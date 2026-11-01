@@ -11,8 +11,8 @@ const TARGET_RING_RADIUS_PX = 11;
 // Beyond this the map data runs out of detail and borders turn angular.
 const MAX_ZOOM = 100;
 // Low enough that neighboring land stays in view: isolated islands need context.
-const MAX_AUTO_ZOOM = 12;
-const TARGET_VIEW_SHARE = 0.35;
+const MAX_AUTO_ZOOM = 5;
+const TARGET_VIEW_SHARE = 0.2;
 const ZOOM_DURATION_MS = 750;
 
 // Largest polygon of a feature: drives the target ring and auto-zoom, so that e.g.

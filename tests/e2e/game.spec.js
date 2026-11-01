@@ -235,6 +235,17 @@ for (const colorScheme of ['light', 'dark']) {
   });
 }
 
+test('jumping to a new country zooms in only moderately', async ({ page }) => {
+  await open(page);
+  await page.selectOption('#continent-filter', 'OC');
+  for (let i = 0; i < 10; i++) {
+    const scale = await page.evaluate(() => Number(document.querySelector('#map').mapTestApi.transform().match(/scale\((.+)\)/)[1]));
+    expect(scale).toBeLessThanOrEqual(5);
+    await page.click('#dont-know-btn');
+    await page.keyboard.press('Enter');
+  }
+});
+
 test('the map zooms and pans', async ({ page }) => {
   await open(page);
   const transform = () => page.evaluate(() => document.querySelector('#map').mapTestApi.transform());
