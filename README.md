@@ -100,14 +100,14 @@ Key: `countryquiz.v1`
 
 ## Map
 
-- World map as **SVG**, rendered with **d3-geo** (stored locally under `vendor/`).
+- World map drawn on a **canvas**, projected with **d3-geo** (stored locally under `vendor/`). Canvas draws each frame completely, so borders stay sharp while zooming; SVG only sharpened after zooming stopped.
 - Map data: **Natural Earth, 1:10m scale** (public domain) as GeoJSON or TopoJSON under `data/`. Each country needs a unique **ISO 3166-1 alpha-2 code**.
   - Note: In Natural Earth, the `ISO_A2` field is `-99` for some countries (including France, Norway, Kosovo). Fall back to `ISO_A2_EH` or a manual mapping in those cases.
   - Simplify the file beforehand (e.g. with mapshaper), but keep enough detail that borders stay sharp when zoomed in; target: map data under 3 MB (about 0.8 MB compressed), and limit the maximum zoom to what the data can show sharply.
 - **Country scope**: all 249 ISO 3166-1 entries plus Kosovo, including dependent territories such as Greenland and French Guiana. Anything else in the map data is drawn but **not asked** and colored neutrally. The list of quizzed countries lives in one central file (`data/countries.js`) so it is easy to adjust.
 - **Zoom and pan** (mouse wheel, drag, pinch on mobile).
 - When a country is asked, **automatically zoom to it** so small countries are recognizable.
-- **Very small countries** (e.g. Vatican City, Monaco, Malta, Pacific and Caribbean island states) are drawn only as their real shapes, with no permanent markers. Only while one is being asked, an unfilled **ring** shows where it is.
+- **Very small countries** (e.g. Vatican City, Monaco, Malta, Pacific and Caribbean island states) are drawn only as their shapes, with no permanent markers. Entries under 40 km² are enlarged to 40 km² so they can be seen. Only while one is being asked, an unfilled **ring** shows where it is.
 - Projection: an equal-area or compromise projection such as Natural Earth or Equal Earth.
 
 ---
