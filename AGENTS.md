@@ -24,6 +24,25 @@ python3 -m http.server --bind 127.0.0.1
 
 Then open http://localhost:8000. To test on a phone, omit `--bind` and open `http://<computer-ip>:8000` on the same Wi-Fi.
 
+## Testing
+
+New code must not break existing functionality. Run the full suite before every commit, and only hand over a change when it passes:
+
+```sh
+npm install        # once
+npx playwright install firefox  # once, and after Playwright updates
+npm test           # everything
+npm run test:unit  # game logic and data, runs in Node
+npm run test:e2e   # the game in Firefox, starts its own server
+```
+
+Browser tests use Playwright's own Firefox build, not the installed Firefox. Dev tools are for testing only: the site itself must keep working without `npm install`.
+
+- Every new feature comes with tests for its behavior.
+- Every bug fix comes with a test that fails without the fix.
+- Logic goes in `tests/unit/`, behavior that needs the page or map goes in `tests/e2e/`.
+- Do not weaken, skip or delete an existing test to get a passing run. If a test fails, assume the new code is wrong. Change the test only if the intended behavior changed or the test itself is wrong, and tell the owner.
+
 ## Project structure
 
 ```
@@ -31,17 +50,18 @@ index.html, style.css   page and styles
 src/                    one module per responsibility
 data/                   map data, country list, aliases
 vendor/                 third-party code, never edited by hand
+tests/unit/             Node tests for logic and data
+tests/e2e/              Playwright tests for the game in a browser
+package.json            dev tools only, never shipped to players
 LICENSE, README.md      license and specification
 ```
 
 Planned as they are added:
 
 ```
-tests/                  automated tests
 tools/                  scripts that generate map data and the d3 bundle
 .github/workflows/      automated checks and deployment
 .editorconfig           indentation and line endings
-package.json            dev tools only, never shipped to players
 eslint.config.js        linter rules
 ```
 
@@ -60,11 +80,9 @@ Add structure only when it is needed. Once `src/` gets crowded, organize it by f
 
 Not done yet. Work through these in order when asked:
 
-1. Add automated tests for `src/quiz.js` and `src/storage.js` with `node --test`.
-2. Add ESLint and Prettier as dev tools. The site must still have no build step.
-3. Add a GitHub Actions workflow that runs linting and tests on every push, and tie deployment to those checks.
-4. Move the scripts that generate `data/world.json` and `vendor/d3.bundle.js` into `tools/`, so both can be regenerated.
-5. Optional: add Playwright tests for the main game flow.
+1. Add ESLint and Prettier as dev tools. The site must still have no build step.
+2. Add a GitHub Actions workflow that runs linting and tests on every push, and tie deployment to those checks.
+3. Move the scripts that generate `data/world.json` and `vendor/d3.bundle.js` into `tools/`, so both can be regenerated.
 
 Later, if types become useful, add JSDoc comments checked by TypeScript, which needs no build step.
 
@@ -76,7 +94,8 @@ Later, if types become useful, add JSDoc comments checked by TypeScript, which n
 - Create one short-lived branch per change, from an up-to-date `main`.
 - Name branches `<type>/<short-kebab-case-description>`, using the commit types below. Examples: `feat/hint-button`, `fix/tooltip-position`, `docs/deployment-guide`.
 - Before creating a branch, tell the owner the proposed name and what it will contain.
-- Only commit, push, merge or deploy when the owner asks.
+- When a feature on a feature branch is implemented and passes all tests, commit it without waiting to be asked.
+- Only push, merge or deploy when the owner asks.
 
 ### Commits
 
@@ -107,7 +126,7 @@ Use [Conventional Commits](https://www.conventionalcommits.org/):
 
 ## Before finishing a change
 
-- Run the game in a browser and check that the console has no errors.
+- Run `npm test`, plus linting once it exists.
+- Play the affected part of the game in a browser.
 - Check the affected items in the README's acceptance criteria.
-- Run tests and linting once they exist.
 - Report anything that was not tested.
