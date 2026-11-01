@@ -104,7 +104,7 @@ Key: `countryquiz.v1`
 - Map data: **Natural Earth, 1:50m scale** (public domain) as GeoJSON or TopoJSON under `data/`. Each country needs a unique **ISO 3166-1 alpha-2 code**.
   - Note: In Natural Earth, the `ISO_A2` field is `-99` for some countries (including France, Norway, Kosovo). Fall back to `ISO_A2_EH` or a manual mapping in those cases.
   - Simplify the file beforehand (e.g. with mapshaper); target: map data well under 1 MB.
-- **Country scope**: the 193 UN member states plus Kosovo, Taiwan, Palestine and Vatican City. Dependent territories (Greenland, French Guiana, etc.) are drawn on the map but **not asked** and colored neutrally. The list of quizzed countries lives in one central file (`data/countries.js`) so it is easy to adjust.
+- **Country scope**: all 249 ISO 3166-1 entries plus Kosovo, including dependent territories such as Greenland and French Guiana. Anything else in the map data is drawn but **not asked** and colored neutrally. The list of quizzed countries lives in one central file (`data/countries.js`) so it is easy to adjust.
 - **Zoom and pan** (mouse wheel, drag, pinch on mobile).
 - When a country is asked, **automatically zoom to it** so small countries are recognizable.
 - **Very small countries** (e.g. Vatican City, Monaco, Malta, Pacific and Caribbean island states) are additionally shown with a **circle marker** that gets the same progress color, so they stay visible and clickable.
@@ -116,7 +116,7 @@ Key: `countryquiz.v1`
 
 - **Stats bar**: number of mastered countries (score 10), started countries (1–9), never-asked countries; overall progress bar.
 - **Tooltip**: on hover/tap of a country that has already been asked, show its name and score. For never-asked countries, do not reveal the name.
-- **Optional continent filter** (Europe, Asia, Africa, North America, South America, Oceania) that only quizzes countries from that continent. Saved in `settings`.
+- **Optional continent filter** (Europe, Asia, Africa, North America, South America, Oceania, Antarctica) that only quizzes countries from that continent. Saved in `settings`.
 - Keyboard control: the input field automatically gets focus for each new country, Enter submits, Enter after the result moves on.
 - Supports light and dark mode (`prefers-color-scheme`).
 

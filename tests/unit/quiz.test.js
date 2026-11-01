@@ -29,6 +29,10 @@ const accepted = [
   ['Kongo', 'CD'],
   ['Kongo', 'CG'],
   ['Frankreih', 'FR'],
+  ['Hongkong', 'HK'],
+  ['Spitzbergen', 'SJ'],
+  ['Färöer', 'FO'],
+  ['Falkland', 'FK'],
   ['Deutschlnd', 'DE'],
 ];
 for (const [input, code] of accepted) {
@@ -48,6 +52,8 @@ const rejected = [
   ['Korea', 'KR'],
   ['Ira', 'IR'], // typo that fits Iran and Irak equally
   ['Ira', 'IQ'],
+  ['Guam', 'GN'],
+  ['Niue', 'NE'],
 ];
 for (const [input, code] of rejected) {
   test(`rejects "${input}" for ${code}`, () => assert.equal(isCorrectAnswer(input, code), false));

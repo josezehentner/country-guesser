@@ -50,8 +50,8 @@ test('loads without console errors or external requests', async ({ page, baseURL
     if (!/^(data|blob):/.test(request.url()) && !request.url().startsWith(baseURL)) problems.push(request.url());
   });
   await open(page);
-  await expect(page.locator('path.country')).toHaveCount(242);
-  await expect(page.locator('#stat-never')).toHaveText('197');
+  await expect(page.locator('path.country')).toHaveCount(252);
+  await expect(page.locator('#stat-never')).toHaveText('250');
   expect(problems).toEqual([]);
 });
 
@@ -65,7 +65,7 @@ test('correct answer scores +1, saves, colors the country and Enter moves on', a
   expect((await stored(page)).countries[code]).toMatchObject({ score: 1, seen: 1, correct: 1 });
   await expect.poll(() => fill(page, code)).toBe(DARK_RED);
   await expect(page.locator('#stat-started')).toHaveText('1');
-  await expect(page.locator('#stat-never')).toHaveText('196');
+  await expect(page.locator('#stat-never')).toHaveText('249');
 
   await page.keyboard.press('Enter');
   await expect(page.locator('#feedback')).toHaveText('');
@@ -120,7 +120,7 @@ test('colors match the progress table and survive a reload', async ({ page }) =>
   expect(zero).not.toBe(never);
   await expect(page.locator('#stat-mastered')).toHaveText('1');
   await expect(page.locator('#stat-started')).toHaveText('1');
-  await expect(page.locator('#stat-never')).toHaveText('194');
+  await expect(page.locator('#stat-never')).toHaveText('247');
 
   await page.reload();
   await expect.poll(() => fill(page, 'DE')).toBe(DARK_GREEN);
@@ -130,7 +130,7 @@ test('colors match the progress table and survive a reload', async ({ page }) =>
 test('continent filter only asks countries from that continent', async ({ page }) => {
   await open(page);
   await page.selectOption('#continent-filter', 'SA');
-  const southAmerica = ['AR', 'BO', 'BR', 'CL', 'CO', 'EC', 'GY', 'PE', 'PY', 'SR', 'UY', 'VE'];
+  const southAmerica = ['AR', 'BO', 'BR', 'CL', 'CO', 'EC', 'GY', 'PE', 'PY', 'SR', 'UY', 'VE', 'FK', 'GF'];
   for (let i = 0; i < 15; i++) {
     expect(southAmerica).toContain(await targetCode(page));
     await page.click('#dont-know-btn');
@@ -156,7 +156,7 @@ test('export and import round-trip, invalid files rejected, reset clears', async
 
   page.once('dialog', (dialog) => dialog.accept());
   await page.click('#reset-btn');
-  await expect(page.locator('#stat-never')).toHaveText('197');
+  await expect(page.locator('#stat-never')).toHaveText('250');
   expect((await stored(page)).countries).toEqual({});
 
   page.once('dialog', (dialog) => dialog.dismiss());
@@ -190,7 +190,7 @@ test('tooltip hides never-asked countries and the current question', async ({ pa
 
 test('small countries have markers, and the map zooms and pans', async ({ page }) => {
   await open(page);
-  for (const code of ['VA', 'MC', 'MT', 'NR']) await expect(page.locator(`circle.marker[data-code="${code}"]`)).toBeAttached();
+  for (const code of ['VA', 'MC', 'MT', 'NR', 'GI', 'TK']) await expect(page.locator(`circle.marker[data-code="${code}"]`)).toBeAttached();
   await expect(page.locator('circle.marker[data-code="DE"]')).toHaveCount(0);
 
   const transform = () => page.locator('#map > g').getAttribute('transform');
@@ -216,7 +216,7 @@ test('game works with a notice when localStorage is blocked', async ({ page }) =
   await expect(page.locator('#storage-notice')).toBeVisible();
   await page.click('#dont-know-btn');
   await expect(page.locator('#feedback')).toHaveClass(/bad/);
-  await expect(page.locator('#stat-never')).toHaveText('196');
+  await expect(page.locator('#stat-never')).toHaveText('249');
 });
 
 test.describe('on a phone', () => {
