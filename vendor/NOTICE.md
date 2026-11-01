@@ -10,4 +10,6 @@
   into Cyprus, Guantanamo Bay into Cuba, the UNDOF zone into Syria and the Korean
   DMZ into the two Koreas; Crimea assigned to Ukraine; Jan Mayen assigned to SJ
   and the U.S. minor islands to UM. Simplified to 25% with mapshaper, except
-  entries under 100 km², which keep full detail and are drawn on top.
+  entries under 100 km², which keep full detail and are drawn on top. Entries
+  under 40 km² are enlarged to 40 km² around their own centers, so these shapes
+  are deliberately not to scale.

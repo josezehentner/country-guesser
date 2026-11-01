@@ -44,10 +44,12 @@ test('map data keeps enough detail to stay sharp when zoomed in', () => {
   assert.ok(points > 130_000, `only ${points} points`);
 });
 
-test('micro-states keep a real shape instead of collapsing', () => {
-  const vatican = world.features.find((feature) => feature.properties.id === 'VA');
-  const area = geoArea(vatican) * 6371 ** 2;
-  assert.ok(area > 0.005 && area < 2, `Vatican City is ${area} km²`);
+test('the smallest countries are enlarged to a visible minimum size', () => {
+  for (const code of ['VA', 'GI', 'TK']) {
+    const feature = world.features.find((candidate) => candidate.properties.id === code);
+    const area = geoArea(feature) * 6371 ** 2;
+    assert.ok(area > 39 && area < 41, `${code} is ${area} km²`);
+  }
 });
 
 test('aliases only refer to quizzed countries', () => {
