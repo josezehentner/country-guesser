@@ -50,7 +50,7 @@ test('loads without console errors or external requests', async ({ page, baseURL
     if (!/^(data|blob):/.test(request.url()) && !request.url().startsWith(baseURL)) problems.push(request.url());
   });
   await open(page);
-  await expect(page.locator('path.country')).toHaveCount(252);
+  await expect(page.locator('path.country')).toHaveCount(258);
   await expect(page.locator('#stat-never')).toHaveText('250');
   expect(problems).toEqual([]);
 });
@@ -188,11 +188,36 @@ test('tooltip hides never-asked countries and the current question', async ({ pa
   await expect(tooltip).toContainText(await page.evaluate(async (c) => (await import('/data/countries.js')).COUNTRY_BY_CODE.get(c).name, code));
 });
 
-test('small countries have markers, and the map zooms and pans', async ({ page }) => {
+test('small countries are plain shapes and only the asked one gets a ring', async ({ page }) => {
   await open(page);
-  for (const code of ['VA', 'MC', 'MT', 'NR', 'GI', 'TK']) await expect(page.locator(`circle.marker[data-code="${code}"]`)).toBeAttached();
-  await expect(page.locator('circle.marker[data-code="DE"]')).toHaveCount(0);
+  for (const code of ['VA', 'MC', 'MT', 'NR', 'GI', 'TK']) await expect(page.locator(`path[data-code="${code}"]`)).toBeAttached();
+  await expect(page.locator('#map circle:not(.target-ring)')).toHaveCount(0);
 
+  const oceania = await page.evaluate(async () => (await import('/data/countries.js')).COUNTRIES.filter((c) => c.continent === 'OC').map((c) => c.code));
+  await seed(page, Object.fromEntries(oceania.filter((code) => code !== 'NR').map((code) => [code, entry(10)])), { continent: 'OC' });
+  for (let i = 0; i < 100 && (await targetCode(page)) !== 'NR'; i++) {
+    await page.click('#dont-know-btn');
+    await page.keyboard.press('Enter');
+  }
+  expect(await targetCode(page)).toBe('NR');
+  await expect(page.locator('#map circle.target-ring')).toHaveCount(1);
+});
+
+for (const colorScheme of ['light', 'dark']) {
+  test.describe(`in ${colorScheme} mode`, () => {
+    test.use({ colorScheme });
+
+    test('land is beige, water light blue and borders black', async ({ page }) => {
+      await open(page);
+      await expect.poll(() => fill(page, 'PT')).toBe('rgb(245, 230, 200)');
+      await expect(page.locator('#map-wrap')).toHaveCSS('background-color', 'rgb(173, 216, 230)');
+      await expect(page.locator('path[data-code="PT"]')).toHaveCSS('stroke', 'rgb(0, 0, 0)');
+    });
+  });
+}
+
+test('the map zooms and pans', async ({ page }) => {
+  await open(page);
   const transform = () => page.locator('#map > g').getAttribute('transform');
   await expect.poll(transform).toMatch(/scale/);
   await page.waitForTimeout(900);

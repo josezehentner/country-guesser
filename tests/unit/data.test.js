@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { geoArea } from '../../vendor/d3.bundle.js';
 import { ALIASES } from '../../data/aliases.js';
 import { CONTINENTS, COUNTRIES, COUNTRY_BY_CODE } from '../../data/countries.js';
 import { scoreColor } from '../../src/colors.js';
@@ -16,7 +17,7 @@ test('quiz scope is all 249 ISO 3166-1 entries plus Kosovo', () => {
 });
 
 test('map regions outside ISO 3166-1 are not quizzed', () => {
-  for (const code of ['ATC', 'KAS']) {
+  for (const code of ['KAS', 'BRT']) {
     assert.ok(mapIds.includes(code), code);
     assert.ok(!COUNTRY_BY_CODE.has(code), code);
   }
@@ -31,9 +32,22 @@ test('every quizzed country has a name, a continent and a map shape', () => {
   }
 });
 
-test('map features have unique ids and map data stays under 1 MB', () => {
+test('map features have unique ids and map data stays under 3 MB', () => {
   assert.equal(new Set(mapIds).size, mapIds.length);
-  assert.ok(readFileSync(new URL('../../data/world.json', import.meta.url)).length < 1_000_000);
+  assert.ok(readFileSync(new URL('../../data/world.json', import.meta.url)).length < 3_000_000);
+});
+
+test('map data keeps enough detail to stay sharp when zoomed in', () => {
+  let points = 0;
+  const count = (value) => (typeof value[0] === 'number' ? points++ : value.forEach(count));
+  for (const feature of world.features) count(feature.geometry.coordinates);
+  assert.ok(points > 130_000, `only ${points} points`);
+});
+
+test('micro-states keep a real shape instead of collapsing', () => {
+  const vatican = world.features.find((feature) => feature.properties.id === 'VA');
+  const area = geoArea(vatican) * 6371 ** 2;
+  assert.ok(area > 0.005 && area < 2, `Vatican City is ${area} km²`);
 });
 
 test('aliases only refer to quizzed countries', () => {

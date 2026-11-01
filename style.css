@@ -5,13 +5,12 @@
   --text: #1c2128;
   --muted: #5d6673;
   --border: #d4d8de;
-  --ocean: #dbe7f1;
-  --never: #fbfbfa;
-  --dependency: #e7e8e6;
-  --country-stroke: #8a929c;
+  --ocean: #add8e6;
+  --never: #f5e6c8;
+  --country-stroke: #000000;
   --score-zero: #8d8f93;
   --score-lightness: 30%;
-  --target: #0b57d0;
+  --target: #e6007e;
   --accent: #0b57d0;
   --accent-text: #ffffff;
   --good: #1a7a35;
@@ -25,13 +24,6 @@
     --text: #e8eaed;
     --muted: #a1a9b3;
     --border: #38414b;
-    --ocean: #0f1a24;
-    --never: #2b323a;
-    --dependency: #1e242b;
-    --country-stroke: #5d6772;
-    --score-zero: #737980;
-    --score-lightness: 36%;
-    --target: #ffd54a;
     --accent: #8ab4f8;
     --accent-text: #10151b;
     --good: #6dd58c;
@@ -104,16 +96,6 @@ h1 { margin: 0; font-size: 1.1rem; }
   transition: fill 0.25s;
 }
 
-.country.dependency { fill: var(--dependency); }
-
-.marker {
-  fill: var(--never);
-  stroke: var(--country-stroke);
-  stroke-width: 1px;
-  vector-effect: non-scaling-stroke;
-  transition: fill 0.25s;
-}
-
 .target-outline, .target-ring {
   fill: none;
   stroke: var(--target);
@@ -132,7 +114,7 @@ h1 { margin: 0; font-size: 1.1rem; }
 
 @media (prefers-reduced-motion: reduce) {
   .target-outline, .target-ring { animation: none; }
-  .progress-fill, .country, .marker { transition: none; }
+  .progress-fill, .country { transition: none; }
 }
 
 .tooltip {

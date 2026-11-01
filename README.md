@@ -101,13 +101,13 @@ Key: `countryquiz.v1`
 ## Map
 
 - World map as **SVG**, rendered with **d3-geo** (stored locally under `vendor/`).
-- Map data: **Natural Earth, 1:50m scale** (public domain) as GeoJSON or TopoJSON under `data/`. Each country needs a unique **ISO 3166-1 alpha-2 code**.
+- Map data: **Natural Earth, 1:10m scale** (public domain) as GeoJSON or TopoJSON under `data/`. Each country needs a unique **ISO 3166-1 alpha-2 code**.
   - Note: In Natural Earth, the `ISO_A2` field is `-99` for some countries (including France, Norway, Kosovo). Fall back to `ISO_A2_EH` or a manual mapping in those cases.
-  - Simplify the file beforehand (e.g. with mapshaper); target: map data well under 1 MB.
+  - Simplify the file beforehand (e.g. with mapshaper), but keep enough detail that borders stay sharp when zoomed in; target: map data under 3 MB (about 0.8 MB compressed), and limit the maximum zoom to what the data can show sharply.
 - **Country scope**: all 249 ISO 3166-1 entries plus Kosovo, including dependent territories such as Greenland and French Guiana. Anything else in the map data is drawn but **not asked** and colored neutrally. The list of quizzed countries lives in one central file (`data/countries.js`) so it is easy to adjust.
 - **Zoom and pan** (mouse wheel, drag, pinch on mobile).
 - When a country is asked, **automatically zoom to it** so small countries are recognizable.
-- **Very small countries** (e.g. Vatican City, Monaco, Malta, Pacific and Caribbean island states) are additionally shown with a **circle marker** that gets the same progress color, so they stay visible and clickable.
+- **Very small countries** (e.g. Vatican City, Monaco, Malta, Pacific and Caribbean island states) are drawn only as their real shapes, with no permanent markers. Only while one is being asked, an unfilled **ring** shows where it is.
 - Projection: an equal-area or compromise projection such as Natural Earth or Equal Earth.
 
 ---
@@ -176,6 +176,6 @@ Local testing: because of ES modules, serve via a local web server, e.g. `python
 - [ ] Colors match the table above; "never asked" and "score 0" are distinguishable.
 - [ ] Progress persists after reloading and after closing the browser.
 - [ ] Export produces a JSON file, import restores the same state, invalid files are rejected.
-- [ ] Small countries are visible via markers and the game zooms to the asked country.
+- [ ] Small countries are plain shapes, get a ring only while asked, and the game zooms to the asked country.
 - [ ] Usable on mobile (touch zoom, input, no horizontal scrollbar).
 - [ ] Game works even when localStorage is unavailable (with a notice).
