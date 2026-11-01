@@ -28,6 +28,7 @@ const accepted = [
   ["Côte d'Ivoire", 'CI'],
   ['Kongo', 'CD'],
   ['Kongo', 'CG'],
+  ['UAE', 'AE'],
   ['Frankreih', 'FR'],
   ['Hongkong', 'HK'],
   ['Spitzbergen', 'SJ'],
