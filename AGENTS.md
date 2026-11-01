@@ -19,10 +19,10 @@ Country Quiz is a static browser game built with plain HTML, CSS and JavaScript 
 ES modules and `fetch` do not work from `file://`, so always use a local server:
 
 ```sh
-python3 -m http.server --bind 127.0.0.1
+npm start
 ```
 
-Then open http://localhost:8000. To test on a phone, omit `--bind` and open `http://<computer-ip>:8000` on the same Wi-Fi.
+Then open http://localhost:8000. This server (`tools/serve.py`) disables browser caching, so changes always show up. To test on a phone, run `python3 -m http.server` and open `http://<computer-ip>:8000` on the same Wi-Fi.
 
 ## Testing
 
@@ -49,6 +49,7 @@ Browser tests use Playwright's own Firefox build, not the installed Firefox. Dev
 
 ```
 index.html, style.css   page and styles
+tools/serve.py          local development server without caching
 src/                    one module per responsibility
 data/                   map data, country list, aliases
 vendor/                 third-party code, never edited by hand
