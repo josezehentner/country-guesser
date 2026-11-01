@@ -1,6 +1,6 @@
 # Country Quiz – World Map Game with Persistent Progress
 
-A simple single-player country guessing game in the browser. Each country on the world map is colored by learning progress, from dark red (guessed correctly once) to dark green (guessed correctly 10 times). Progress is stored locally in the browser and persists across days and months.
+A simple single-player country guessing game in the browser. Each country on the world map is colored by learning progress, from dark red (1 point) to dark green (10 points). Progress is stored locally in the browser and persists across days and months.
 
 This document is the specification for the implementation.
 
@@ -51,13 +51,14 @@ Each country has a **score from 0 to 10**, or has **never been asked**.
 |---|---|---|
 | not present | country never asked | no fill color (neutral light gray/white, outline only) |
 | 0 | asked before, currently 0 points | gray (clearly distinguishable from "never asked") |
-| 1 | guessed correctly once | dark red |
+| 1 | 1 point | dark red |
 | 2–9 | intermediate levels | gradient via orange/olive |
 | 10 | mastered | dark green |
 
 Rules:
-- **Correct answer**: +1 (maximum 10).
-- **Wrong answer** or "I don't know": −1 (minimum 0).
+- **First answer for a country**: correct starts at 5, wrong or "I don't know" starts at 3.
+- **Later correct answer**: +1 (maximum 10).
+- **Later wrong answer** or "I don't know": −1 (minimum 0).
 - Once a country has been asked, it never returns to the "never asked" state.
 
 Color calculation (guideline, may be visually tuned):
@@ -172,7 +173,7 @@ Local testing: because of ES modules, serve via a local web server, e.g. `python
 
 - [ ] Site loads on GitHub Pages without a build step and without console errors.
 - [ ] A country is highlighted, input is checked correctly (including umlauts, alternative names, small typos).
-- [ ] Correct = +1, wrong/"I don't know" = −1, bounds 0 and 10 are respected.
+- [ ] First answer starts at 5 (correct) or 3 (wrong/"I don't know"); later correct = +1, wrong/"I don't know" = −1; bounds 0 and 10 are respected.
 - [ ] Colors match the table above; "never asked" and "score 0" are distinguishable.
 - [ ] Progress persists after reloading and after closing the browser.
 - [ ] Export produces a JSON file, import restores the same state, invalid files are rejected.

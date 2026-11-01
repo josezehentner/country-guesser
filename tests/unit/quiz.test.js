@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { COUNTRIES } from '../../data/countries.js';
-import { isCorrectAnswer, normalize, pickNextCountry, selectionWeight } from '../../src/quiz.js';
+import { isCorrectAnswer, nextScore, normalize, pickNextCountry, selectionWeight } from '../../src/quiz.js';
 
 test('normalize ignores case, whitespace, diacritics and punctuation', () => {
   assert.equal(normalize('  ÖSTERREICH '), 'osterreich');
@@ -59,6 +59,19 @@ const rejected = [
 for (const [input, code] of rejected) {
   test(`rejects "${input}" for ${code}`, () => assert.equal(isCorrectAnswer(input, code), false));
 }
+
+test('the first answer sets the starting score', () => {
+  assert.equal(nextScore(undefined, true), 5);
+  assert.equal(nextScore(undefined, false), 3);
+});
+
+test('later answers move the score by one within 0 and 10', () => {
+  assert.equal(nextScore({ score: 5 }, true), 6);
+  assert.equal(nextScore({ score: 3 }, false), 2);
+  assert.equal(nextScore({ score: 10 }, true), 10);
+  assert.equal(nextScore({ score: 0 }, false), 0);
+  assert.equal(nextScore({ score: 0 }, true), 1);
+});
 
 test('weights favor weak and never-asked countries over mastered ones', () => {
   const mastered = selectionWeight({ score: 10 });

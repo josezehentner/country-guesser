@@ -73,15 +73,15 @@ test('loads without console errors or external requests', async ({ page, baseURL
   expect(problems).toEqual([]);
 });
 
-test('correct answer scores +1, saves, colors the country and Enter moves on', async ({ page }) => {
+test('first correct answer starts at 5, saves, colors the country and Enter moves on', async ({ page }) => {
   await open(page);
   const code = await targetCode(page);
   await page.fill('#answer-input', (await targetName(page)).toUpperCase());
   await page.keyboard.press('Enter');
   await expect(page.locator('#feedback')).toHaveClass(/good/);
-  await expect(page.locator('#feedback')).toContainText('1/10');
-  expect((await stored(page)).countries[code]).toMatchObject({ score: 1, seen: 1, correct: 1 });
-  expect(await page.evaluate((c) => document.querySelector('#map').mapTestApi.colorOf(c), code)).toBe('hsl(0, 70%, 30%)');
+  await expect(page.locator('#feedback')).toContainText('5/10');
+  expect((await stored(page)).countries[code]).toMatchObject({ score: 5, seen: 1, correct: 1 });
+  expect(await page.evaluate((c) => document.querySelector('#map').mapTestApi.colorOf(c), code)).toBe(`hsl(${(4 / 9) * 120}, 70%, 30%)`);
   await expect(page.locator('#stat-started')).toHaveText('1');
   await expect(page.locator('#stat-never')).toHaveText('249');
 
@@ -92,7 +92,7 @@ test('correct answer scores +1, saves, colors the country and Enter moves on', a
   expect(await targetCode(page)).not.toBe(code);
 });
 
-test('wrong answer reveals the name and "Weiß ich nicht" counts as wrong', async ({ page }) => {
+test('first wrong answer starts at 3, reveals the name, and "Weiß ich nicht" counts as wrong', async ({ page }) => {
   await open(page);
   for (const answer of [() => page.fill('#answer-input', 'Atlantis').then(() => page.keyboard.press('Enter')),
     () => page.click('#dont-know-btn')]) {
@@ -101,7 +101,7 @@ test('wrong answer reveals the name and "Weiß ich nicht" counts as wrong', asyn
     await answer();
     await expect(page.locator('#feedback')).toHaveClass(/bad/);
     await expect(page.locator('#feedback')).toContainText(name);
-    expect((await stored(page)).countries[code]).toMatchObject({ score: 0, seen: 1, correct: 0 });
+    expect((await stored(page)).countries[code]).toMatchObject({ score: 3, seen: 1, correct: 0 });
     await page.keyboard.press('Enter');
   }
 });
