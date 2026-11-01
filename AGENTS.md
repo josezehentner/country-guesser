@@ -36,6 +36,8 @@ npm run test:unit  # game logic and data, runs in Node
 npm run test:e2e   # the game in Firefox, starts its own server
 ```
 
+GitHub Actions runs `npm test` on every pull request and every push to `main`. A pull request is ready to merge only when those checks are green.
+
 Browser tests use Playwright's own Firefox build, not the installed Firefox. Dev tools are for testing only: the site itself must keep working without `npm install`.
 
 - Every new feature comes with tests for its behavior.
@@ -53,6 +55,7 @@ vendor/                 third-party code, never edited by hand
 tests/unit/             Node tests for logic and data
 tests/e2e/              Playwright tests for the game in a browser
 package.json            dev tools only, never shipped to players
+.github/workflows/      automated tests on GitHub
 LICENSE, README.md      license and specification
 ```
 
@@ -60,7 +63,6 @@ Planned as they are added:
 
 ```
 tools/                  scripts that generate map data and the d3 bundle
-.github/workflows/      automated checks and deployment
 .editorconfig           indentation and line endings
 eslint.config.js        linter rules
 ```
@@ -81,7 +83,7 @@ Add structure only when it is needed. Once `src/` gets crowded, organize it by f
 Not done yet. Work through these in order when asked:
 
 1. Add ESLint and Prettier as dev tools. The site must still have no build step.
-2. Add a GitHub Actions workflow that runs linting and tests on every push, and tie deployment to those checks.
+2. Add linting to the GitHub Actions workflow, and tie deployment to its checks.
 3. Move the scripts that generate `data/world.json` and `vendor/d3.bundle.js` into `tools/`, so both can be regenerated.
 
 Later, if types become useful, add JSDoc comments checked by TypeScript, which needs no build step.
