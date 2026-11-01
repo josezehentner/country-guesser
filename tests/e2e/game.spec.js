@@ -191,7 +191,7 @@ test('tooltip hides never-asked countries and the current question', async ({ pa
 test('small countries are plain shapes and only the asked one gets a ring', async ({ page }) => {
   await open(page);
   for (const code of ['VA', 'MC', 'MT', 'NR', 'GI', 'TK']) await expect(page.locator(`path[data-code="${code}"]`)).toBeAttached();
-  await expect(page.locator('#map circle:not(.target-ring)')).toHaveCount(0);
+  await expect(page.locator('#map circle')).toHaveCount(0);
 
   const oceania = await page.evaluate(async () => (await import('/data/countries.js')).COUNTRIES.filter((c) => c.continent === 'OC').map((c) => c.code));
   await seed(page, Object.fromEntries(oceania.filter((code) => code !== 'NR').map((code) => [code, entry(10)])), { continent: 'OC' });
@@ -200,7 +200,7 @@ test('small countries are plain shapes and only the asked one gets a ring', asyn
     await page.keyboard.press('Enter');
   }
   expect(await targetCode(page)).toBe('NR');
-  await expect(page.locator('#map circle.target-ring')).toHaveCount(1);
+  await expect(page.locator('#map-target circle.target-ring')).toHaveCount(1);
 });
 
 for (const colorScheme of ['light', 'dark']) {

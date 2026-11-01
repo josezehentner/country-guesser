@@ -30,21 +30,24 @@ function largestPolygon(feature) {
 }
 
 // `getTooltipText(code)` returns the text to show for a country, or null.
-export function createMap(svg, tooltip, world, getTooltipText) {
+export function createMap(svg, targetSvg, tooltip, world, getTooltipText) {
   const projection = geoNaturalEarth1().fitExtent([[4, 4], [WIDTH - 4, HEIGHT - 4]], { type: 'Sphere' });
   const path = geoPath(projection);
 
   const root = createSvgElement('g');
   const countriesLayer = createSvgElement('g');
   const targetLayer = createSvgElement('g');
-  root.append(countriesLayer, targetLayer);
+  root.append(countriesLayer);
   svg.append(root);
+  targetSvg.append(targetLayer);
 
   const countries = new Map();
+  const shapes = [];
   for (const feature of world.features) {
     const code = feature.properties.id;
     const quizzed = COUNTRY_BY_CODE.has(code);
     const element = createSvgElement('path', { d: path(feature), class: 'country' });
+    shapes.push({ element, bounds: path.bounds(feature) });
     if (!quizzed) {
       countriesLayer.append(element);
       continue;
@@ -69,13 +72,30 @@ export function createMap(svg, tooltip, world, getTooltipText) {
     targetRing.setAttribute('r', TARGET_RING_RADIUS_PX * unitsPerPixel);
   }
 
+  // Hides shapes outside the view, so the browser only draws the detail it needs.
+  function hideOffscreenShapes(transform) {
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+    const rect = svg.getBoundingClientRect();
+    const left = transform.invertX((rect.left - ctm.e) / ctm.a);
+    const right = transform.invertX((rect.right - ctm.e) / ctm.a);
+    const top = transform.invertY((rect.top - ctm.f) / ctm.d);
+    const bottom = transform.invertY((rect.bottom - ctm.f) / ctm.d);
+    for (const { element, bounds: [[x0, y0], [x1, y1]] } of shapes) {
+      const visible = x1 >= left && x0 <= right && y1 >= top && y0 <= bottom;
+      element.style.display = visible ? '' : 'none';
+    }
+  }
+
   const zoomBehavior = zoom()
     .scaleExtent([1, MAX_ZOOM])
     .translateExtent([[-WIDTH / 2, -HEIGHT], [WIDTH * 1.5, HEIGHT * 2]])
     .on('zoom', ({ transform }) => {
       scale = transform.k;
       root.setAttribute('transform', transform.toString());
+      targetLayer.setAttribute('transform', transform.toString());
       updateTargetRingSize();
+      hideOffscreenShapes(transform);
     });
   const svgSelection = select(svg).call(zoomBehavior).on('dblclick.zoom', null);
   window.addEventListener('resize', updateTargetRingSize);
