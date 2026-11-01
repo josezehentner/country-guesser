@@ -1,26 +1,21 @@
 import { geoArea, geoCentroid, geoNaturalEarth1, geoPath, select, zoom, zoomIdentity } from '../vendor/d3.bundle.js';
 import { COUNTRY_BY_CODE } from '../data/countries.js';
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
 const WIDTH = 1000;
 const HEIGHT = 520;
 const EARTH_RADIUS_KM = 6371;
-const MARKER_MAX_AREA_KM2 = 8000;
-const MARKER_RADIUS_PX = 5;
+const BORDER_WIDTH_PX = 0.8;
+const TARGET_WIDTH_PX = 2.5;
+const TARGET_RING_MAX_AREA_KM2 = 8000;
 const TARGET_RING_RADIUS_PX = 11;
-const MAX_ZOOM = 300;
+// Beyond this the map data runs out of detail and borders turn angular.
+const MAX_ZOOM = 100;
 // Low enough that neighboring land stays in view: isolated islands need context.
 const MAX_AUTO_ZOOM = 12;
 const TARGET_VIEW_SHARE = 0.35;
 const ZOOM_DURATION_MS = 750;
 
-function createSvgElement(name, attributes = {}) {
-  const element = document.createElementNS(SVG_NS, name);
-  for (const [key, value] of Object.entries(attributes)) element.setAttribute(key, value);
-  return element;
-}
-
-// Largest polygon of a feature: drives markers and auto-zoom, so that e.g.
+// Largest polygon of a feature: drives the target ring and auto-zoom, so that e.g.
 // Alaska or far-away islands do not pull the view away from the mainland.
 function largestPolygon(feature) {
   const { geometry } = feature;
@@ -30,111 +25,186 @@ function largestPolygon(feature) {
 }
 
 // `getTooltipText(code)` returns the text to show for a country, or null.
-export function createMap(svg, tooltip, world, getTooltipText) {
+export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText) {
   const projection = geoNaturalEarth1().fitExtent([[4, 4], [WIDTH - 4, HEIGHT - 4]], { type: 'Sphere' });
   const path = geoPath(projection);
+  const context = canvas.getContext('2d', { alpha: true });
+  const targetContext = targetCanvas.getContext('2d');
+  const hitContext = document.createElement('canvas').getContext('2d');
 
-  const root = createSvgElement('g');
-  const countriesLayer = createSvgElement('g');
-  const markersLayer = createSvgElement('g');
-  const targetLayer = createSvgElement('g');
-  root.append(countriesLayer, markersLayer, targetLayer);
-  svg.append(root);
+  const shapes = world.features.map((feature) => ({
+    code: feature.properties.id,
+    path: new Path2D(path(feature)),
+    bounds: path.bounds(feature),
+    color: 'var(--never)',
+    feature,
+  }));
+  const shapeByCode = new Map(shapes.filter((shape) => COUNTRY_BY_CODE.has(shape.code)).map((shape) => [shape.code, shape]));
 
-  const countries = new Map();
-  for (const feature of world.features) {
-    const code = feature.properties.id;
-    const quizzed = COUNTRY_BY_CODE.has(code);
-    const element = createSvgElement('path', {
-      d: path(feature),
-      class: quizzed ? 'country' : 'country dependency',
-    });
-    if (!quizzed) {
-      countriesLayer.append(element);
-      continue;
+  let transform = zoomIdentity;
+  let target = null;
+  let drawScheduled = false;
+  let drawCount = 0;
+  let cssWidth = 1;
+  let cssHeight = 1;
+  let pixelRatio = 1;
+  let resolvedColors = new Map();
+
+  // Canvas cannot read CSS variables, so style.css tokens are resolved here.
+  function resolveColor(color) {
+    if (!resolvedColors.has(color)) {
+      const styles = getComputedStyle(document.documentElement);
+      resolvedColors.set(color, color.replace(/var\((--[\w-]+)\)/g, (_, name) => styles.getPropertyValue(name).trim()));
     }
-    element.dataset.code = code;
-    countriesLayer.append(element);
-
-    const entry = { feature, element, marker: null, focus: largestPolygon(feature) };
-    const areaKm2 = geoArea(feature) * EARTH_RADIUS_KM ** 2;
-    if (areaKm2 < MARKER_MAX_AREA_KM2) {
-      const [x, y] = projection(geoCentroid(entry.focus));
-      entry.marker = createSvgElement('circle', { class: 'marker', cx: x, cy: y });
-      entry.marker.dataset.code = code;
-      markersLayer.append(entry.marker);
-    }
-    countries.set(code, entry);
+    return resolvedColors.get(color);
   }
 
-  let scale = 1;
-  let targetRing = null;
+  // Fits the whole map into the canvas: world units to CSS pixels at zoom 1.
+  function baseView() {
+    const scale = Math.min(cssWidth / WIDTH, cssHeight / HEIGHT);
+    return { scale, x: (cssWidth - WIDTH * scale) / 2, y: (cssHeight - HEIGHT * scale) / 2 };
+  }
 
-  // Keeps markers at a constant on-screen size, independent of zoom and window size.
-  function updateMarkerSizes() {
-    const unitsPerPixel = 1 / ((svg.getScreenCTM()?.a || 1) * scale);
-    for (const { marker } of countries.values()) {
-      if (marker) marker.setAttribute('r', MARKER_RADIUS_PX * unitsPerPixel);
+  function applyWorldTransform(ctx) {
+    const base = baseView();
+    const scale = pixelRatio * transform.k * base.scale;
+    ctx.setTransform(
+      scale, 0, 0, scale,
+      pixelRatio * (transform.x + transform.k * base.x),
+      pixelRatio * (transform.y + transform.k * base.y),
+    );
+    return scale;
+  }
+
+  function isVisible([[x0, y0], [x1, y1]]) {
+    const base = baseView();
+    const left = (transform.invertX(0) - base.x) / base.scale;
+    const right = (transform.invertX(cssWidth) - base.x) / base.scale;
+    const top = (transform.invertY(0) - base.y) / base.scale;
+    const bottom = (transform.invertY(cssHeight) - base.y) / base.scale;
+    return x1 >= left && x0 <= right && y1 >= top && y0 <= bottom;
+  }
+
+  function drawCountries() {
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    const scale = applyWorldTransform(context);
+    context.lineWidth = (BORDER_WIDTH_PX * pixelRatio) / scale;
+    context.strokeStyle = resolveColor('var(--country-stroke)');
+    for (const shape of shapes) {
+      if (!isVisible(shape.bounds)) continue;
+      context.fillStyle = resolveColor(shape.color);
+      context.fill(shape.path);
+      context.stroke(shape.path);
     }
-    if (targetRing) targetRing.setAttribute('r', TARGET_RING_RADIUS_PX * unitsPerPixel);
+  }
+
+  function drawTarget() {
+    targetContext.setTransform(1, 0, 0, 1, 0, 0);
+    targetContext.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+    if (!target) return;
+    const scale = applyWorldTransform(targetContext);
+    targetContext.strokeStyle = resolveColor('var(--target)');
+    targetContext.lineWidth = (TARGET_WIDTH_PX * pixelRatio) / scale;
+    targetContext.lineJoin = 'round';
+    targetContext.stroke(target.path);
+    if (target.ring) {
+      targetContext.beginPath();
+      targetContext.arc(target.ring[0], target.ring[1], (TARGET_RING_RADIUS_PX * pixelRatio) / scale, 0, 2 * Math.PI);
+      targetContext.stroke();
+    }
+  }
+
+  function scheduleDraw() {
+    if (drawScheduled) return;
+    drawScheduled = true;
+    requestAnimationFrame(() => {
+      drawScheduled = false;
+      drawCount += 1;
+      drawCountries();
+      drawTarget();
+    });
   }
 
   const zoomBehavior = zoom()
     .scaleExtent([1, MAX_ZOOM])
-    .translateExtent([[-WIDTH / 2, -HEIGHT], [WIDTH * 1.5, HEIGHT * 2]])
-    .on('zoom', ({ transform }) => {
-      scale = transform.k;
-      root.setAttribute('transform', transform.toString());
-      updateMarkerSizes();
+    .on('zoom', (event) => {
+      transform = event.transform;
+      scheduleDraw();
     });
-  const svgSelection = select(svg).call(zoomBehavior).on('dblclick.zoom', null);
-  window.addEventListener('resize', updateMarkerSizes);
-  updateMarkerSizes();
+  const canvasSelection = select(canvas).call(zoomBehavior).on('dblclick.zoom', null);
 
-  function zoomToCountry(entry) {
-    const [[x0, y0], [x1, y1]] = path.bounds(entry.focus);
-    const fit = TARGET_VIEW_SHARE * Math.min(WIDTH / Math.max(x1 - x0, 0.01), HEIGHT / Math.max(y1 - y0, 0.01));
+  function resize() {
+    cssWidth = canvas.clientWidth || 1;
+    cssHeight = canvas.clientHeight || 1;
+    pixelRatio = window.devicePixelRatio || 1;
+    for (const element of [canvas, targetCanvas]) {
+      element.width = Math.round(cssWidth * pixelRatio);
+      element.height = Math.round(cssHeight * pixelRatio);
+    }
+    zoomBehavior.translateExtent([[-cssWidth, -cssHeight], [cssWidth * 2, cssHeight * 2]]);
+    scheduleDraw();
+  }
+  new ResizeObserver(resize).observe(canvas);
+  resize();
+
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    resolvedColors = new Map();
+    scheduleDraw();
+  });
+
+  function zoomToBounds([[x0, y0], [x1, y1]], animate) {
+    const base = baseView();
+    const width = Math.max((x1 - x0) * base.scale, 0.01);
+    const height = Math.max((y1 - y0) * base.scale, 0.01);
+    const fit = TARGET_VIEW_SHARE * Math.min(cssWidth / width, cssHeight / height);
     const k = Math.max(1, Math.min(MAX_AUTO_ZOOM, fit));
-    const transform = zoomIdentity
-      .translate(WIDTH / 2, HEIGHT / 2)
+    const next = zoomIdentity
+      .translate(cssWidth / 2, cssHeight / 2)
       .scale(k)
-      .translate(-(x0 + x1) / 2, -(y0 + y1) / 2);
+      .translate(-(base.x + ((x0 + x1) / 2) * base.scale), -(base.y + ((y0 + y1) / 2) * base.scale));
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    svgSelection.interrupt();
-    if (reducedMotion) svgSelection.call(zoomBehavior.transform, transform);
-    else svgSelection.transition().duration(ZOOM_DURATION_MS).call(zoomBehavior.transform, transform);
+    canvasSelection.interrupt();
+    if (animate && !reducedMotion) canvasSelection.transition().duration(ZOOM_DURATION_MS).call(zoomBehavior.transform, next);
+    else canvasSelection.call(zoomBehavior.transform, next);
   }
 
   function setColor(code, color) {
-    const entry = countries.get(code);
-    if (!entry) return;
-    entry.element.style.fill = color;
-    if (entry.marker) entry.marker.style.fill = color;
+    const shape = shapeByCode.get(code);
+    if (shape) {
+      shape.color = color;
+      scheduleDraw();
+    }
   }
 
   function highlight(code) {
-    const entry = countries.get(code);
-    targetLayer.replaceChildren();
-    targetRing = null;
-    targetLayer.append(createSvgElement('path', { class: 'target-outline', d: entry.element.getAttribute('d') }));
-    if (entry.marker) {
-      targetRing = createSvgElement('circle', {
-        class: 'target-ring',
-        cx: entry.marker.getAttribute('cx'),
-        cy: entry.marker.getAttribute('cy'),
-      });
-      targetLayer.append(targetRing);
-    }
-    updateMarkerSizes();
-    zoomToCountry(entry);
+    const shape = shapeByCode.get(code);
+    const focus = largestPolygon(shape.feature);
+    const isSmall = geoArea(shape.feature) * EARTH_RADIUS_KM ** 2 < TARGET_RING_MAX_AREA_KM2;
+    target = { code, path: shape.path, ring: isSmall ? projection(geoCentroid(focus)) : null };
+    zoomToBounds(path.bounds(focus), true);
+    scheduleDraw();
   }
 
   function hideTooltip() {
     tooltip.hidden = true;
   }
 
+  function codeAt(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const base = baseView();
+    const x = (transform.invertX(clientX - rect.left) - base.x) / base.scale;
+    const y = (transform.invertY(clientY - rect.top) - base.y) / base.scale;
+    for (let i = shapes.length - 1; i >= 0; i--) {
+      const { code, bounds: [[x0, y0], [x1, y1]], path: shapePath } = shapes[i];
+      if (x < x0 || x > x1 || y < y0 || y > y1) continue;
+      if (shapeByCode.has(code) && hitContext.isPointInPath(shapePath, x, y)) return code;
+    }
+    return null;
+  }
+
   function showTooltip(event) {
-    const code = event.target.dataset?.code;
+    const code = codeAt(event.clientX, event.clientY);
     const text = code ? getTooltipText(code) : null;
     if (!text) {
       hideTooltip();
@@ -142,18 +212,39 @@ export function createMap(svg, tooltip, world, getTooltipText) {
     }
     tooltip.textContent = text;
     tooltip.hidden = false;
-    const bounds = svg.getBoundingClientRect();
-    const x = event.clientX - bounds.left + 12;
-    const y = event.clientY - bounds.top + 12;
-    tooltip.style.left = `${Math.min(x, bounds.width - tooltip.offsetWidth - 4)}px`;
-    tooltip.style.top = `${Math.min(y, bounds.height - tooltip.offsetHeight - 4)}px`;
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left + 12;
+    const y = event.clientY - rect.top + 12;
+    tooltip.style.left = `${Math.min(x, rect.width - tooltip.offsetWidth - 4)}px`;
+    tooltip.style.top = `${Math.min(y, rect.height - tooltip.offsetHeight - 4)}px`;
   }
 
-  svg.addEventListener('pointermove', (event) => {
+  canvas.addEventListener('pointermove', (event) => {
     if (event.pointerType === 'mouse') showTooltip(event);
   });
-  svg.addEventListener('click', showTooltip);
-  svg.addEventListener('pointerleave', hideTooltip);
+  canvas.addEventListener('click', showTooltip);
+  canvas.addEventListener('pointerleave', hideTooltip);
+
+  // A canvas has no elements to inspect, so the browser tests go through this.
+  canvas.mapTestApi = {
+    targetCode: () => target?.code,
+    hasTargetRing: () => Boolean(target?.ring),
+    hasShape: (code) => shapeByCode.has(code),
+    colorOf: (code) => resolveColor(shapeByCode.get(code).color),
+    shapeCount: () => shapes.length,
+    drawCount: () => drawCount,
+    transform: () => transform.toString(),
+    zoomTo: (code) => zoomToBounds(path.bounds(largestPolygon(shapeByCode.get(code).feature)), false),
+    pointOf: (code) => {
+      const [wx, wy] = projection(geoCentroid(largestPolygon(shapeByCode.get(code).feature)));
+      const base = baseView();
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: rect.left + transform.applyX(base.x + wx * base.scale),
+        y: rect.top + transform.applyY(base.y + wy * base.scale),
+      };
+    },
+  };
 
   return { setColor, highlight, hideTooltip };
 }

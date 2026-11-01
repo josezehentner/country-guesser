@@ -178,7 +178,7 @@ async function start() {
     const response = await fetch('data/world.json');
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const world = await response.json();
-    map = createMap(byId('map'), byId('tooltip'), world, tooltipText);
+    map = createMap(byId('map'), byId('map-target'), byId('tooltip'), world, tooltipText);
   } catch (error) {
     console.error(error);
     byId('loading').textContent = 'Die Karte konnte nicht geladen werden.';

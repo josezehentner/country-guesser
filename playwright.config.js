@@ -10,6 +10,7 @@ export default defineConfig({
     browserName: 'firefox',
     colorScheme: 'light',
     acceptDownloads: true,
+    contextOptions: { reducedMotion: 'reduce' },
   },
   webServer: {
     command: `python3 -m http.server ${PORT} --bind 127.0.0.1`,

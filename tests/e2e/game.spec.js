@@ -8,14 +8,11 @@ const entry = (score) => ({ score, seen: 12, correct: 11, lastSeen: '2026-10-29T
 
 async function open(page) {
   await page.goto('/');
-  await expect(page.locator('.target-outline')).toBeAttached();
+  await expect.poll(() => targetCode(page)).toBeTruthy();
 }
 
 function targetCode(page) {
-  return page.evaluate(() => {
-    const d = document.querySelector('.target-outline').getAttribute('d');
-    return document.querySelector(`path.country[d="${d}"]`).dataset.code;
-  });
+  return page.evaluate(() => document.querySelector('#map').mapTestApi?.targetCode());
 }
 
 async function targetName(page) {
@@ -30,7 +27,7 @@ function stored(page) {
 async function seed(page, countries, settings = {}) {
   await page.evaluate(([key, value]) => localStorage.setItem(key, JSON.stringify(value)), [KEY, { version: 1, countries, settings }]);
   await page.reload();
-  await expect(page.locator('.target-outline')).toBeAttached();
+  await expect.poll(() => targetCode(page)).toBeTruthy();
 }
 
 async function seedAll(page, score) {
@@ -38,8 +35,29 @@ async function seedAll(page, score) {
   await seed(page, Object.fromEntries(codes.map((code) => [code, entry(score)])));
 }
 
+// Reads the color actually drawn in the middle of a country.
 function fill(page, code) {
-  return page.locator(`path[data-code="${code}"]`).evaluate((element) => getComputedStyle(element).fill);
+  return page.evaluate(async (c) => {
+    const canvas = document.querySelector('#map');
+    const api = canvas.mapTestApi;
+    api.zoomTo(c);
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+    const { x, y } = api.pointOf(c);
+    const rect = canvas.getBoundingClientRect();
+    const [r, g, b] = canvas.getContext('2d').getImageData(x - rect.left, y - rect.top, 1, 1).data;
+    return `rgb(${r}, ${g}, ${b})`;
+  }, code);
+}
+
+async function clickCountry(page, code) {
+  const { x, y } = await page.evaluate(async (c) => {
+    const api = document.querySelector('#map').mapTestApi;
+    api.zoomTo(c);
+    await new Promise(requestAnimationFrame);
+    return api.pointOf(c);
+  }, code);
+  await page.mouse.click(x, y);
 }
 
 test('loads without console errors or external requests', async ({ page, baseURL }) => {
@@ -50,7 +68,7 @@ test('loads without console errors or external requests', async ({ page, baseURL
     if (!/^(data|blob):/.test(request.url()) && !request.url().startsWith(baseURL)) problems.push(request.url());
   });
   await open(page);
-  await expect(page.locator('path.country')).toHaveCount(252);
+  expect(await page.evaluate(() => document.querySelector('#map').mapTestApi.shapeCount())).toBe(258);
   await expect(page.locator('#stat-never')).toHaveText('250');
   expect(problems).toEqual([]);
 });
@@ -63,7 +81,7 @@ test('correct answer scores +1, saves, colors the country and Enter moves on', a
   await expect(page.locator('#feedback')).toHaveClass(/good/);
   await expect(page.locator('#feedback')).toContainText('1/10');
   expect((await stored(page)).countries[code]).toMatchObject({ score: 1, seen: 1, correct: 1 });
-  await expect.poll(() => fill(page, code)).toBe(DARK_RED);
+  expect(await page.evaluate((c) => document.querySelector('#map').mapTestApi.colorOf(c), code)).toBe('hsl(0, 70%, 30%)');
   await expect(page.locator('#stat-started')).toHaveText('1');
   await expect(page.locator('#stat-never')).toHaveText('249');
 
@@ -123,6 +141,7 @@ test('colors match the progress table and survive a reload', async ({ page }) =>
   await expect(page.locator('#stat-never')).toHaveText('247');
 
   await page.reload();
+  await expect.poll(() => targetCode(page)).toBeTruthy();
   await expect.poll(() => fill(page, 'DE')).toBe(DARK_GREEN);
   await expect(page.locator('#continent-filter')).toHaveValue('AF');
 });
@@ -174,28 +193,51 @@ test('tooltip hides never-asked countries and the current question', async ({ pa
   await open(page);
   await seed(page, { DE: entry(7) }, { continent: 'AF' });
   const tooltip = page.locator('#tooltip');
-  await page.locator('path[data-code="DE"]').dispatchEvent('click');
+  await clickCountry(page, 'DE');
   await expect(tooltip).toHaveText('Deutschland: 7/10');
-  await page.locator('path[data-code="PT"]').dispatchEvent('click');
+  await clickCountry(page, 'PT');
   await expect(tooltip).toBeHidden();
 
   await seedAll(page, 5);
   const code = await targetCode(page);
-  await page.locator(`path[data-code="${code}"]`).dispatchEvent('click');
+  await clickCountry(page, code);
   await expect(tooltip).toBeHidden();
   await page.click('#dont-know-btn');
-  await page.locator(`path[data-code="${code}"]`).dispatchEvent('click');
+  await clickCountry(page, code);
   await expect(tooltip).toContainText(await page.evaluate(async (c) => (await import('/data/countries.js')).COUNTRY_BY_CODE.get(c).name, code));
 });
 
-test('small countries have markers, and the map zooms and pans', async ({ page }) => {
+test('small countries are plain shapes and only the asked one gets a ring', async ({ page }) => {
   await open(page);
-  for (const code of ['VA', 'MC', 'MT', 'NR', 'GI', 'TK']) await expect(page.locator(`circle.marker[data-code="${code}"]`)).toBeAttached();
-  await expect(page.locator('circle.marker[data-code="DE"]')).toHaveCount(0);
+  const api = (method, ...args) => page.evaluate(([m, a]) => document.querySelector('#map').mapTestApi[m](...a), [method, args]);
+  for (const code of ['VA', 'MC', 'MT', 'NR', 'GI', 'TK']) expect(await api('hasShape', code)).toBe(true);
 
-  const transform = () => page.locator('#map > g').getAttribute('transform');
-  await expect.poll(transform).toMatch(/scale/);
-  await page.waitForTimeout(900);
+  const oceania = await page.evaluate(async () => (await import('/data/countries.js')).COUNTRIES.filter((c) => c.continent === 'OC').map((c) => c.code));
+  await seed(page, Object.fromEntries(oceania.filter((code) => code !== 'NR').map((code) => [code, entry(10)])), { continent: 'OC' });
+  for (let i = 0; i < 100 && (await targetCode(page)) !== 'NR'; i++) {
+    await page.click('#dont-know-btn');
+    await page.keyboard.press('Enter');
+  }
+  expect(await targetCode(page)).toBe('NR');
+  expect(await api('hasTargetRing')).toBe(true);
+});
+
+for (const colorScheme of ['light', 'dark']) {
+  test.describe(`in ${colorScheme} mode`, () => {
+    test.use({ colorScheme });
+
+    test('land is beige, water light blue and borders black', async ({ page }) => {
+      await open(page);
+      await expect.poll(() => fill(page, 'PT')).toBe('rgb(245, 230, 200)');
+      await expect(page.locator('#map-wrap')).toHaveCSS('background-color', 'rgb(173, 216, 230)');
+      expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--country-stroke').trim())).toBe('#000000');
+    });
+  });
+}
+
+test('the map zooms and pans', async ({ page }) => {
+  await open(page);
+  const transform = () => page.evaluate(() => document.querySelector('#map').mapTestApi.transform());
   const initial = await transform();
   await page.mouse.move(600, 300);
   await page.mouse.wheel(0, -300);
@@ -206,6 +248,19 @@ test('small countries have markers, and the map zooms and pans', async ({ page }
   await page.mouse.move(500, 250, { steps: 5 });
   await page.mouse.up();
   await expect.poll(transform).not.toBe(zoomed);
+});
+
+test('the highlight is on its own layer and the map keeps drawing while zooming', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('#map-target')).toHaveCSS('pointer-events', 'none');
+  const draws = () => page.evaluate(() => document.querySelector('#map').mapTestApi.drawCount());
+  await page.waitForTimeout(300);
+  const idle = await draws();
+  await page.waitForTimeout(500);
+  expect(await draws()).toBe(idle);
+  await page.mouse.move(600, 300);
+  await page.mouse.wheel(0, -100);
+  await expect.poll(draws).toBeGreaterThan(idle);
 });
 
 test('game works with a notice when localStorage is blocked', async ({ page }) => {
