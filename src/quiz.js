@@ -1,6 +1,9 @@
 import { COUNTRIES } from '../data/countries.js';
 import { ALIASES } from '../data/aliases.js';
 
+const MAX_SCORE = 10;
+const FIRST_CORRECT_SCORE = 5;
+const FIRST_WRONG_SCORE = 3;
 const MIN_FUZZY_LENGTH = 4;
 const LONG_NAME_LENGTH = 8;
 
@@ -56,6 +59,12 @@ export function isCorrectAnswer(input, code) {
     if (otherCode !== code && names.some((name) => isWithinTolerance(answer, name))) return false;
   }
   return true;
+}
+
+// The first answer sets a starting score; later answers move it by one.
+export function nextScore(entry, correct) {
+  if (!entry) return correct ? FIRST_CORRECT_SCORE : FIRST_WRONG_SCORE;
+  return Math.max(0, Math.min(MAX_SCORE, entry.score + (correct ? 1 : -1)));
 }
 
 // Weaker and never-asked countries come up more often; mastered ones rarely.

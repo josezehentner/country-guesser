@@ -1,7 +1,7 @@
 import { COUNTRIES, COUNTRY_BY_CODE, CONTINENTS } from '../data/countries.js';
 import { scoreColor } from './colors.js';
 import { createMap } from './map.js';
-import { isCorrectAnswer, pickNextCountry } from './quiz.js';
+import { isCorrectAnswer, nextScore, pickNextCountry } from './quiz.js';
 import { emptyProgress, exportProgress, loadProgress, parseImport, saveProgress } from './storage.js';
 
 const MAX_SCORE = 10;
@@ -90,8 +90,9 @@ function nextQuestion() {
 }
 
 function recordAnswer(correct) {
-  const entry = progress.countries[current.code] ?? { score: 0, seen: 0, correct: 0, lastSeen: '' };
-  entry.score = Math.max(0, Math.min(MAX_SCORE, entry.score + (correct ? 1 : -1)));
+  const previous = progress.countries[current.code];
+  const entry = previous ?? { score: 0, seen: 0, correct: 0, lastSeen: '' };
+  entry.score = nextScore(previous, correct);
   entry.seen += 1;
   if (correct) entry.correct += 1;
   entry.lastSeen = new Date().toISOString().replace(/\.\d+Z$/, 'Z');

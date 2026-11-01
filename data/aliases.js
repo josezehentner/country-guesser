@@ -3,7 +3,7 @@
 export const ALIASES = {
   AQ: ['Antarktika', 'Südpol'],
   AX: ['Åland', 'Aland-Inseln'],
-  AE: ['VAE', 'Emirate', 'Arabische Emirate'],
+  AE: ['VAE', 'UAE', 'Emirate', 'Arabische Emirate'],
   AG: ['Antigua', 'Antigua & Barbuda'],
   BA: ['Bosnien', 'Bosnien-Herzegowina', 'Herzegowina'],
   BL: ['Saint-Barthélemy', 'St. Barth'],
