@@ -1,6 +1,7 @@
 import { COUNTRY_BY_CODE, CONTINENTS } from '../data/countries.js';
 
-const STORAGE_KEY = 'countryquiz.v1';
+// Each mode keeps its own progress under its own key.
+export const STORAGE_KEY = 'countryquiz.v1';
 const VERSION = 1;
 
 export function emptyProgress() {
@@ -56,9 +57,9 @@ export function parseImport(text) {
   return allValid ? sanitize(raw) : null;
 }
 
-export function loadProgress() {
+export function loadProgress(key = STORAGE_KEY) {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = localStorage.getItem(key);
     return stored ? sanitize(JSON.parse(stored)) : emptyProgress();
   } catch {
     return emptyProgress();
@@ -66,16 +67,16 @@ export function loadProgress() {
 }
 
 // Returns false if the progress could not be persisted.
-export function saveProgress(progress) {
+export function saveProgress(progress, key = STORAGE_KEY) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    localStorage.setItem(key, JSON.stringify(progress));
     return true;
   } catch {
     return false;
   }
 }
 
-export function exportProgress(progress) {
+export function exportProgress(progress, filePrefix = 'countryquiz-progress') {
   const now = new Date();
   const pad = (n) => String(n).padStart(2, '0');
   const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
@@ -83,7 +84,7 @@ export function exportProgress(progress) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `countryquiz-progress-${date}.json`;
+  link.download = `${filePrefix}-${date}.json`;
   document.body.append(link);
   link.click();
   link.remove();
