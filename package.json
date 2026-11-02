@@ -7,9 +7,14 @@
     "start": "python3 tools/serve.py",
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "node --test \"tests/unit/*.test.js\"",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "build:vendor": "esbuild tools/d3-bundle.js --bundle --format=esm --minify --legal-comments=none --outfile=vendor/d3.bundle.js"
   },
   "devDependencies": {
-    "@playwright/test": "^1.64.1"
+    "@playwright/test": "^1.64.1",
+    "d3-geo": "3.1.1",
+    "d3-selection": "3.0.0",
+    "d3-zoom": "3.0.0",
+    "esbuild": "0.28.2"
   }
 }
