@@ -73,6 +73,22 @@ test('loads without console errors or external requests', async ({ page, baseURL
   expect(problems).toEqual([]);
 });
 
+test('playing a round violates no content security policy rule', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.cspViolations = [];
+    document.addEventListener('securitypolicyviolation', (event) => window.cspViolations.push(event.violatedDirective));
+  });
+  await open(page);
+  await page.fill('#answer-input', await targetName(page));
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#feedback')).toHaveClass(/good/);
+  await page.keyboard.press('Enter');
+  await page.click('#dont-know-btn');
+  await expect(page.locator('#feedback')).toHaveClass(/bad/);
+  expect(page.url()).toMatch(/\/$/);
+  expect(await page.evaluate(() => window.cspViolations)).toEqual([]);
+});
+
 test('first correct answer starts at 5, saves, colors the country and Enter moves on', async ({ page }) => {
   await open(page);
   const code = await targetCode(page);
