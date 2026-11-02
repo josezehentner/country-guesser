@@ -40,7 +40,7 @@ This section describes the "Länder benennen" mode.
 2. The player **types the country's name** into an input field and confirms with Enter.
 3. The game reports **correct** or **wrong**. If wrong, the correct name is shown.
 4. The country's progress is updated and saved, and its color on the map changes immediately.
-5. After a short pause (or via a "Weiter" / next button), the next country appears.
+5. After a short pause the next country appears by itself, so one press of Enter (or "Prüfen", or "Los" on a phone keyboard) is enough per country. The pause is about 1.2 s after a correct answer and 2.5 s after a wrong one, so the right name can be read. Enter, "Weiter" or simply typing the next answer moves on at once.
 
 Additionally, a **"Weiß ich nicht"** ("I don't know") button that counts as wrong and reveals the answer.
 
@@ -139,7 +139,7 @@ Key: `countryquiz.v1`
 - **Settings dialog** behind a ⚙ button in the top bar: the continent filter and the progress actions (export, import, reset). They are rarely needed, so they take no space next to the globe.
 - **Small screens** (narrow, or phones held sideways): one layout for all devices, only CSS adapts it. Everything outside the globe shrinks to one row above (menu link, stats as colored dots, ⚙, a thin progress line) and one below (input, "Prüfen"/"Weiter", "?" for "Weiß ich nicht"). The result appears over the bottom of the globe instead of in its own row.
 - **On-screen keyboard**: the page is sized to the area above the keyboard, so the answer row stays visible and the globe takes the rest.
-- Keyboard control: the input field automatically gets focus for each new country, Enter submits, Enter after the result moves on.
+- Keyboard control: the input field automatically gets focus for each new country and stays editable, so a phone keyboard stays open. Enter submits; the next country follows by itself.
 - Supports light and dark mode (`prefers-color-scheme`).
 
 ---
