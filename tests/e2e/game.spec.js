@@ -241,6 +241,18 @@ test('tooltip hides never-asked countries and the current question', async ({ pa
   await expect(tooltip).toContainText(await page.evaluate(async (c) => (await import('/data/countries.js')).COUNTRY_BY_CODE.get(c).name, code));
 });
 
+// Their centroids lie outside their own shapes.
+test('countries with a curved shape can be clicked', async ({ page }) => {
+  const codes = ['IL', 'SO', 'VN', 'BM', 'CC', 'IO'];
+  await open(page);
+  await seed(page, Object.fromEntries(codes.map((code) => [code, entry(7)])), { continent: 'SA' });
+  for (const code of codes) {
+    await clickCountry(page, code);
+    const name = await page.evaluate(async (c) => (await import('/data/countries.js')).COUNTRY_BY_CODE.get(c).name, code);
+    await expect(page.locator('#tooltip')).toHaveText(`${name}: 7/10`);
+  }
+});
+
 test('small countries are plain shapes and only the asked one gets a ring', async ({ page }) => {
   await open(page);
   const api = (method, ...args) => page.evaluate(([m, a]) => document.querySelector('#map').mapTestApi[m](...a), [method, args]);
@@ -291,8 +303,9 @@ test('the globe turns the asked country to the front and center', async ({ page 
       return { point: api.pointOf(c), facing: api.isFacing(api.view().center), middle: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } };
     }, code);
     expect(facing).toBe(true);
-    expect(Math.abs(point.x - middle.x)).toBeLessThan(2);
-    expect(Math.abs(point.y - middle.y)).toBeLessThan(2);
+    // pointOf may move off the centroid by a few pixels to land safely inside.
+    expect(Math.abs(point.x - middle.x)).toBeLessThan(10);
+    expect(Math.abs(point.y - middle.y)).toBeLessThan(10);
     await page.click('#dont-know-btn');
     await page.keyboard.press('Enter');
   }

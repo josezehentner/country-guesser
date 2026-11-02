@@ -38,6 +38,37 @@ function largestPolygon(shape) {
   return areas.indexOf(Math.max(...areas));
 }
 
+function segmentDistance([px, py], [ax, ay], [bx, by]) {
+  const [dx, dy] = [bx - ax, by - ay];
+  const length2 = dx * dx + dy * dy;
+  const t = length2 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / length2)) : 0;
+  return Math.hypot(px - ax - t * dx, py - ay - t * dy);
+}
+
+// Screen point inside a polygon on the front of the globe for the tests to click
+// on, as far from its border as the candidates allow. The centroid can lie outside,
+// e.g. for crescent shapes like Somalia, or close to the edge of a thin atoll.
+function clickablePoint(projection, polygon, centroid) {
+  const contains = (point) => geoContains({ type: 'Polygon', coordinates: polygon }, projection.invert(point));
+  const ring = polygon[0].map((point) => projection(point));
+  const clearance = (point) => Math.min(...ring.slice(1).map((vertex, i) => segmentDistance(point, ring[i], vertex)));
+  const first = projection(centroid);
+  if (contains(first) && clearance(first) >= 3) return first;
+  let [best, bestClearance] = [first, -1];
+  const count = ring.length - 1;
+  const stride = Math.max(1, Math.floor(count / 200));
+  for (const share of [0.5, 0.33, 0.25]) {
+    for (let i = 0; i < count; i += stride) {
+      const [a, b] = [ring[i], ring[(i + Math.round(count * share)) % count]];
+      const point = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+      if (!contains(point)) continue;
+      const distance = clearance(point);
+      if (distance > bestClearance) [best, bestClearance] = [point, distance];
+    }
+  }
+  return best;
+}
+
 const ease = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
 
 // `getTooltipText(code)` returns the text to show for a country, or null.
@@ -367,7 +398,10 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText) 
     zoomTo: (code) => focusOn(shapeByCode.get(code), MAX_ZOOM, false),
     pointOf: (code) => {
       const shape = shapeByCode.get(code);
-      return clientPoint(shape.caps[largestPolygon(shape)].center);
+      const index = largestPolygon(shape);
+      const [x, y] = clickablePoint(projection, shape.polygons[index], shape.caps[index].center);
+      const rect = canvas.getBoundingClientRect();
+      return { x: rect.left + x, y: rect.top + y };
     },
     pointAt: clientPoint,
     isFacing: (location) => geoDistance(center, location) < Math.PI / 2,
