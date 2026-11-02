@@ -7,7 +7,7 @@ const DARK_GREEN = 'rgb(23, 130, 23)';
 const entry = (score) => ({ score, seen: 12, correct: 11, lastSeen: '2026-10-29T18:00:00Z' });
 
 async function open(page) {
-  await page.goto('/');
+  await page.goto('/name-countries.html');
   await expect.poll(() => targetCode(page)).toBeTruthy();
 }
 
@@ -103,7 +103,7 @@ test('playing a round violates no content security policy rule', async ({ page }
   await page.keyboard.press('Enter');
   await page.click('#dont-know-btn');
   await expect(page.locator('#feedback')).toHaveClass(/bad/);
-  expect(page.url()).toMatch(/\/$/);
+  expect(page.url()).toMatch(/\/name-countries\.html$/);
   expect(await page.evaluate(() => window.cspViolations)).toEqual([]);
 });
 
