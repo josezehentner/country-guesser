@@ -45,7 +45,8 @@ html, body { height: 100%; margin: 0; }
 body {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  /* Set by main.js to the area above an on-screen keyboard */
+  height: var(--visible-height, 100dvh);
   overflow: hidden;
   background: var(--bg);
   color: var(--text);
@@ -76,7 +77,15 @@ h1 { margin: 0; font-size: 1.1rem; }
 
 .stats { display: flex; gap: 16px; margin: 0; font-size: 0.85rem; }
 .stats div { display: flex; gap: 5px; }
-.stats dt { color: var(--muted); }
+.stats dt { display: flex; align-items: center; gap: 5px; color: var(--muted); }
+
+/* Small dots in the colors of the legend, shown instead of the labels when space is short */
+.stat-dot { display: none; width: 10px; height: 10px; border: 1px solid var(--country-stroke); border-radius: 50%; }
+.stat-dot.mastered { background: hsl(120, 70%, var(--score-lightness)); }
+.stat-dot.started { background: hsl(40, 70%, var(--score-lightness)); }
+.stat-dot.never { background: var(--never); }
+
+.icon-button { padding: 4px 10px; font-size: 1.15rem; line-height: 1; }
 .stats dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 .progress {
@@ -210,25 +219,68 @@ button:disabled { opacity: 0.5; cursor: default; }
 
 button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
 
-.feedback { min-height: 1.4em; margin: 8px 0; font-weight: 600; }
+.feedback { min-height: 1.4em; margin: 8px 0 0; font-weight: 600; }
 .feedback.good { color: var(--good); }
 .feedback.bad { color: var(--bad); }
 
-.tools {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
-}
-
-.tools label { display: flex; align-items: center; gap: 6px; margin-right: auto; color: var(--muted); }
-.tools button, .tools select { padding: 4px 8px; }
+.label-short { display: none; }
 
 .notice { margin: 6px 0 0; color: var(--muted); font-size: 0.8rem; }
 
-@media (max-width: 640px) {
-  .stats { gap: 10px; font-size: 0.75rem; }
+/* Settings */
+.settings {
+  width: min(360px, calc(100% - 32px));
+  padding: 16px 18px 18px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.settings::backdrop { background: rgb(0 0 0 / 0.4); }
+.settings h2 { margin: 0 0 14px; font-size: 1.1rem; }
+.setting { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.setting-group { margin: 16px 0 6px; color: var(--muted); font-size: 0.85rem; }
+.setting-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+#settings-close { display: block; width: 100%; margin-top: 18px; }
+
+/* Small screens, and phones held sideways: everything outside the map shrinks to
+   one row above and one below, so the globe keeps room next to the keyboard. */
+@media (max-width: 640px), (max-height: 500px) {
+  .topbar { position: relative; flex-wrap: nowrap; gap: 12px; padding: 6px 10px 8px; }
+  .topbar h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .stats { gap: 12px; margin-right: auto; font-size: 0.85rem; }
+  .stats .label-long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .stat-dot { display: inline-block; }
+  .progress { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 0; }
+
+  .panel { position: relative; padding: 8px 10px; }
+  .answer { flex-wrap: nowrap; gap: 6px; }
+  .answer input { flex: 1 1 auto; }
+  .answer button { flex: none; min-width: 44px; }
+  .answer .label-long { display: none; }
+  .answer .label-short { display: inline; }
+
+  /* The result floats over the bottom of the globe instead of taking a row. */
+  .feedback {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 44px);
+    z-index: 3;
+    width: max-content;
+    max-width: calc(100% - 24px);
+    min-height: 0;
+    margin: 0;
+    padding: 6px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 0.15);
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  .feedback:empty { display: none; }
+
   .legend { font-size: 0.65rem; }
   .swatch { width: 15px; }
 }
