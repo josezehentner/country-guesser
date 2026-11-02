@@ -1,6 +1,10 @@
+import { createHash } from 'node:crypto';
 import { defineConfig } from '@playwright/test';
 
-const PORT = 4173;
+// Each worktree gets its own port, derived from its folder, so test runs in parallel
+// sessions never meet. TEST_PORT overrides it.
+const folderHash = parseInt(createHash('sha1').update(process.cwd()).digest('hex').slice(0, 8), 16);
+const PORT = Number(process.env.TEST_PORT) || 4200 + (folderHash % 800);
 
 export default defineConfig({
   testDir: 'tests/e2e',
@@ -15,7 +19,9 @@ export default defineConfig({
   webServer: {
     command: `python3 -m http.server ${PORT} --bind 127.0.0.1`,
     url: `http://127.0.0.1:${PORT}/`,
-    reuseExistingServer: true,
+    // A server already on this port belongs to something else: fail instead of
+    // silently testing its code.
+    reuseExistingServer: false,
     stderr: 'ignore',
   },
 });
