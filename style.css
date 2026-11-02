@@ -207,6 +207,8 @@ h1 { margin: 0; font-size: 1.1rem; }
 
 /* The name to find, in the place of the answer input */
 .answer .prompt { flex: 1 1 200px; min-width: 0; align-self: center; margin: 0; overflow-wrap: anywhere; }
+/* Only holds the focus between answers, it is not a control. */
+.answer .prompt:focus { outline: none; }
 
 button, select {
   padding: 8px 12px;

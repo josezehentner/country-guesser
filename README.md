@@ -53,7 +53,8 @@ Additionally, a **"Weiß ich nicht"** ("I don't know") button that counts as wro
 3. A click on the named country is **correct**; the country is marked where it is, without moving the view. Small countries (those that get a ring) also count when the click lands within the ring's radius of them, because they are hard to hit.
 4. A click on a **different** country is wrong: the game names the clicked country, marks the right one and turns it to the front.
 5. A click on the ocean or on land that is not quizzed is no answer; a hint says so.
-6. "Weiß ich nicht" counts as wrong and shows the country. "Weiter" (or Enter) moves on.
+6. After a correct answer the next country follows on its own after a short pause (about a second); "Weiter" or Enter skips the pause. After a wrong answer the game waits for "Weiter" (or Enter), so the player can see where the country is.
+7. "Weiß ich nicht" counts as wrong and shows the country.
 
 While a question is open the tooltip names no country at all, because it would give the answer away. Country choice, scoring, colors, stats, legend and settings work as in "Länder benennen".
 

@@ -72,7 +72,7 @@ test('loads without console errors and names a country without marking it', asyn
   expect(problems).toEqual([]);
 });
 
-test('clicking the named country is correct, saves its own progress and Enter moves on', async ({ page }) => {
+test('clicking the named country is correct, saves its own progress and the next country follows on its own', async ({ page }) => {
   await open(page);
   const code = await askedCode(page);
   await clickCountry(page, code);
@@ -84,10 +84,39 @@ test('clicking the named country is correct, saves its own progress and Enter mo
   expect(await mapApi(page, 'targetCode')).toBe(code);
   await expect(page.locator('#stat-started')).toHaveText('1');
 
+
+  await expect.poll(() => askedCode(page), { timeout: 5000 }).not.toBe(code);
+  await expect(page.locator('#feedback')).toHaveText('');
+  expect(await mapApi(page, 'targetCode')).toBeUndefined();
+  // An Enter that came too late to skip the pause must not answer the new question.
+  await expect(page.locator('#prompt')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#feedback')).toHaveText('');
+  expect(Object.keys((await stored(page)).countries)).toEqual([code]);
+});
+
+test('"Weiter" skips the pause after a correct answer, and only one country follows', async ({ page }) => {
+  await open(page);
+  const code = await askedCode(page);
+  await clickCountry(page, code);
+  await expect(page.locator('#feedback')).toHaveClass(/good/);
+  await page.click('#next-btn');
+  const next = await askedCode(page);
+  expect(next).not.toBe(code);
+  await page.waitForTimeout(1500);
+  expect(await askedCode(page)).toBe(next);
+});
+
+test('after a wrong answer the game waits for "Weiter" or Enter', async ({ page }) => {
+  await open(page);
+  const code = await askedCode(page);
+  await clickCountry(page, await otherCode(page));
+  await expect(page.locator('#feedback')).toHaveClass(/bad/);
+  await page.waitForTimeout(1500);
+  expect(await askedCode(page)).toBe(code);
   await expect(page.locator('#next-btn')).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.locator('#feedback')).toHaveText('');
-  expect(await mapApi(page, 'targetCode')).toBeUndefined();
   expect(await askedCode(page)).not.toBe(code);
 });
 
