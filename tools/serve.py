@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Local development server that stops browsers from caching files."""
+import os
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-PORT = 8000
+# Set PORT to run several servers at once, e.g. one per worktree: PORT=8001 npm start
+PORT = int(os.environ.get("PORT", "8000"))
 ROOT = Path(__file__).resolve().parent.parent
 
 
