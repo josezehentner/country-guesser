@@ -136,6 +136,9 @@ Key: `countryquiz.v1`
 - **Stats bar**: number of mastered countries (score 10), started countries (1–9), never-asked countries; overall progress bar.
 - **Tooltip**: on hover/tap of a country that has already been asked, show its name and score. For never-asked countries, do not reveal the name.
 - **Optional continent filter** (Europe, Asia, Africa, North America, South America, Oceania, Antarctica) that only quizzes countries from that continent. Saved in `settings`.
+- **Settings dialog** behind a ⚙ button in the top bar: the continent filter and the progress actions (export, import, reset). They are rarely needed, so they take no space next to the globe.
+- **Small screens** (narrow, or phones held sideways): one layout for all devices, only CSS adapts it. Everything outside the globe shrinks to one row above (menu link, stats as colored dots, ⚙, a thin progress line) and one below (input, "Prüfen"/"Weiter", "?" for "Weiß ich nicht"). The result appears over the bottom of the globe instead of in its own row.
+- **On-screen keyboard**: the page is sized to the area above the keyboard, so the answer row stays visible and the globe takes the rest.
 - Keyboard control: the input field automatically gets focus for each new country, Enter submits, Enter after the result moves on.
 - Supports light and dark mode (`prefers-color-scheme`).
 
@@ -201,5 +204,5 @@ Local testing: because of ES modules, serve via a local web server, e.g. `python
 - [ ] Export produces a JSON file, import restores the same state, invalid files are rejected.
 - [ ] Small countries are plain shapes, get a ring only while asked, and the globe turns to the asked country.
 - [ ] The globe turns and zooms smoothly, and borders stay sharp at every zoom level.
-- [ ] Usable on mobile (touch zoom, input, no horizontal scrollbar).
+- [ ] Usable on mobile (touch zoom, input, no horizontal scrollbar), with most of the screen left for the globe even while the keyboard is open.
 - [ ] Game works even when localStorage is unavailable (with a notice).

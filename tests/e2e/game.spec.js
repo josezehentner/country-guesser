@@ -68,6 +68,18 @@ function pixelAt(page, location) {
 
 const view = (page) => page.evaluate(() => document.querySelector('#map').mapTestApi.view());
 
+// The continent filter and the progress actions live in the settings dialog.
+async function openSettings(page) {
+  await page.click('#settings-btn');
+  await expect(page.locator('#settings')).toBeVisible();
+}
+
+async function chooseContinent(page, continent) {
+  await openSettings(page);
+  await page.selectOption('#continent-filter', continent);
+  await page.click('#settings-close');
+}
+
 async function clickCountry(page, code) {
   const { x, y } = await page.evaluate(async (c) => {
     const api = document.querySelector('#map').mapTestApi;
@@ -182,7 +194,7 @@ test('colors match the progress table and survive a reload', async ({ page }) =>
 
 test('continent filter only asks countries from that continent', async ({ page }) => {
   await open(page);
-  await page.selectOption('#continent-filter', 'SA');
+  await chooseContinent(page, 'SA');
   const southAmerica = ['AR', 'BO', 'BR', 'CL', 'CO', 'EC', 'GY', 'PE', 'PY', 'SR', 'UY', 'VE', 'FK', 'GF'];
   for (let i = 0; i < 15; i++) {
     expect(southAmerica).toContain(await targetCode(page));
@@ -197,6 +209,7 @@ test('export and import round-trip, invalid files rejected, reset clears', async
   await seed(page, { DE: entry(10), FR: entry(3) });
   const before = (await stored(page)).countries;
 
+  await openSettings(page);
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#export-btn')]);
   expect(download.suggestedFilename()).toMatch(/^countryquiz-progress-\d{4}-\d{2}-\d{2}\.json$/);
   const exportPath = testInfo.outputPath('export.json');
@@ -207,6 +220,7 @@ test('export and import round-trip, invalid files rejected, reset clears', async
   await expect(page.locator('#feedback')).toContainText('ungültig');
   expect((await stored(page)).countries).toEqual(before);
 
+  await openSettings(page);
   page.once('dialog', (dialog) => dialog.accept());
   await page.click('#reset-btn');
   await expect(page.locator('#stat-never')).toHaveText('250');
@@ -283,7 +297,7 @@ for (const colorScheme of ['light', 'dark']) {
 
 test('jumping to a new country zooms in only moderately', async ({ page }) => {
   await open(page);
-  await page.selectOption('#continent-filter', 'OC');
+  await chooseContinent(page, 'OC');
   for (let i = 0; i < 10; i++) {
     expect((await view(page)).k).toBeLessThanOrEqual(3);
     await page.click('#dont-know-btn');
@@ -293,7 +307,7 @@ test('jumping to a new country zooms in only moderately', async ({ page }) => {
 
 test('the globe turns the asked country to the front and center', async ({ page }) => {
   await open(page);
-  await page.selectOption('#continent-filter', 'SA');
+  await chooseContinent(page, 'SA');
   for (let i = 0; i < 5; i++) {
     const code = await targetCode(page);
     const { point, facing, middle } = await page.evaluate((c) => {
@@ -454,4 +468,61 @@ test.describe('on a phone', () => {
     await page.tap('#dont-know-btn');
     await expect(page.locator('#feedback')).toHaveClass(/bad/);
   });
+
+  test('keeps everything but the globe to one row above and one below', async ({ page }) => {
+    await open(page);
+    const box = (selector) => page.locator(selector).boundingBox();
+    expect((await box('.topbar')).height).toBeLessThan(50);
+    expect((await box('.panel')).height).toBeLessThan(65);
+    const [input, submit, dontKnow] = await Promise.all(['#answer-input', '#submit-btn', '#dont-know-btn'].map(box));
+    expect(Math.abs(submit.y - input.y)).toBeLessThan(5);
+    expect(Math.abs(dontKnow.y - input.y)).toBeLessThan(5);
+    expect(dontKnow.width).toBeGreaterThanOrEqual(44);
+    await expect(page.locator('#dont-know-btn')).toHaveAccessibleName('Weiß ich nicht');
+    await expect(page.locator('.stats')).toContainText('Gemeistert');
+    expect((await box('#map-wrap')).height).toBeGreaterThan(500);
+  });
+
+  test('shows the result over the globe instead of in its own row', async ({ page }) => {
+    await open(page);
+    const panelHeight = (await page.locator('.panel').boundingBox()).height;
+    await page.tap('#dont-know-btn');
+    const [feedback, map] = await Promise.all(['#feedback', '#map-wrap'].map((s) => page.locator(s).boundingBox()));
+    expect(feedback.y + feedback.height).toBeLessThanOrEqual(map.y + map.height);
+    expect((await page.locator('.panel').boundingBox()).height).toBe(panelHeight);
+  });
+
+  // An open on-screen keyboard leaves less room: the page fits the visible area,
+  // which the test simulates by shrinking the viewport.
+  test('keeps the answer row and a large globe above the keyboard', async ({ page }) => {
+    await open(page);
+    await page.setViewportSize({ width: 375, height: 400 });
+    await expect.poll(() => page.evaluate(() => document.body.getBoundingClientRect().height)).toBe(400);
+    const panel = await page.locator('.panel').boundingBox();
+    expect(panel.y + panel.height).toBeLessThanOrEqual(400);
+    expect((await page.locator('#map-wrap').boundingBox()).height).toBeGreaterThan(250);
+  });
+});
+
+test('settings hold the continent filter and progress actions', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('#continent-filter')).toBeHidden();
+  await openSettings(page);
+  await expect(page.locator('#continent-filter')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#settings')).toBeHidden();
+  await expect(page.locator('#answer-input')).toBeFocused();
+
+  await openSettings(page);
+  page.once('dialog', (dialog) => dialog.dismiss());
+  await page.click('#reset-btn');
+  // Closed first, so the confirmation and messages are not hidden behind it.
+  await expect(page.locator('#settings')).toBeHidden();
+});
+
+test('on a wide screen the buttons keep their full labels', async ({ page }) => {
+  await open(page);
+  expect(await page.locator('#dont-know-btn').innerText()).toBe('Weiß ich nicht');
+  await expect(page.locator('.stats')).toContainText('Gemeistert');
+  await expect(page.locator('h1')).toBeVisible();
 });

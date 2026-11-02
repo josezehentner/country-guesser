@@ -135,6 +135,13 @@ function setupControls() {
     if (!answered) finishQuestion(false, 'Schade.');
   });
 
+  const settings = byId('settings');
+  byId('settings-btn').addEventListener('click', () => settings.showModal());
+  byId('settings-close').addEventListener('click', () => settings.close());
+  settings.addEventListener('close', () => input.focus({ preventScroll: true }));
+  // Messages and confirmations of these actions would be hidden behind the dialog.
+  for (const id of ['export-btn', 'import-btn', 'reset-btn']) byId(id).addEventListener('click', () => settings.close());
+
   for (const [code, name] of Object.entries(CONTINENTS)) {
     continentFilter.add(new Option(name, code));
   }
@@ -174,6 +181,22 @@ function replaceProgress(next) {
   nextQuestion();
 }
 
+// An on-screen keyboard covers the bottom of the page, and some browsers do not
+// shrink the page for it. Sizing the page to the visible area keeps the answer row
+// above the keyboard and gives the globe the rest. Without a keyboard nothing changes.
+function fitToVisibleArea() {
+  const viewport = window.visualViewport;
+  if (!viewport) return;
+  const update = () => {
+    // Pinch-zooming the page also shrinks the visible area: keep the layout then.
+    if (Math.abs(viewport.scale - 1) > 0.01) return;
+    document.documentElement.style.setProperty('--visible-height', `${viewport.height}px`);
+    window.scrollTo(0, 0);
+  };
+  viewport.addEventListener('resize', update);
+  update();
+}
+
 async function start() {
   try {
     const response = await fetch('data/world.json');
@@ -195,4 +218,5 @@ async function start() {
   nextQuestion();
 }
 
+fitToVisibleArea();
 start();
