@@ -6,9 +6,7 @@ import { emptyProgress, exportProgress, loadProgress, parseImport, saveProgress 
 
 const MAX_SCORE = 10;
 // After an answer the next country follows by itself, so one key press is enough.
-// Wrong answers stay longer, so the right name can be read.
-const NEXT_DELAY_CORRECT_MS = 800;
-const NEXT_DELAY_WRONG_MS = 1800;
+const NEXT_DELAY_MS = 400;
 
 const byId = (id) => document.getElementById(id);
 const form = byId('answer-form');
@@ -118,7 +116,7 @@ function finishQuestion(correct, wrongPrefix) {
   if (correct) setFeedback(`Richtig: ${current.name} (${score}/${MAX_SCORE})`, 'good');
   else setFeedback(`${wrongPrefix} Das ist ${current.name} (${score}/${MAX_SCORE})`, 'bad');
   input.focus({ preventScroll: true });
-  nextTimer = setTimeout(nextQuestion, correct ? NEXT_DELAY_CORRECT_MS : NEXT_DELAY_WRONG_MS);
+  nextTimer = setTimeout(nextQuestion, NEXT_DELAY_MS);
 }
 
 function tooltipText(code) {
