@@ -340,6 +340,67 @@ test('dragging past a pole stops at the pole', async ({ page }) => {
   expect((await view(page)).center[1]).toBe(90);
 });
 
+// The other tests run with reduced motion, which turns momentum off.
+test.describe('with motion', () => {
+  test.use({ reducedMotion: 'no-preference' });
+
+  async function flick(page, { pauseBeforeRelease = 0 } = {}) {
+    await page.waitForTimeout(900);
+    await page.evaluate(() => document.querySelector('#map').mapTestApi.lookAt([0, 0], 1));
+    await page.mouse.move(500, 300);
+    await page.mouse.down();
+    for (let x = 520; x <= 640; x += 20) {
+      await page.mouse.move(x, 300);
+      await page.waitForTimeout(8);
+    }
+    await page.waitForTimeout(pauseBeforeRelease);
+    await page.mouse.up();
+    return (await view(page)).center[0];
+  }
+
+  test('a quick drag gives the globe momentum that dies down', async ({ page }) => {
+    await open(page);
+    const released = await flick(page);
+    await page.waitForTimeout(150);
+    const coasting = (await view(page)).center[0];
+    // Dragging to the right turns the globe westward and keeps doing so.
+    expect(coasting).toBeLessThan(released - 1);
+    await page.waitForTimeout(2500);
+    const settled = (await view(page)).center[0];
+    await page.waitForTimeout(300);
+    expect((await view(page)).center[0]).toBe(settled);
+  });
+
+  test('a drag that stops before letting go has no momentum', async ({ page }) => {
+    await open(page);
+    const released = await flick(page, { pauseBeforeRelease: 300 });
+    await page.waitForTimeout(200);
+    expect((await view(page)).center[0]).toBe(released);
+  });
+
+  test('touching the globe again stops the momentum', async ({ page }) => {
+    await open(page);
+    await flick(page);
+    await page.mouse.down();
+    const held = (await view(page)).center[0];
+    await page.waitForTimeout(200);
+    expect((await view(page)).center[0]).toBe(held);
+    await page.mouse.up();
+  });
+});
+
+test('with reduced motion the globe stops when let go', async ({ page }) => {
+  await open(page);
+  await page.evaluate(() => document.querySelector('#map').mapTestApi.lookAt([0, 0], 1));
+  await page.mouse.move(500, 300);
+  await page.mouse.down();
+  await page.mouse.move(640, 300, { steps: 7 });
+  await page.mouse.up();
+  const released = (await view(page)).center[0];
+  await page.waitForTimeout(200);
+  expect((await view(page)).center[0]).toBe(released);
+});
+
 test('the back of the globe is not drawn and drawing stays fast', async ({ page }) => {
   await open(page);
   const times = await page.evaluate(async () => {

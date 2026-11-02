@@ -18,6 +18,13 @@ const MAX_AUTO_ZOOM = 3;
 const TARGET_VIEW_SHARE = 0.2;
 const ZOOM_DURATION_MS = 750;
 const START_CENTER = [10, 30];
+// After a quick drag the globe keeps turning and slows down with this time constant.
+// Only movement in the last INERTIA_WINDOW_MS before letting go counts.
+const INERTIA_TIME_MS = 325;
+const INERTIA_WINDOW_MS = 100;
+const INERTIA_MIN_SPEED = 0.15;
+const INERTIA_MAX_SPEED = 4;
+const INERTIA_STOP_SPEED = 0.01;
 // Below zoom LOD_MAX_ZOOM, borders are drawn from simplified copies that stay within
 // LOD_ERROR_PX CSS pixels of the full data, less than the border line is wide, so
 // zooming never shows less detail. There is one copy per half doubling of the zoom.
@@ -225,23 +232,61 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText) 
   // a gesture moved: the globe turns so the point under the screen center follows.
   let gesture = zoomIdentity;
   let syncing = false;
+  // Recent drag steps as { time, dx, dy } in CSS pixels, for the speed when letting go.
+  let dragSteps = [];
   const zoomBehavior = zoom()
     .scaleExtent([1, MAX_ZOOM])
     .on('start', (event) => {
-      if (event.sourceEvent) stopAnimation();
+      if (!event.sourceEvent) return;
+      stopAnimation();
+      dragSteps = [];
     })
     .on('zoom', (event) => {
       const previous = gesture;
       gesture = event.transform;
       if (syncing) return;
-      const middle = [cssWidth / 2, cssHeight / 2];
-      const [x, y] = gesture.apply(previous.invert(middle));
+      const [x, y] = gesture.apply(previous.invert([cssWidth / 2, cssHeight / 2]));
+      const [dx, dy] = [x - cssWidth / 2, y - cssHeight / 2];
+      if (gesture.k !== k) dragSteps = null;
+      else if (dragSteps && event.sourceEvent) dragSteps.push({ time: performance.now(), dx, dy });
       k = gesture.k;
-      const scale = radius * k;
-      const cosLat = Math.max(0.2, Math.cos(center[1] / DEGREES));
-      setCenter([center[0] + ((middle[0] - x) / scale / cosLat) * DEGREES, center[1] - ((middle[1] - y) / scale) * DEGREES]);
+      turnBy(dx, dy);
+    })
+    .on('end', (event) => {
+      if (event.sourceEvent && dragSteps) keepTurning(dragSteps);
+      dragSteps = [];
     });
   const canvasSelection = select(canvas).call(zoomBehavior).on('dblclick.zoom', null);
+
+  // Turns the globe as if its surface moved by dx, dy CSS pixels at the screen center.
+  function turnBy(dx, dy) {
+    const scale = radius * k;
+    const cosLat = Math.max(0.2, Math.cos(center[1] / DEGREES));
+    setCenter([center[0] - (dx / scale / cosLat) * DEGREES, center[1] + (dy / scale) * DEGREES]);
+  }
+
+  // Momentum: after a quick drag the globe turns on and slows down. A drag that
+  // stopped before letting go, or that also zoomed, has none.
+  function keepTurning(steps) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const now = performance.now();
+    const recent = steps.filter((step) => now - step.time < INERTIA_WINDOW_MS);
+    if (recent.length < 2) return;
+    const elapsed = Math.max(now - recent[0].time, 1000 / 60);
+    let velocity = [recent.slice(1).reduce((sum, step) => sum + step.dx, 0) / elapsed, recent.slice(1).reduce((sum, step) => sum + step.dy, 0) / elapsed];
+    const speed = Math.hypot(...velocity);
+    if (speed < INERTIA_MIN_SPEED) return;
+    if (speed > INERTIA_MAX_SPEED) velocity = velocity.map((v) => (v * INERTIA_MAX_SPEED) / speed);
+    let last = now;
+    const step = (time) => {
+      const elapsedFrame = Math.max(0, time - last);
+      last = time;
+      turnBy(velocity[0] * elapsedFrame, velocity[1] * elapsedFrame);
+      velocity = velocity.map((v) => v * Math.exp(-elapsedFrame / INERTIA_TIME_MS));
+      animation = Math.hypot(...velocity) > INERTIA_STOP_SPEED ? requestAnimationFrame(step) : null;
+    };
+    animation = requestAnimationFrame(step);
+  }
 
   function setCenter([lon, lat]) {
     center = [((((lon + 180) % 360) + 360) % 360) - 180, Math.max(-90, Math.min(90, lat))];
