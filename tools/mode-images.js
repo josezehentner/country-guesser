@@ -16,7 +16,8 @@ function round(path) {
   return path.replace(/\d+\.\d+/g, (n) => Number(n).toFixed(1));
 }
 
-function globe({ center, highlight }) {
+// `highlight` outlines a country, `pin` puts a map pin on a point.
+function globe({ center, highlight, pin }) {
   const projection = geoOrthographic()
     .clipAngle(90)
     .precision(0)
@@ -34,16 +35,21 @@ function globe({ center, highlight }) {
     return { type: 'MultiPolygon', coordinates: visible.map((polygon) => simplifyPolygon(polygon, tolerance)) };
   };
   const countries = world.features.map((feature) => path(simplified(feature))).filter(Boolean).map(round);
-  const target = round(path(simplified(world.features.find((feature) => feature.properties.id === highlight))));
+  const target = highlight && round(path(simplified(world.features.find((feature) => feature.properties.id === highlight))));
+  const [pinX, pinY] = pin ? projection(pin).map((n) => Number(n.toFixed(1))) : [];
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${WIDTH} ${HEIGHT}">`,
     `<rect width="${WIDTH}" height="${HEIGHT}" fill="${COLORS.space}"/>`,
     `<path d="${round(path({ type: 'Sphere' }))}" fill="${COLORS.ocean}" stroke="${COLORS.border}" stroke-width="0.6"/>`,
     `<path d="${countries.join('')}" fill="${COLORS.land}" stroke="${COLORS.border}" stroke-width="0.4" stroke-linejoin="round"/>`,
-    `<path d="${target}" fill="none" stroke="${COLORS.target}" stroke-width="2.5" stroke-linejoin="round"/>`,
+    target && `<path d="${target}" fill="none" stroke="${COLORS.target}" stroke-width="2.5" stroke-linejoin="round"/>`,
+    // A drop-shaped pin whose tip touches the point.
+    pin && `<path d="M${pinX} ${pinY}c-4-9-12-15-12-23a12 12 0 0 1 24 0c0 8-8 14-12 23z" fill="${COLORS.target}" stroke="${COLORS.border}" stroke-width="1.2" stroke-linejoin="round"/>`,
+    pin && `<circle cx="${pinX}" cy="${pinY - 23}" r="4.5" fill="#ffffff" stroke="${COLORS.border}" stroke-width="1"/>`,
     '</svg>',
     '',
-  ].join('\n');
+  ].filter((line) => line !== undefined).join('\n');
 }
 
 writeFileSync(new URL('../images/modes/name-countries.svg', import.meta.url), globe({ center: [15, 42], highlight: 'DE' }));
+writeFileSync(new URL('../images/modes/find-countries.svg', import.meta.url), globe({ center: [-55, -12], pin: [-47.9, -15.8] }));

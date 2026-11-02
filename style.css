@@ -205,6 +205,11 @@ h1 { margin: 0; font-size: 1.1rem; }
   font-size: 16px;
 }
 
+/* The name to find, in the place of the answer input */
+.answer .prompt { flex: 1 1 200px; min-width: 0; align-self: center; margin: 0; overflow-wrap: anywhere; }
+/* Only holds the focus between answers, it is not a control. */
+.answer .prompt:focus { outline: none; }
+
 button, select {
   padding: 8px 12px;
   background: var(--bg);
@@ -256,7 +261,7 @@ button.primary { background: var(--accent); color: var(--accent-text); border-co
 
   .panel { position: relative; padding: 8px 10px; }
   .answer { flex-wrap: nowrap; gap: 6px; }
-  .answer input { flex: 1 1 auto; }
+  .answer input, .answer .prompt { flex: 1 1 auto; }
   .answer button { flex: none; min-width: 44px; }
   .answer .label-long { display: none; }
   .answer .label-short { display: inline; }

@@ -24,6 +24,9 @@ The start page is titled **Country Guesser** and is a menu with one **card** per
 | Mode | Page | Description |
 |---|---|---|
 | Länder benennen | `name-countries.html` | Markiertes Land erkennen und benennen. |
+| Länder finden | `find-countries.html` | Genanntes Land auf dem Globus finden. |
+
+Each mode keeps its own progress: recognizing a country and finding it are different skills.
 
 Card pictures are drawn from the real map data by `tools/mode-images.js`.
 
@@ -33,8 +36,7 @@ Behind the menu is a comic-style world map: light blue water with halftone dots 
 
 ## Gameplay
 
-This section describes the "Länder benennen" mode.
-
+This section describes the "Länder benennen" mode. "Länder finden" works the other way round, see [below](#mode-länder-finden).
 
 1. One country on the world map is **highlighted** (clearly marked, e.g. thick outline + pulsing effect).
 2. The player **types the country's name** into an input field and confirms with Enter.
@@ -43,6 +45,18 @@ This section describes the "Länder benennen" mode.
 5. After a correct answer the next country appears by itself after 0.4 s, so one press of Enter (or "Prüfen", or "Los" on a phone keyboard) is enough. After a wrong answer or "Weiß ich nicht" the right name stays until the player moves on with Enter, "Weiter" or simply by typing the next answer.
 
 Additionally, a **"Weiß ich nicht"** ("I don't know") button that counts as wrong and reveals the answer.
+
+### Mode "Länder finden"
+
+1. The game **names** a country ("Wo liegt Frankreich?"). Nothing is marked, and the globe stays where the player left it.
+2. The player turns and zooms the globe and **clicks or taps** the country.
+3. A click on the named country is **correct**; the country is marked where it is, without moving the view. Small countries (those that get a ring) also count when the click lands within the ring's radius of them, because they are hard to hit.
+4. A click on a **different** country is wrong: the game names the clicked country, marks the right one and turns it to the front.
+5. A click on the ocean or on land that is not quizzed is no answer; a hint says so.
+6. After a correct answer the next country follows on its own after a short pause (about a second); "Weiter" or Enter skips the pause. After a wrong answer the game waits for "Weiter" (or Enter), so the player can see where the country is.
+7. "Weiß ich nicht" counts as wrong and shows the country.
+
+While a question is open the tooltip names no country at all, because it would give the answer away. Country choice, scoring, colors, stats, legend and settings work as in "Länder benennen".
 
 ### Choosing the next country
 
@@ -90,7 +104,7 @@ Colors must be clearly visible in both light and dark mode. A small **legend** s
 
 ## Storage (localStorage)
 
-Key: `countryquiz.v1`
+Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder finden", both in the format below.
 
 ```json
 {
@@ -110,7 +124,7 @@ Key: `countryquiz.v1`
 
 ### Export / Import
 
-- **Export**: downloads progress as `countryquiz-progress-YYYY-MM-DD.json`.
+- **Export**: downloads the mode's progress as `countryquiz-progress-YYYY-MM-DD.json` ("Länder finden": `countryquiz-find-progress-YYYY-MM-DD.json`).
 - **Import**: select a file, validate its contents, show a confirmation dialog ("Replace current progress?"), then apply.
 - **Reset**: deletes all progress after confirmation.
 
@@ -150,10 +164,13 @@ Key: `countryquiz.v1`
 /
 ├── index.html          # mode menu
 ├── name-countries.html # "Länder benennen" mode
+├── find-countries.html # "Länder finden" mode
 ├── style.css
 ├── images/modes/       # card pictures
 ├── src/
-│   ├── main.js        # startup, game loop
+│   ├── game.js        # shared by all modes: startup, game loop, stats, settings
+│   ├── name-countries.js # "Länder benennen": type the name
+│   ├── find-countries.js # "Länder finden": click the country
 │   ├── map.js         # globe rendering, turning, zoom, coloring
 │   ├── simplify.js    # border detail per zoom level
 │   ├── storage.js     # load/save/export/import
@@ -198,6 +215,7 @@ Local testing: because of ES modules, serve via a local web server, e.g. `python
 - [ ] Site loads on GitHub Pages without a build step and without console errors.
 - [ ] The start page shows a card per mode with picture, name and short description; cards open their mode, and each mode links back to the menu.
 - [ ] A country is highlighted, input is checked correctly (including umlauts, alternative names, small typos).
+- [ ] "Länder finden" names a country without marking it; clicking it is correct, clicking another country is wrong and shows the right one, the ocean is ignored, and names stay hidden until the answer.
 - [ ] First answer starts at 5 (correct) or 3 (wrong/"I don't know"); later correct = +1, wrong/"I don't know" = −1; bounds 0 and 10 are respected.
 - [ ] Colors match the table above; "never asked" and "score 0" are distinguishable.
 - [ ] Progress persists after reloading and after closing the browser.

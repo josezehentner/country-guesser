@@ -52,6 +52,7 @@ The browser tests start their own server on a port derived from the folder, so t
 ```
 index.html              mode menu with one card per game mode
 name-countries.html     the "Länder benennen" mode
+find-countries.html     the "Länder finden" mode
 style.css               styles for all pages
 images/                 menu background and card pictures, generated with `npm run build:images`
 fonts/                  web fonts with their licenses
@@ -116,7 +117,7 @@ The owner may run several agent sessions at once. Each one works in its own git 
 
 - One session, one worktree, one branch, one pull request. Never switch or change another worktree's branch.
 - Run `npm install` once in a new worktree.
-- Stay within the files the task needs. Shared files such as `style.css`, `src/main.js`, `src/map.js`, `README.md` and `tests/e2e/game.spec.js` cause most conflicts: change them only where the task requires it, and keep those changes small.
+- Stay within the files the task needs. Shared files such as `style.css`, `src/game.js`, `src/map.js`, `README.md` and `tests/e2e/game.spec.js` cause most conflicts: change them only where the task requires it, and keep those changes small.
 - Pull requests merge one after another. Before a merge, bring the branch up to date with `main`, resolve conflicts in this worktree, run the full suite again, and only then ask to merge.
 
 ### Commits

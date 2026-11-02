@@ -79,7 +79,9 @@ function clickablePoint(projection, polygon, centroid) {
 const ease = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
 
 // `getTooltipText(code)` returns the text to show for a country, or null.
-export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText) {
+// `onSelect(event)` is called for a click or tap on the globe and returns true when
+// it used it, so no tooltip shows.
+export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, onSelect = () => false) {
   const projection = geoOrthographic().clipAngle(90).precision(0);
   const context = canvas.getContext('2d', { alpha: true });
   const targetContext = targetCanvas.getContext('2d');
@@ -370,11 +372,18 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText) 
     }
   }
 
-  function highlight(code) {
+  const isSmall = (shape) => geoArea(shape.feature) * EARTH_RADIUS_KM ** 2 < TARGET_RING_MAX_AREA_KM2;
+
+  // Marks a country and, unless `focus` is false, turns it to the front and center.
+  function highlight(code, { focus = true } = {}) {
     const shape = shapeByCode.get(code);
-    const isSmall = geoArea(shape.feature) * EARTH_RADIUS_KM ** 2 < TARGET_RING_MAX_AREA_KM2;
-    target = { code, shape, ring: isSmall ? shape.caps[largestPolygon(shape)].center : null };
-    focusOn(shape, MAX_AUTO_ZOOM, true);
+    target = { code, shape, ring: isSmall(shape) ? shape.caps[largestPolygon(shape)].center : null };
+    if (focus) focusOn(shape, MAX_AUTO_ZOOM, true);
+    scheduleDraw();
+  }
+
+  function clearHighlight() {
+    target = null;
     scheduleDraw();
   }
 
@@ -399,6 +408,30 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText) 
     return null;
   }
 
+  // Distance in CSS pixels from a canvas point to the visible border of a shape.
+  function screenDistance(shape, point) {
+    let best = Infinity;
+    for (const polygon of shape.polygons) {
+      for (const ring of polygon) {
+        for (let i = 1; i < ring.length; i++) {
+          if (geoDistance(center, ring[i - 1]) >= Math.PI / 2 || geoDistance(center, ring[i]) >= Math.PI / 2) continue;
+          best = Math.min(best, segmentDistance(point, projection(ring[i - 1]), projection(ring[i])));
+        }
+      }
+    }
+    return best;
+  }
+
+  // True if a click lands on the country. Small countries are hard to hit, so a
+  // click as close as their ring's radius counts too.
+  function hits(code, clientX, clientY) {
+    if (codeAt(clientX, clientY) === code) return true;
+    const shape = shapeByCode.get(code);
+    if (!isSmall(shape)) return false;
+    const rect = canvas.getBoundingClientRect();
+    return screenDistance(shape, [clientX - rect.left, clientY - rect.top]) <= TARGET_RING_RADIUS_PX;
+  }
+
   function showTooltip(event) {
     const code = codeAt(event.clientX, event.clientY);
     const text = code ? getTooltipText(code) : null;
@@ -418,7 +451,10 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText) 
   canvas.addEventListener('pointermove', (event) => {
     if (event.pointerType === 'mouse') showTooltip(event);
   });
-  canvas.addEventListener('click', showTooltip);
+  canvas.addEventListener('click', (event) => {
+    if (onSelect(event)) hideTooltip();
+    else showTooltip(event);
+  });
   canvas.addEventListener('pointerleave', hideTooltip);
 
   // Screen position of a point on the globe, in client coordinates.
@@ -452,5 +488,5 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText) 
     isFacing: (location) => geoDistance(center, location) < Math.PI / 2,
   };
 
-  return { setColor, highlight, hideTooltip };
+  return { setColor, highlight, clearHighlight, hideTooltip, codeAt, hits };
 }
