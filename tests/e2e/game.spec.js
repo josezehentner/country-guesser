@@ -164,12 +164,16 @@ test('one Enter checks the answer, and the next country follows by itself', asyn
   await expect(page.locator('#answer-input')).toBeFocused();
 });
 
-test('a wrong answer moves on by itself just as fast', async ({ page }) => {
+test('a wrong answer keeps the right name until the player moves on', async ({ page }) => {
   await open(page);
   const code = await targetCode(page);
+  const name = await targetName(page);
   await page.click('#dont-know-btn');
-  await expect(page.locator('#feedback')).toHaveClass(/bad/);
-  await expect.poll(() => targetCode(page), { timeout: 5000 }).not.toBe(code);
+  await page.waitForTimeout(1500);
+  expect(await targetCode(page)).toBe(code);
+  await expect(page.locator('#feedback')).toContainText(name);
+  await page.keyboard.press('Enter');
+  expect(await targetCode(page)).not.toBe(code);
 });
 
 test('Enter or typing during the pause moves on at once', async ({ page }) => {
@@ -523,7 +527,7 @@ test.describe('on a phone', () => {
     await expect(page.locator('#feedback')).toHaveClass(/bad/);
   });
 
-  test('one tap on Prüfen checks the answer and moves on', async ({ page }) => {
+  test('one tap on Prüfen moves on after a right answer, Weiter after a wrong one', async ({ page }) => {
     await open(page);
     const code = await targetCode(page);
     await page.fill('#answer-input', await targetName(page));
@@ -531,6 +535,12 @@ test.describe('on a phone', () => {
     await expect(page.locator('#feedback')).toHaveClass(/good/);
     await expect.poll(() => targetCode(page), { timeout: 5000 }).not.toBe(code);
     await expect(page.locator('#answer-input')).toBeFocused();
+
+    const next = await targetCode(page);
+    await page.tap('#dont-know-btn');
+    await expect(page.locator('#submit-btn')).toHaveText('Weiter');
+    await page.tap('#submit-btn');
+    expect(await targetCode(page)).not.toBe(next);
   });
 
   test('keeps everything but the globe to one row above and one below', async ({ page }) => {

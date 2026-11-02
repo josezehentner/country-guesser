@@ -5,7 +5,9 @@ import { isCorrectAnswer, nextScore, pickNextCountry } from './quiz.js';
 import { emptyProgress, exportProgress, loadProgress, parseImport, saveProgress } from './storage.js';
 
 const MAX_SCORE = 10;
-// After an answer the next country follows by itself, so one key press is enough.
+// After a correct answer the next country follows by itself, so one key press is
+// enough. A wrong answer waits for Enter, "Weiter" or typing, so the right name can
+// be read.
 const NEXT_DELAY_MS = 400;
 
 const byId = (id) => document.getElementById(id);
@@ -116,7 +118,7 @@ function finishQuestion(correct, wrongPrefix) {
   if (correct) setFeedback(`Richtig: ${current.name} (${score}/${MAX_SCORE})`, 'good');
   else setFeedback(`${wrongPrefix} Das ist ${current.name} (${score}/${MAX_SCORE})`, 'bad');
   input.focus({ preventScroll: true });
-  nextTimer = setTimeout(nextQuestion, NEXT_DELAY_MS);
+  if (correct) nextTimer = setTimeout(nextQuestion, NEXT_DELAY_MS);
 }
 
 function tooltipText(code) {
