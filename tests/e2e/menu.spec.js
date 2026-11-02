@@ -33,6 +33,16 @@ test('a card opens its mode, and the mode leads back to the menu', async ({ page
   await expect(page.locator('h1')).toHaveText('Country Guesser');
 });
 
+test('the "Länder finden" card opens its mode', async ({ page }) => {
+  await page.goto('/');
+  const card = page.locator('a.mode-card', { hasText: 'Länder finden' });
+  await expect(card.locator('p')).toHaveText('Genanntes Land auf dem Globus finden.');
+  expect(await card.locator('img').evaluate((image) => image.complete && image.naturalWidth > 0)).toBe(true);
+  await card.click();
+  await expect(page).toHaveURL(/find-countries\.html$/);
+  await expect(page.locator('h1')).toHaveText('Länder finden');
+});
+
 test('cards work with the keyboard', async ({ page }) => {
   await page.goto('/');
   await page.keyboard.press('Tab');
