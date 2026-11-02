@@ -7,8 +7,8 @@ import { emptyProgress, exportProgress, loadProgress, parseImport, saveProgress 
 const MAX_SCORE = 10;
 // After an answer the next country follows by itself, so one key press is enough.
 // Wrong answers stay longer, so the right name can be read.
-const NEXT_DELAY_CORRECT_MS = 1200;
-const NEXT_DELAY_WRONG_MS = 2500;
+const NEXT_DELAY_CORRECT_MS = 800;
+const NEXT_DELAY_WRONG_MS = 1800;
 
 const byId = (id) => document.getElementById(id);
 const form = byId('answer-form');

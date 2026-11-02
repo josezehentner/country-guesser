@@ -40,7 +40,7 @@ This section describes the "Länder benennen" mode.
 2. The player **types the country's name** into an input field and confirms with Enter.
 3. The game reports **correct** or **wrong**. If wrong, the correct name is shown.
 4. The country's progress is updated and saved, and its color on the map changes immediately.
-5. After a short pause the next country appears by itself, so one press of Enter (or "Prüfen", or "Los" on a phone keyboard) is enough per country. The pause is about 1.2 s after a correct answer and 2.5 s after a wrong one, so the right name can be read. Enter, "Weiter" or simply typing the next answer moves on at once.
+5. After a short pause the next country appears by itself, so one press of Enter (or "Prüfen", or "Los" on a phone keyboard) is enough per country. The pause is about 0.8 s after a correct answer and 1.8 s after a wrong one, so the right name can be read. Enter, "Weiter" or simply typing the next answer moves on at once.
 
 Additionally, a **"Weiß ich nicht"** ("I don't know") button that counts as wrong and reveals the answer.
 

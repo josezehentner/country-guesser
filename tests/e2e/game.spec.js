@@ -169,7 +169,7 @@ test('a wrong answer stays long enough to read the right name', async ({ page })
   const code = await targetCode(page);
   await page.click('#dont-know-btn');
   // Timers never fire early, so this holds even on a busy machine.
-  await page.waitForTimeout(1600);
+  await page.waitForTimeout(1200);
   expect(await targetCode(page)).toBe(code);
   await expect(page.locator('#feedback')).toHaveClass(/bad/);
   await expect.poll(() => targetCode(page), { timeout: 5000 }).not.toBe(code);
