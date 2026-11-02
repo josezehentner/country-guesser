@@ -51,10 +51,11 @@ Browser tests use Playwright's own Firefox build, not the installed Firefox. Dev
 index.html              mode menu with one card per game mode
 name-countries.html     the "Länder benennen" mode
 style.css               styles for all pages
-images/modes/           card pictures, generated with `npm run build:images`
+images/                 menu background and card pictures, generated with `npm run build:images`
 tools/serve.py          local development server without caching
 tools/d3-bundle.js      d3 functions in vendor/d3.bundle.js, rebuilt with `npm run build:vendor`
 tools/mode-images.js    draws the card pictures from the map data
+tools/menu-background.js draws the comic world map behind the menu
 src/                    one module per responsibility
 data/                   map data, country list, aliases
 vendor/                 third-party code, never edited by hand

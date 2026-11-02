@@ -27,6 +27,8 @@ The start page is a menu with one **card** per game mode. Each card has a pictur
 
 Card pictures are drawn from the real map data by `tools/mode-images.js`.
 
+Behind the menu is a comic-style world map: light blue water with halftone dots and waves, light green land with thick ink outlines and an offset shadow, no country borders. It is drawn from the map data by `tools/menu-background.js` and dimmed in dark mode. The title sits in a comic panel so it stays readable on the map.
+
 ---
 
 ## Gameplay

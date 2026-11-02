@@ -7,6 +7,7 @@
   --border: #d4d8de;
   --ocean: #add8e6;
   --space: #e3e8ee;
+  --ink: #1d2b36;
   --never: #f5e6c8;
   --country-stroke: #000000;
   --score-zero: #8d8f93;
@@ -26,6 +27,7 @@
     --muted: #a1a9b3;
     --border: #38414b;
     --space: #0a0d12;
+    --ink: #000000;
     --accent: #8ab4f8;
     --accent-text: #10151b;
     --good: #6dd58c;
@@ -234,10 +236,33 @@ button.primary { background: var(--accent); color: var(--accent-text); border-co
 /* Mode menu */
 body.menu { display: block; height: auto; min-height: 100dvh; overflow: auto; }
 
+/* Comic world map behind the menu, on its own fixed layer: background-attachment:
+   fixed does not work on iOS. */
+body.menu::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--bg) url("images/menu-background.svg") center / cover no-repeat;
+}
+
+@media (prefers-color-scheme: dark) {
+  body.menu::before { filter: brightness(0.45) saturate(0.8); }
+}
+
+.menu-title {
+  display: inline-block;
+  padding: 12px 20px 14px;
+  background: var(--surface);
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 6px 6px 0 var(--ink);
+}
+
 .menu-header, .modes { max-width: 960px; margin: 0 auto; }
 
 .menu-header { padding: 32px 16px 0; }
-.menu-header h1 { font-size: 1.6rem; }
+.menu-header h1 { margin: 0; font-size: 1.6rem; }
 .menu-header p { margin: 4px 0 0; color: var(--muted); }
 
 .modes {
@@ -278,7 +303,7 @@ a.mode-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2p
 .mode-card h2 { margin: 0; font-size: 1.05rem; }
 .mode-card p { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; }
 
-.mode-card.soon { background: transparent; border-style: dashed; }
+.mode-card.soon { border-style: dashed; }
 .mode-card.soon .mode-image { display: grid; place-items: center; color: var(--muted); font-size: 2rem; }
 
 @media (prefers-reduced-motion: reduce) {

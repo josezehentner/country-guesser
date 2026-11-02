@@ -13,6 +13,15 @@ test('the menu shows each mode as a card with picture, name and description', as
   expect(problems).toEqual([]);
 });
 
+test('the menu has the comic world map as background', async ({ page }) => {
+  const responses = [];
+  page.on('response', (response) => responses.push([response.url(), response.status()]));
+  await page.goto('/');
+  const background = await page.evaluate(() => getComputedStyle(document.body, '::before').backgroundImage);
+  expect(background).toContain('images/menu-background.svg');
+  await expect.poll(() => responses.find(([url]) => url.endsWith('/images/menu-background.svg'))?.[1]).toBe(200);
+});
+
 test('a card opens its mode, and the mode leads back to the menu', async ({ page }) => {
   await page.goto('/');
   await page.click('text=Länder benennen');
