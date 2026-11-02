@@ -50,6 +50,24 @@ function fill(page, code) {
   }, code);
 }
 
+// Reads the color drawn at a point on the globe, e.g. in the open ocean.
+function pixelAt(page, location) {
+  return page.evaluate(async (l) => {
+    const canvas = document.querySelector('#map');
+    const api = canvas.mapTestApi;
+    api.lookAt(l, 1);
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+    const { x, y } = api.pointAt(l);
+    const rect = canvas.getBoundingClientRect();
+    const scale = canvas.width / rect.width;
+    const [r, g, b] = canvas.getContext('2d').getImageData((x - rect.left) * scale, (y - rect.top) * scale, 1, 1).data;
+    return `rgb(${r}, ${g}, ${b})`;
+  }, location);
+}
+
+const view = (page) => page.evaluate(() => document.querySelector('#map').mapTestApi.view());
+
 async function clickCountry(page, code) {
   const { x, y } = await page.evaluate(async (c) => {
     const api = document.querySelector('#map').mapTestApi;
@@ -223,6 +241,18 @@ test('tooltip hides never-asked countries and the current question', async ({ pa
   await expect(tooltip).toContainText(await page.evaluate(async (c) => (await import('/data/countries.js')).COUNTRY_BY_CODE.get(c).name, code));
 });
 
+// Their centroids lie outside their own shapes.
+test('countries with a curved shape can be clicked', async ({ page }) => {
+  const codes = ['IL', 'SO', 'VN', 'BM', 'CC', 'IO'];
+  await open(page);
+  await seed(page, Object.fromEntries(codes.map((code) => [code, entry(7)])), { continent: 'SA' });
+  for (const code of codes) {
+    await clickCountry(page, code);
+    const name = await page.evaluate(async (c) => (await import('/data/countries.js')).COUNTRY_BY_CODE.get(c).name, code);
+    await expect(page.locator('#tooltip')).toHaveText(`${name}: 7/10`);
+  }
+});
+
 test('small countries are plain shapes and only the asked one gets a ring', async ({ page }) => {
   await open(page);
   const api = (method, ...args) => page.evaluate(([m, a]) => document.querySelector('#map').mapTestApi[m](...a), [method, args]);
@@ -245,7 +275,7 @@ for (const colorScheme of ['light', 'dark']) {
     test('land is beige, water light blue and borders black', async ({ page }) => {
       await open(page);
       await expect.poll(() => fill(page, 'PT')).toBe('rgb(245, 230, 200)');
-      await expect(page.locator('#map-wrap')).toHaveCSS('background-color', 'rgb(173, 216, 230)');
+      await expect.poll(() => pixelAt(page, [-30, 0])).toBe('rgb(173, 216, 230)');
       expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--country-stroke').trim())).toBe('#000000');
     });
   });
@@ -255,26 +285,140 @@ test('jumping to a new country zooms in only moderately', async ({ page }) => {
   await open(page);
   await page.selectOption('#continent-filter', 'OC');
   for (let i = 0; i < 10; i++) {
-    const scale = await page.evaluate(() => Number(document.querySelector('#map').mapTestApi.transform().match(/scale\((.+)\)/)[1]));
-    expect(scale).toBeLessThanOrEqual(5);
+    expect((await view(page)).k).toBeLessThanOrEqual(3);
     await page.click('#dont-know-btn');
     await page.keyboard.press('Enter');
   }
 });
 
-test('the map zooms and pans', async ({ page }) => {
+test('the globe turns the asked country to the front and center', async ({ page }) => {
   await open(page);
-  const transform = () => page.evaluate(() => document.querySelector('#map').mapTestApi.transform());
-  const initial = await transform();
+  await page.selectOption('#continent-filter', 'SA');
+  for (let i = 0; i < 5; i++) {
+    const code = await targetCode(page);
+    const { point, facing, middle } = await page.evaluate((c) => {
+      const canvas = document.querySelector('#map');
+      const rect = canvas.getBoundingClientRect();
+      const api = canvas.mapTestApi;
+      return { point: api.pointOf(c), facing: api.isFacing(api.view().center), middle: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } };
+    }, code);
+    expect(facing).toBe(true);
+    // pointOf may move off the centroid by a few pixels to land safely inside.
+    expect(Math.abs(point.x - middle.x)).toBeLessThan(10);
+    expect(Math.abs(point.y - middle.y)).toBeLessThan(10);
+    await page.click('#dont-know-btn');
+    await page.keyboard.press('Enter');
+  }
+});
+
+test('the globe zooms and rotates', async ({ page }) => {
+  await open(page);
+  await page.evaluate(() => document.querySelector('#map').mapTestApi.lookAt([0, 0], 1));
   await page.mouse.move(600, 300);
   await page.mouse.wheel(0, -300);
-  await expect.poll(transform).not.toBe(initial);
+  await expect.poll(async () => (await view(page)).k).toBeGreaterThan(1);
   await page.waitForTimeout(200);
-  const zoomed = await transform();
+  const before = await view(page);
   await page.mouse.down();
   await page.mouse.move(500, 250, { steps: 5 });
   await page.mouse.up();
-  await expect.poll(transform).not.toBe(zoomed);
+  const after = await view(page);
+  expect(after.k).toBe(before.k);
+  expect(after.center[0]).toBeGreaterThan(before.center[0]);
+  expect(after.center[1]).toBeLessThan(before.center[1]);
+});
+
+test('dragging past a pole stops at the pole', async ({ page }) => {
+  await open(page);
+  await page.evaluate(() => document.querySelector('#map').mapTestApi.lookAt([0, 60], 1));
+  for (let i = 0; i < 2; i++) {
+    await page.mouse.move(600, 150);
+    await page.mouse.down();
+    await page.mouse.move(600, 650, { steps: 10 });
+    await page.mouse.up();
+  }
+  expect((await view(page)).center[1]).toBe(90);
+});
+
+// The other tests run with reduced motion, which turns momentum off.
+test.describe('with motion', () => {
+  test.use({ reducedMotion: 'no-preference' });
+
+  async function flick(page, { pauseBeforeRelease = 0 } = {}) {
+    await page.waitForTimeout(900);
+    await page.evaluate(() => document.querySelector('#map').mapTestApi.lookAt([0, 0], 1));
+    await page.mouse.move(500, 300);
+    await page.mouse.down();
+    for (let x = 520; x <= 640; x += 20) {
+      await page.mouse.move(x, 300);
+      await page.waitForTimeout(8);
+    }
+    await page.waitForTimeout(pauseBeforeRelease);
+    await page.mouse.up();
+    return (await view(page)).center[0];
+  }
+
+  test('a quick drag gives the globe momentum that dies down', async ({ page }) => {
+    await open(page);
+    const released = await flick(page);
+    await page.waitForTimeout(150);
+    const coasting = (await view(page)).center[0];
+    // Dragging to the right turns the globe westward and keeps doing so.
+    expect(coasting).toBeLessThan(released - 1);
+    await page.waitForTimeout(2500);
+    const settled = (await view(page)).center[0];
+    await page.waitForTimeout(300);
+    expect((await view(page)).center[0]).toBe(settled);
+  });
+
+  test('a drag that stops before letting go has no momentum', async ({ page }) => {
+    await open(page);
+    const released = await flick(page, { pauseBeforeRelease: 300 });
+    await page.waitForTimeout(200);
+    expect((await view(page)).center[0]).toBe(released);
+  });
+
+  test('touching the globe again stops the momentum', async ({ page }) => {
+    await open(page);
+    await flick(page);
+    await page.mouse.down();
+    const held = (await view(page)).center[0];
+    await page.waitForTimeout(200);
+    expect((await view(page)).center[0]).toBe(held);
+    await page.mouse.up();
+  });
+});
+
+test('with reduced motion the globe stops when let go', async ({ page }) => {
+  await open(page);
+  await page.evaluate(() => document.querySelector('#map').mapTestApi.lookAt([0, 0], 1));
+  await page.mouse.move(500, 300);
+  await page.mouse.down();
+  await page.mouse.move(640, 300, { steps: 7 });
+  await page.mouse.up();
+  const released = (await view(page)).center[0];
+  await page.waitForTimeout(200);
+  expect((await view(page)).center[0]).toBe(released);
+});
+
+test('the back of the globe is not drawn and drawing stays fast', async ({ page }) => {
+  await open(page);
+  const times = await page.evaluate(async () => {
+    const api = document.querySelector('#map').mapTestApi;
+    const result = [];
+    for (let i = 0; i < 20; i++) {
+      api.lookAt([i * 18, 20], 1);
+      await new Promise(requestAnimationFrame);
+      await new Promise(requestAnimationFrame);
+      result.push({ ms: api.lastDrawMs(), drawn: api.drawnShapes(), total: api.shapeCount() });
+    }
+    return result;
+  });
+  for (const { drawn, total } of times) expect(drawn).toBeLessThan(total);
+  const sorted = times.map((t) => t.ms).sort((a, b) => a - b);
+  console.log(`globe draw time: median ${sorted[10]} ms, max ${sorted.at(-1)} ms`);
+  // Only catches gross slowdowns: CI machines vary a lot.
+  expect(sorted[10]).toBeLessThan(50);
 });
 
 test('the highlight is on its own layer and the map keeps drawing while zooming', async ({ page }) => {

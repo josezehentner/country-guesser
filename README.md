@@ -101,15 +101,16 @@ Key: `countryquiz.v1`
 
 ## Map
 
-- World map drawn on a **canvas**, projected with **d3-geo** (stored locally under `vendor/`). Canvas draws each frame completely, so borders stay sharp while zooming; SVG only sharpened after zooming stopped.
+- The world is a **globe** drawn on a **canvas**, projected with **d3-geo** (stored locally under `vendor/`). Canvas draws each frame completely, so borders stay sharp while turning and zooming; SVG only sharpened after zooming stopped.
+- **Performance**: a globe has to be projected anew for every frame. To stay fast, only the side facing the player and the visible part are drawn, and borders come from simplified copies per zoom level that stay within half a pixel of the full data, less than a border line is wide. Zooming in never shows less detail than the data has.
 - Map data: **Natural Earth, 1:10m scale** (public domain) as GeoJSON or TopoJSON under `data/`. Each country needs a unique **ISO 3166-1 alpha-2 code**.
   - Note: In Natural Earth, the `ISO_A2` field is `-99` for some countries (including France, Norway, Kosovo). Fall back to `ISO_A2_EH` or a manual mapping in those cases.
   - Simplify the file beforehand (e.g. with mapshaper), but keep enough detail that borders stay sharp when zoomed in; target: map data under 3 MB (about 0.8 MB compressed), and limit the maximum zoom to what the data can show sharply.
 - **Country scope**: all 249 ISO 3166-1 entries plus Kosovo, including dependent territories such as Greenland and French Guiana. Anything else in the map data is drawn but **not asked** and colored neutrally. The list of quizzed countries lives in one central file (`data/countries.js`) so it is easy to adjust.
-- **Zoom and pan** (mouse wheel, drag, pinch on mobile).
-- When a country is asked, **automatically zoom to it** so small countries are recognizable.
+- **Turn and zoom** the globe: drag to turn it, mouse wheel or pinch to zoom. Turning stops at the poles. After a quick drag the globe keeps turning and slows down within about a second, unless the player prefers reduced motion.
+- When a country is asked, the globe **turns it to the front and center** and zooms in moderately, so neighboring land stays in view.
 - **Very small countries** (e.g. Vatican City, Monaco, Malta, Pacific and Caribbean island states) are drawn only as their shapes, with no permanent markers. Entries under 40 km² are enlarged to 40 km² so they can be seen. Only while one is being asked, an unfilled **ring** shows where it is.
-- Projection: an equal-area or compromise projection such as Natural Earth or Equal Earth.
+- Projection: orthographic, so the map looks like a globe seen from space.
 
 ---
 
@@ -131,7 +132,8 @@ Key: `countryquiz.v1`
 ├── style.css
 ├── src/
 │   ├── main.js        # startup, game loop
-│   ├── map.js         # rendering, zoom, coloring
+│   ├── map.js         # globe rendering, turning, zoom, coloring
+│   ├── simplify.js    # border detail per zoom level
 │   ├── storage.js     # load/save/export/import
 │   ├── quiz.js        # country selection, answer checking
 │   └── colors.js      # score → color
@@ -177,6 +179,7 @@ Local testing: because of ES modules, serve via a local web server, e.g. `python
 - [ ] Colors match the table above; "never asked" and "score 0" are distinguishable.
 - [ ] Progress persists after reloading and after closing the browser.
 - [ ] Export produces a JSON file, import restores the same state, invalid files are rejected.
-- [ ] Small countries are plain shapes, get a ring only while asked, and the game zooms to the asked country.
+- [ ] Small countries are plain shapes, get a ring only while asked, and the globe turns to the asked country.
+- [ ] The globe turns and zooms smoothly, and borders stay sharp at every zoom level.
 - [ ] Usable on mobile (touch zoom, input, no horizontal scrollbar).
 - [ ] Game works even when localStorage is unavailable (with a notice).

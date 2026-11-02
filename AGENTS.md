@@ -50,6 +50,7 @@ Browser tests use Playwright's own Firefox build, not the installed Firefox. Dev
 ```
 index.html, style.css   page and styles
 tools/serve.py          local development server without caching
+tools/d3-bundle.js      d3 functions in vendor/d3.bundle.js, rebuilt with `npm run build:vendor`
 src/                    one module per responsibility
 data/                   map data, country list, aliases
 vendor/                 third-party code, never edited by hand
@@ -63,7 +64,7 @@ LICENSE, README.md      license and specification
 Planned as they are added:
 
 ```
-tools/                  scripts that generate map data and the d3 bundle
+tools/                  script that generates map data
 .editorconfig           indentation and line endings
 eslint.config.js        linter rules
 ```
@@ -85,7 +86,7 @@ Not done yet. Work through these in order when asked:
 
 1. Add ESLint and Prettier as dev tools. The site must still have no build step.
 2. Add linting to the GitHub Actions workflow, and tie deployment to its checks.
-3. Move the scripts that generate `data/world.json` and `vendor/d3.bundle.js` into `tools/`, so both can be regenerated.
+3. Move the script that generates `data/world.json` into `tools/`, so it can be regenerated. The d3 bundle already can be.
 
 Later, if types become useful, add JSDoc comments checked by TypeScript, which needs no build step.
 
