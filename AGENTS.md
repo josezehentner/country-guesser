@@ -100,6 +100,7 @@ Later, if types become useful, add JSDoc comments checked by TypeScript, which n
 - Before creating a branch, tell the owner the proposed name and what it will contain.
 - When a feature on a feature branch is implemented and passes all tests, commit it without waiting to be asked.
 - Only push, merge or deploy when the owner asks.
+- After a branch is merged and works, delete it on GitHub and locally. Its commits are in `main`, and the pull request keeps the history.
 
 ### Commits
 
