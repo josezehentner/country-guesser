@@ -358,31 +358,48 @@ test('dragging past a pole stops at the pole', async ({ page }) => {
 test.describe('with motion', () => {
   test.use({ reducedMotion: 'no-preference' });
 
+  // Fires the drag inside the page in one go: mouse steps sent one by one from the
+  // test arrive late on a busy machine, which then reads as a drag that stopped.
+  function drag(page, { release }) {
+    return page.evaluate((letGo) => {
+      const canvas = document.querySelector('#map');
+      const rect = canvas.getBoundingClientRect();
+      const fire = (target, type, x) => target.dispatchEvent(new MouseEvent(type, {
+        bubbles: true, cancelable: true, view: window, clientX: rect.left + x, clientY: rect.top + 250, buttons: type === 'mouseup' ? 0 : 1,
+      }));
+      if (letGo === 'only') return fire(window, 'mouseup', 540);
+      fire(canvas, 'mousedown', 400);
+      for (let x = 420; x <= 540; x += 20) fire(window, 'mousemove', x);
+      if (letGo) fire(window, 'mouseup', 540);
+    }, release);
+  }
+
   async function flick(page, { pauseBeforeRelease = 0 } = {}) {
     await page.waitForTimeout(900);
     await page.evaluate(() => document.querySelector('#map').mapTestApi.lookAt([0, 0], 1));
-    await page.mouse.move(500, 300);
-    await page.mouse.down();
-    for (let x = 520; x <= 640; x += 20) {
-      await page.mouse.move(x, 300);
-      await page.waitForTimeout(8);
+    if (pauseBeforeRelease) {
+      await drag(page, { release: false });
+      await page.waitForTimeout(pauseBeforeRelease);
+      await drag(page, { release: 'only' });
+    } else {
+      await drag(page, { release: true });
     }
-    await page.waitForTimeout(pauseBeforeRelease);
-    await page.mouse.up();
     return (await view(page)).center[0];
+  }
+
+  // True once the globe stopped turning for a moment.
+  async function settled(page) {
+    const before = (await view(page)).center[0];
+    await page.waitForTimeout(300);
+    return (await view(page)).center[0] === before;
   }
 
   test('a quick drag gives the globe momentum that dies down', async ({ page }) => {
     await open(page);
     const released = await flick(page);
-    await page.waitForTimeout(150);
-    const coasting = (await view(page)).center[0];
     // Dragging to the right turns the globe westward and keeps doing so.
-    expect(coasting).toBeLessThan(released - 1);
-    await page.waitForTimeout(2500);
-    const settled = (await view(page)).center[0];
-    await page.waitForTimeout(300);
-    expect((await view(page)).center[0]).toBe(settled);
+    await expect.poll(async () => (await view(page)).center[0]).toBeLessThan(released - 1);
+    await expect.poll(() => settled(page), { timeout: 5000 }).toBe(true);
   });
 
   test('a drag that stops before letting go has no momentum', async ({ page }) => {
@@ -395,6 +412,7 @@ test.describe('with motion', () => {
   test('touching the globe again stops the momentum', async ({ page }) => {
     await open(page);
     await flick(page);
+    await page.mouse.move(600, 300);
     await page.mouse.down();
     const held = (await view(page)).center[0];
     await page.waitForTimeout(200);
@@ -430,9 +448,10 @@ test('the back of the globe is not drawn and drawing stays fast', async ({ page 
   });
   for (const { drawn, total } of times) expect(drawn).toBeLessThan(total);
   const sorted = times.map((t) => t.ms).sort((a, b) => a - b);
-  console.log(`globe draw time: median ${sorted[10]} ms, max ${sorted.at(-1)} ms`);
-  // Only catches gross slowdowns: CI machines vary a lot.
-  expect(sorted[10]).toBeLessThan(50);
+  console.log(`globe draw time: fastest quarter ${sorted[5]} ms, median ${sorted[10]} ms, max ${sorted.at(-1)} ms`);
+  // Only catches gross slowdowns, which make every frame slower. A busy machine,
+  // e.g. other test runs in parallel, slows only some frames, so the faster ones count.
+  expect(sorted[5]).toBeLessThan(50);
 });
 
 test('the highlight is on its own layer and the map keeps drawing while zooming', async ({ page }) => {
