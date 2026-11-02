@@ -7,10 +7,6 @@ const promptName = byId('prompt-name');
 const nextButton = byId('next-btn');
 const dontKnowButton = byId('dont-know-btn');
 
-// After a correct answer the next country follows on its own after this pause.
-const AUTO_NEXT_MS = 1000;
-let autoNext = null;
-
 // While a question is open the focus rests on the prompt, not on a button: an Enter
 // meant to skip the pause must not answer the next question with "Weiß ich nicht".
 const focusNext = () => (nextButton.disabled ? prompt : nextButton).focus({ preventScroll: true });
@@ -18,6 +14,8 @@ const focusNext = () => (nextButton.disabled ? prompt : nextButton).focus({ prev
 startGame({
   storageKey: 'countryquiz.find.v1',
   exportPrefix: 'countryquiz-find-progress',
+  // Long enough to see where the found country is marked.
+  nextDelayMs: 1000,
 
   setup(game) {
     nextButton.addEventListener('click', () => {
@@ -32,7 +30,6 @@ startGame({
 
   // The globe stays where the player left it: finding the country is the task.
   ask(game) {
-    clearTimeout(autoNext);
     promptName.textContent = game.current.name;
     nextButton.disabled = true;
     dontKnowButton.disabled = false;
@@ -52,7 +49,6 @@ startGame({
     if (game.map.hits(code, event.clientX, event.clientY)) {
       game.finish(true, `Richtig: ${name}`);
       game.map.highlight(code, { focus: false });
-      autoNext = setTimeout(() => game.nextQuestion(), AUTO_NEXT_MS);
       return true;
     }
     const clicked = game.map.codeAt(event.clientX, event.clientY);

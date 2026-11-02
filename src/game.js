@@ -12,6 +12,7 @@ export const byId = (id) => document.getElementById(id);
 
 // `mode` provides:
 //   storageKey, exportPrefix  where its progress is kept and how exports are named
+//   nextDelayMs               pause after a correct answer before the next country
 //   setup(game)               wires up its own controls once the map is ready
 //   ask(game)                 shows the new question in game.current
 //   answered(game, correct)   updates its controls after an answer
@@ -25,6 +26,7 @@ export function startGame(mode) {
 
   let progress = loadProgress(mode.storageKey);
   let previousCode = null;
+  let nextTimer = null;
 
   const game = {
     map: null,
@@ -90,6 +92,7 @@ export function startGame(mode) {
   }
 
   function nextQuestion() {
+    clearTimeout(nextTimer);
     game.current = pickNextCountry(currentPool(), progress.countries, previousCode);
     previousCode = game.current.code;
     game.isAnswered = false;
@@ -113,12 +116,15 @@ export function startGame(mode) {
     return entry.score;
   }
 
-  // Scores the current question and shows `message` with the new score.
+  // Scores the current question and shows `message` with the new score. After a
+  // correct answer the next country follows by itself; a wrong one waits for the
+  // player, so the right answer can be seen.
   function finish(correct, message) {
     const score = recordAnswer(correct);
     game.isAnswered = true;
     setFeedback(`${message} (${score}/${MAX_SCORE})`, correct ? 'good' : 'bad');
     mode.answered(game, correct);
+    if (correct) nextTimer = setTimeout(nextQuestion, mode.nextDelayMs);
   }
 
   function tooltipText(code) {
