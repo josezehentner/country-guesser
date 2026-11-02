@@ -6,6 +6,7 @@
   --muted: #5d6673;
   --border: #d4d8de;
   --ocean: #add8e6;
+  --space: #e3e8ee;
   --never: #f5e6c8;
   --country-stroke: #000000;
   --score-zero: #8d8f93;
@@ -24,6 +25,7 @@
     --text: #e8eaed;
     --muted: #a1a9b3;
     --border: #38414b;
+    --space: #0a0d12;
     --accent: #8ab4f8;
     --accent-text: #10151b;
     --good: #6dd58c;
@@ -83,7 +85,7 @@ h1 { margin: 0; font-size: 1.1rem; }
 .progress-fill { width: 0; height: 100%; background: var(--good); transition: width 0.3s; }
 
 /* Map */
-.map-wrap { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; background: var(--ocean); }
+.map-wrap { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; background: var(--space); }
 
 #map { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
 #map:active { cursor: grabbing; }
