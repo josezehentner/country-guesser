@@ -5,6 +5,10 @@ import { isCorrectAnswer, nextScore, pickNextCountry } from './quiz.js';
 import { emptyProgress, exportProgress, loadProgress, parseImport, saveProgress } from './storage.js';
 
 const MAX_SCORE = 10;
+// After a correct answer the next country follows by itself, so one key press is
+// enough. A wrong answer waits for Enter, "Weiter" or typing, so the right name can
+// be read.
+const NEXT_DELAY_MS = 400;
 
 const byId = (id) => document.getElementById(id);
 const form = byId('answer-form');
@@ -20,6 +24,7 @@ let map = null;
 let current = null;
 let previousCode = null;
 let answered = false;
+let nextTimer = null;
 
 function setFeedback(text, kind = '') {
   feedback.textContent = text;
@@ -78,9 +83,9 @@ function currentPool() {
 function nextQuestion() {
   current = pickNextCountry(currentPool(), progress.countries, previousCode);
   previousCode = current.code;
+  clearTimeout(nextTimer);
   answered = false;
   input.value = '';
-  input.readOnly = false;
   submitButton.textContent = 'Prüfen';
   dontKnowButton.disabled = false;
   setFeedback('');
@@ -106,12 +111,14 @@ function recordAnswer(correct) {
 function finishQuestion(correct, wrongPrefix) {
   const score = recordAnswer(correct);
   answered = true;
-  input.readOnly = true;
+  // The field stays editable: a read-only field would close the phone keyboard.
+  input.value = '';
   submitButton.textContent = 'Weiter';
   dontKnowButton.disabled = true;
   if (correct) setFeedback(`Richtig: ${current.name} (${score}/${MAX_SCORE})`, 'good');
   else setFeedback(`${wrongPrefix} Das ist ${current.name} (${score}/${MAX_SCORE})`, 'bad');
   input.focus({ preventScroll: true });
+  if (correct) nextTimer = setTimeout(nextQuestion, NEXT_DELAY_MS);
 }
 
 function tooltipText(code) {
@@ -129,6 +136,14 @@ function setupControls() {
     } else if (input.value.trim()) {
       finishQuestion(isCorrectAnswer(input.value, current.code), 'Falsch.');
     }
+  });
+
+  // Typing the next answer during the pause moves on at once and keeps the letters.
+  input.addEventListener('input', () => {
+    if (!answered) return;
+    const typed = input.value;
+    nextQuestion();
+    input.value = typed;
   });
 
   dontKnowButton.addEventListener('click', () => {

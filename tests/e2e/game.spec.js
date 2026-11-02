@@ -152,6 +152,45 @@ test('first wrong answer starts at 3, reveals the name, and "Weiß ich nicht" co
   }
 });
 
+test('one Enter checks the answer, and the next country follows by itself', async ({ page }) => {
+  await open(page);
+  const code = await targetCode(page);
+  await page.fill('#answer-input', await targetName(page));
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#feedback')).toHaveClass(/good/);
+  await expect(page.locator('#answer-input')).toBeEditable();
+  await expect.poll(() => targetCode(page), { timeout: 5000 }).not.toBe(code);
+  await expect(page.locator('#feedback')).toHaveText('');
+  await expect(page.locator('#answer-input')).toBeFocused();
+});
+
+test('a wrong answer keeps the right name until the player moves on', async ({ page }) => {
+  await open(page);
+  const code = await targetCode(page);
+  const name = await targetName(page);
+  await page.click('#dont-know-btn');
+  await page.waitForTimeout(1500);
+  expect(await targetCode(page)).toBe(code);
+  await expect(page.locator('#feedback')).toContainText(name);
+  await page.keyboard.press('Enter');
+  expect(await targetCode(page)).not.toBe(code);
+});
+
+test('Enter or typing during the pause moves on at once', async ({ page }) => {
+  await open(page);
+  let code = await targetCode(page);
+  await page.click('#dont-know-btn');
+  await page.keyboard.press('Enter');
+  expect(await targetCode(page)).not.toBe(code);
+
+  code = await targetCode(page);
+  await page.click('#dont-know-btn');
+  await page.keyboard.type('Fr');
+  expect(await targetCode(page)).not.toBe(code);
+  await expect(page.locator('#answer-input')).toHaveValue('Fr');
+  await expect(page.locator('#feedback')).toHaveText('');
+});
+
 test('empty input is ignored', async ({ page }) => {
   await open(page);
   await page.fill('#answer-input', '   ');
@@ -486,6 +525,22 @@ test.describe('on a phone', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
     await page.tap('#dont-know-btn');
     await expect(page.locator('#feedback')).toHaveClass(/bad/);
+  });
+
+  test('one tap on Prüfen moves on after a right answer, Weiter after a wrong one', async ({ page }) => {
+    await open(page);
+    const code = await targetCode(page);
+    await page.fill('#answer-input', await targetName(page));
+    await page.tap('#submit-btn');
+    await expect(page.locator('#feedback')).toHaveClass(/good/);
+    await expect.poll(() => targetCode(page), { timeout: 5000 }).not.toBe(code);
+    await expect(page.locator('#answer-input')).toBeFocused();
+
+    const next = await targetCode(page);
+    await page.tap('#dont-know-btn');
+    await expect(page.locator('#submit-btn')).toHaveText('Weiter');
+    await page.tap('#submit-btn');
+    expect(await targetCode(page)).not.toBe(next);
   });
 
   test('keeps everything but the globe to one row above and one below', async ({ page }) => {
