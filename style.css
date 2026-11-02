@@ -8,6 +8,9 @@
   --ocean: #add8e6;
   --space: #e3e8ee;
   --ink: #1d2b36;
+  /* Land and its shadow in the comic menu background */
+  --comic-land: #b5e48c;
+  --comic-shadow: #6fae4f;
   --never: #f5e6c8;
   --country-stroke: #000000;
   --score-zero: #8d8f93;
@@ -234,6 +237,12 @@ button.primary { background: var(--accent); color: var(--accent-text); border-co
 .back:hover { text-decoration: underline; }
 
 /* Mode menu */
+@font-face {
+  font-family: "Bangers";
+  src: url("fonts/bangers/Bangers-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
 body.menu { display: block; height: auto; min-height: 100dvh; overflow: auto; }
 
 /* Comic world map behind the menu, on its own fixed layer: background-attachment:
@@ -250,24 +259,41 @@ body.menu::before {
   body.menu::before { filter: brightness(0.45) saturate(0.8); }
 }
 
-.menu-title {
-  display: inline-block;
-  padding: 12px 20px 14px;
-  background: var(--surface);
-  border: 3px solid var(--ink);
-  border-radius: 12px;
-  box-shadow: 6px 6px 0 var(--ink);
-}
-
 .menu-header, .modes { max-width: 960px; margin: 0 auto; }
 
-.menu-header { padding: 32px 16px 0; }
-.menu-header h1 { margin: 0; font-size: 1.6rem; }
-.menu-header p { margin: 4px 0 0; color: var(--muted); }
+.menu-header { padding: 36px 16px 0; text-align: center; }
+
+/* Comic title: land-green letters with an ink outline and the land's shadow. */
+.menu-header h1 {
+  margin: 0;
+  color: var(--comic-land);
+  font-family: "Bangers", "Comic Sans MS", system-ui, sans-serif;
+  font-size: clamp(3rem, 11vw, 5.5rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  -webkit-text-stroke: 0.1em var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 0.07em 0.08em 0 var(--comic-shadow);
+}
+
+/* Subtitle as a small comic label. */
+.menu-header p {
+  display: inline-block;
+  margin: 14px 0 0;
+  padding: 4px 14px;
+  background: var(--surface);
+  color: var(--text);
+  border: 3px solid var(--ink);
+  border-radius: 999px;
+  box-shadow: 3px 3px 0 var(--ink);
+  font-weight: 600;
+}
 
 .modes {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 300px));
+  justify-content: center;
   gap: 16px;
   padding: 20px 16px 32px;
   list-style: none;

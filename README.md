@@ -19,7 +19,7 @@ This document is the specification for the implementation.
 
 ## Mode Menu
 
-The start page is a menu with one **card** per game mode. Each card has a picture, the mode's name and a very short description, and opens the mode on its own page. Every mode links back to the menu. Modes that are not ready yet are shown as "Demnächst" and cannot be opened.
+The start page is titled **Country Guesser** and is a menu with one **card** per game mode. Each card has a picture, the mode's name and a very short description, and opens the mode on its own page. Every mode links back to the menu. Modes that are not ready yet are shown as "Demnächst" and cannot be opened.
 
 | Mode | Page | Description |
 |---|---|---|
@@ -27,7 +27,7 @@ The start page is a menu with one **card** per game mode. Each card has a pictur
 
 Card pictures are drawn from the real map data by `tools/mode-images.js`.
 
-Behind the menu is a comic-style world map: light blue water with halftone dots and waves, light green land with thick ink outlines and an offset shadow, no country borders. It is drawn from the map data by `tools/menu-background.js` and dimmed in dark mode. The title sits in a comic panel so it stays readable on the map.
+Behind the menu is a comic-style world map: light blue water with halftone dots and waves, light green land with thick ink outlines and an offset shadow, no country borders. It is drawn from the map data by `tools/menu-background.js` and dimmed in dark mode. The centered title uses the comic font Bangers (stored under `fonts/`) in the map's land green with an ink outline and the land's shadow; the subtitle sits in a small comic label.
 
 ---
 

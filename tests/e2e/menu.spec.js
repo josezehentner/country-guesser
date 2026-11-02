@@ -5,7 +5,9 @@ test('the menu shows each mode as a card with picture, name and description', as
   page.on('console', (message) => { if (message.type() === 'error') problems.push(message.text()); });
   page.on('pageerror', (error) => problems.push(error.message));
   await page.goto('/');
-  await expect(page.locator('h1')).toHaveText('Länder-Quiz');
+  await expect(page.locator('h1')).toHaveText('Country Guesser');
+  await expect(page).toHaveTitle('Country Guesser');
+  expect(await page.evaluate(async () => { await document.fonts.ready; return document.fonts.check('1em Bangers'); })).toBe(true);
   const card = page.locator('a.mode-card', { hasText: 'Länder benennen' });
   await expect(card.locator('h2')).toHaveText('Länder benennen');
   await expect(card.locator('p')).toHaveText('Markiertes Land erkennen und benennen.');
@@ -28,7 +30,7 @@ test('a card opens its mode, and the mode leads back to the menu', async ({ page
   await expect(page).toHaveURL(/name-countries\.html$/);
   await expect(page.locator('h1')).toHaveText('Länder benennen');
   await page.click('text=Menü');
-  await expect(page.locator('h1')).toHaveText('Länder-Quiz');
+  await expect(page.locator('h1')).toHaveText('Country Guesser');
 });
 
 test('cards work with the keyboard', async ({ page }) => {

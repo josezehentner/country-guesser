@@ -52,6 +52,7 @@ index.html              mode menu with one card per game mode
 name-countries.html     the "Länder benennen" mode
 style.css               styles for all pages
 images/                 menu background and card pictures, generated with `npm run build:images`
+fonts/                  web fonts with their licenses
 tools/serve.py          local development server without caching
 tools/d3-bundle.js      d3 functions in vendor/d3.bundle.js, rebuilt with `npm run build:vendor`
 tools/mode-images.js    draws the card pictures from the map data
