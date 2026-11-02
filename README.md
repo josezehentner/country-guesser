@@ -17,7 +17,24 @@ This document is the specification for the implementation.
 
 ---
 
+## Mode Menu
+
+The start page is titled **Country Guesser** and is a menu with one **card** per game mode. Each card has a picture, the mode's name and a very short description, and opens the mode on its own page. Every mode links back to the menu. Modes that are not ready yet are shown as "Demnächst" and cannot be opened.
+
+| Mode | Page | Description |
+|---|---|---|
+| Länder benennen | `name-countries.html` | Markiertes Land erkennen und benennen. |
+
+Card pictures are drawn from the real map data by `tools/mode-images.js`.
+
+Behind the menu is a comic-style world map: light blue water with halftone dots and waves, light green land with thick ink outlines and an offset shadow, no country borders. It is drawn from the map data by `tools/menu-background.js` and dimmed in dark mode. The centered title uses the comic font Bangers (stored under `fonts/`) in the map's land green with an ink outline and the land's shadow. There is no subtitle.
+
+---
+
 ## Gameplay
+
+This section describes the "Länder benennen" mode.
+
 
 1. One country on the world map is **highlighted** (clearly marked, e.g. thick outline + pulsing effect).
 2. The player **types the country's name** into an input field and confirms with Enter.
@@ -128,8 +145,10 @@ Key: `countryquiz.v1`
 
 ```
 /
-├── index.html
+├── index.html          # mode menu
+├── name-countries.html # "Länder benennen" mode
 ├── style.css
+├── images/modes/       # card pictures
 ├── src/
 │   ├── main.js        # startup, game loop
 │   ├── map.js         # globe rendering, turning, zoom, coloring
@@ -174,6 +193,7 @@ Local testing: because of ES modules, serve via a local web server, e.g. `python
 ## Acceptance Criteria
 
 - [ ] Site loads on GitHub Pages without a build step and without console errors.
+- [ ] The start page shows a card per mode with picture, name and short description; cards open their mode, and each mode links back to the menu.
 - [ ] A country is highlighted, input is checked correctly (including umlauts, alternative names, small typos).
 - [ ] First answer starts at 5 (correct) or 3 (wrong/"I don't know"); later correct = +1, wrong/"I don't know" = −1; bounds 0 and 10 are respected.
 - [ ] Colors match the table above; "never asked" and "score 0" are distinguishable.

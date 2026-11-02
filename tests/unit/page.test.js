@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 const root = new URL('../../', import.meta.url);
-const html = readFileSync(new URL('index.html', root), 'utf8');
+const pages = readdirSync(root).filter((name) => name.endsWith('.html'));
 
-function csp() {
+function csp(page) {
+  const html = readFileSync(new URL(page, root), 'utf8');
   const content = html.match(/http-equiv="Content-Security-Policy"\s+content="([^"]+)"/)[1];
   return Object.fromEntries(content.split(';').map((directive) => {
     const [name, ...values] = directive.trim().split(/\s+/);
@@ -13,18 +14,27 @@ function csp() {
   }));
 }
 
+test('the menu and every mode are pages of their own', () => {
+  assert.ok(pages.includes('index.html'));
+  assert.ok(pages.includes('name-countries.html'));
+});
+
 test('content security policy only allows the site itself', () => {
-  const policy = csp();
-  assert.deepEqual(policy['default-src'], ["'self'"]);
-  assert.deepEqual(policy['img-src'], ["'self'", 'data:']);
-  assert.ok(!policy['script-src'], 'scripts fall back to default-src');
+  for (const page of pages) {
+    const policy = csp(page);
+    assert.deepEqual(policy['default-src'], ["'self'"], page);
+    assert.deepEqual(policy['img-src'], ["'self'", 'data:'], page);
+    assert.ok(!policy['script-src'], `${page}: scripts fall back to default-src`);
+  }
 });
 
 // default-src does not cover these two.
 test('content security policy blocks base and form targets', () => {
-  const policy = csp();
-  assert.deepEqual(policy['base-uri'], ["'none'"]);
-  assert.deepEqual(policy['form-action'], ["'none'"]);
+  for (const page of pages) {
+    const policy = csp(page);
+    assert.deepEqual(policy['base-uri'], ["'none'"], page);
+    assert.deepEqual(policy['form-action'], ["'none'"], page);
+  }
 });
 
 test('github pages serves the repo without jekyll', () => {

@@ -14,3 +14,9 @@
   entries under 100 km², which keep full detail and are drawn on top. Entries
   under 40 km² are enlarged to 40 km² around their own centers, so these shapes
   are deliberately not to scale.
+- `images/modes/*.svg` and `images/menu-background.svg`: drawn from
+  `data/world.json` by `tools/mode-images.js` and `tools/menu-background.js`,
+  so the same Natural Earth source applies.
+- `fonts/bangers/Bangers-Regular.ttf`: Bangers by The Bangers Project Authors,
+  SIL Open Font License 1.1 (`fonts/bangers/OFL.txt`), unchanged.
+  https://github.com/googlefonts/bangers

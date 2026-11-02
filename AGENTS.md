@@ -7,7 +7,7 @@ Country Quiz is a static browser game built with plain HTML, CSS and JavaScript 
 
 - No build step, backend, login or database. The site must run directly from the repo on GitHub Pages.
 - No external requests at runtime. Libraries and data live in the repo.
-- Keep the Content Security Policy in `index.html` restrictive.
+- Keep the Content Security Policy in every HTML page restrictive.
 - Display user input with `textContent` only. Never pass imported data or user input to `innerHTML` or `eval`.
 - Never commit secrets, API keys or tokens.
 - UI text is German. Code, comments, file names and commit messages are English.
@@ -48,9 +48,15 @@ Browser tests use Playwright's own Firefox build, not the installed Firefox. Dev
 ## Project structure
 
 ```
-index.html, style.css   page and styles
+index.html              mode menu with one card per game mode
+name-countries.html     the "Länder benennen" mode
+style.css               styles for all pages
+images/                 menu background and card pictures, generated with `npm run build:images`
+fonts/                  web fonts with their licenses
 tools/serve.py          local development server without caching
 tools/d3-bundle.js      d3 functions in vendor/d3.bundle.js, rebuilt with `npm run build:vendor`
+tools/mode-images.js    draws the card pictures from the map data
+tools/menu-background.js draws the comic world map behind the menu
 src/                    one module per responsibility
 data/                   map data, country list, aliases
 vendor/                 third-party code, never edited by hand
