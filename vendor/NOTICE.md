@@ -17,3 +17,6 @@
 - `images/modes/*.svg` and `images/menu-background.svg`: drawn from
   `data/world.json` by `tools/mode-images.js` and `tools/menu-background.js`,
   so the same Natural Earth source applies.
+- `fonts/bangers/Bangers-Regular.ttf`: Bangers by The Bangers Project Authors,
+  SIL Open Font License 1.1 (`fonts/bangers/OFL.txt`), unchanged.
+  https://github.com/googlefonts/bangers
