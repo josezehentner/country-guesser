@@ -25,7 +25,7 @@ const throwingStorage = {
 beforeEach(() => stubLocalStorage(memoryStorage()));
 
 test('progress survives a save and load', () => {
-  const progress = { version: 1, countries: { AT: entry }, settings: { continent: 'EU' } };
+  const progress = { version: 1, countries: { AT: entry }, settings: { regions: ['EU', 'ME'], levels: ['easy'], filtersOpen: false } };
   assert.equal(saveProgress(progress), true);
   assert.deepEqual(loadProgress(), progress);
 });
@@ -59,6 +59,25 @@ test('loading drops invalid entries but keeps valid ones', () => {
   assert.deepEqual(loadProgress(), { version: 1, countries: { AT: entry }, settings: {} });
 });
 
+test('filters keep only known, distinct codes', () => {
+  const settings = { regions: ['EU', 'EU', 'XX', 7], levels: ['hard', 'impossible'], filtersOpen: 'yes', extra: 1 };
+  stubLocalStorage(memoryStorage({ [KEY]: JSON.stringify({ version: 1, countries: {}, settings }) }));
+  assert.deepEqual(loadProgress().settings, { regions: ['EU'], levels: ['hard'] });
+});
+
+test('an emptied filter stays empty, one with only unknown codes means no filter', () => {
+  const settings = { regions: [], levels: ['impossible'] };
+  stubLocalStorage(memoryStorage({ [KEY]: JSON.stringify({ version: 1, countries: {}, settings }) }));
+  assert.deepEqual(loadProgress().settings, { regions: [] });
+});
+
+test('the old single continent becomes a region filter', () => {
+  stubLocalStorage(memoryStorage({ [KEY]: JSON.stringify({ version: 1, countries: {}, settings: { continent: 'AF' } }) }));
+  assert.deepEqual(loadProgress().settings, { regions: ['AF'] });
+  const file = { version: 1, countries: { AT: entry }, settings: { continent: 'SA' } };
+  assert.deepEqual(parseImport(JSON.stringify(file)).settings, { regions: ['SA'] });
+});
+
 test('loading strips unknown fields from entries', () => {
   const stored = { version: 1, countries: { AT: { ...entry, extra: 'x' } }, settings: {} };
   stubLocalStorage(memoryStorage({ [KEY]: JSON.stringify(stored) }));
@@ -79,7 +98,7 @@ test('blocked localStorage does not throw', () => {
 });
 
 test('parseImport accepts a valid file', () => {
-  const file = { version: 1, countries: { AT: entry }, settings: { continent: 'AF' } };
+  const file = { version: 1, countries: { AT: entry }, settings: { regions: ['AF'], levels: ['easy', 'medium'] } };
   assert.deepEqual(parseImport(JSON.stringify(file)), file);
 });
 

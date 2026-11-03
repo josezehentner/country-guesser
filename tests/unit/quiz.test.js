@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { COUNTRIES } from '../../data/countries.js';
-import { isCorrectAnswer, nextScore, normalize, pickNextCountry, selectionWeight } from '../../src/quiz.js';
+import { filterCountries, isCorrectAnswer, nextScore, normalize, pickNextCountry, selectionWeight } from '../../src/quiz.js';
 
 test('normalize ignores case, whitespace, diacritics and punctuation', () => {
   assert.equal(normalize('  ÖSTERREICH '), 'osterreich');
@@ -86,6 +86,30 @@ test('pickNextCountry never repeats the previous country', () => {
   for (let i = 0; i < 500; i++) {
     assert.notEqual(pickNextCountry(pool, {}, pool[0].code).code, pool[0].code);
   }
+});
+
+test('pickNextCountry asks the only country left again', () => {
+  const [only] = COUNTRIES;
+  assert.equal(pickNextCountry([only], {}, only.code), only);
+});
+
+test('filterCountries combines regions and levels', () => {
+  const codes = (filters) => filterCountries(COUNTRIES, filters).map((country) => country.code);
+  assert.equal(codes().length, COUNTRIES.length);
+  assert.equal(codes({}).length, COUNTRIES.length);
+
+  const southAmerica = codes({ regions: ['SA'] });
+  assert.ok(southAmerica.includes('BR') && southAmerica.includes('FK') && !southAmerica.includes('DE'));
+
+  const easySouthAmerica = codes({ regions: ['SA'], levels: ['easy'] });
+  assert.deepEqual(easySouthAmerica.sort(), ['AR', 'BR', 'CL', 'CO', 'PE', 'VE']);
+
+  const hardOrEasyEurope = codes({ regions: ['EU', 'ME'], levels: ['easy', 'hard'] });
+  assert.ok(hardOrEasyEurope.includes('DE') && hardOrEasyEurope.includes('FO') && hardOrEasyEurope.includes('TR'));
+  assert.ok(!hardOrEasyEurope.includes('SK'));
+
+  assert.deepEqual(codes({ regions: [] }), []);
+  assert.deepEqual(codes({ regions: ['AN'], levels: ['easy'] }), []);
 });
 
 test('pickNextCountry follows the weights and stays inside the pool', () => {

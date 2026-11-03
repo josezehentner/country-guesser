@@ -25,6 +25,20 @@
     <button type="button" id="settings-btn" class="icon-button" aria-label="Einstellungen" aria-haspopup="dialog" title="Einstellungen">⚙&#xFE0E;</button>
   </header>
 
+  <div class="play-area">
+  <aside id="filters" class="filters" aria-labelledby="filters-title">
+    <h2 id="filters-title">Filter</h2>
+    <fieldset>
+      <legend>Regionen</legend>
+      <div id="region-filters" class="filter-options"></div>
+    </fieldset>
+    <fieldset>
+      <legend>Schwierigkeit</legend>
+      <div id="level-filters" class="filter-options"></div>
+    </fieldset>
+    <p id="filter-summary" class="filter-summary" aria-live="polite"></p>
+  </aside>
+  <button type="button" id="filters-btn" class="filters-tab" aria-label="Filter" aria-controls="filters" aria-expanded="false" title="Filter"><span class="tab-arrow" aria-hidden="true"></span><span class="tab-label" aria-hidden="true">Filter</span></button>
   <main class="map-wrap" id="map-wrap">
     <canvas id="map" role="img" aria-label="Globus"></canvas>
     <canvas id="map-target" aria-hidden="true"></canvas>
@@ -33,6 +47,7 @@
     <ul class="legend" id="legend" aria-label="Legende"></ul>
     <p class="loading" id="loading">Karte wird geladen …</p>
   </main>
+  </div>
 
   <section class="panel">
     <form id="answer-form" class="answer" autocomplete="off">
@@ -48,11 +63,6 @@
 
   <dialog id="settings" class="settings" aria-labelledby="settings-title">
     <h2 id="settings-title">Einstellungen</h2>
-    <label class="setting">Kontinent
-      <select id="continent-filter">
-        <option value="">Alle</option>
-      </select>
-    </label>
     <p class="setting-group">Fortschritt</p>
     <div class="setting-actions">
       <button type="button" id="export-btn">Exportieren</button>

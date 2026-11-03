@@ -251,7 +251,7 @@ test('the tooltip names no country until the answer is given', async ({ page }) 
 test('a click right next to a small country counts as a hit', async ({ page }) => {
   await open(page);
   const oceania = await page.evaluate(async () => (await import('/data/countries.js')).COUNTRIES.filter((c) => c.continent === 'OC').map((c) => c.code));
-  await seed(page, Object.fromEntries(oceania.filter((code) => code !== 'NR').map((code) => [code, entry(10)])), { continent: 'OC' });
+  await seed(page, Object.fromEntries(oceania.filter((code) => code !== 'NR').map((code) => [code, entry(10)])), { regions: ['OC'] });
   for (let i = 0; i < 100 && (await askedCode(page)) !== 'NR'; i++) await skipQuestion(page);
   expect(await askedCode(page)).toBe('NR');
 
@@ -304,6 +304,19 @@ test('settings export this mode\'s progress under its own name', async ({ page }
   await page.click('#settings-btn');
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#export-btn')]);
   expect(download.suggestedFilename()).toMatch(/^countryquiz-find-progress-\d{4}-\d{2}-\d{2}\.json$/);
+});
+
+test('the filter sidebar works here too and keeps this mode\'s own choice', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('#filters')).toBeVisible();
+  for (const input of await page.locator('#filters input[name="levels"]').all()) {
+    if ((await input.getAttribute('value')) !== 'easy') await input.uncheck();
+  }
+  await expect(page.locator('#filter-summary')).toHaveText('58 Länder werden abgefragt.');
+  expect((await stored(page)).settings.levels).toEqual(['easy']);
+  expect(await stored(page, NAME_MODE_KEY)).toBeNull();
+  const level = await page.evaluate(async (c) => (await import('/data/countries.js')).COUNTRY_BY_CODE.get(c).level, await askedCode(page));
+  expect(level).toBe('easy');
 });
 
 test('the menu link leads back to the menu', async ({ page }) => {

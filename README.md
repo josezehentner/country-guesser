@@ -108,9 +108,11 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
     "AT": { "score": 7, "seen": 12, "correct": 9, "lastSeen": "2026-10-30T21:00:00Z" },
     "FR": { "score": 10, "seen": 15, "correct": 13, "lastSeen": "2026-10-29T18:00:00Z" }
   },
-  "settings": {}
+  "settings": { "regions": ["EU", "ME"], "levels": ["easy", "medium"], "filtersOpen": true }
 }
 ```
+
+`settings` is optional throughout: a missing `regions` or `levels` means all of them, an empty list means none. `filtersOpen` remembers whether the filter sidebar is open on a wide screen. An older `"continent": "AF"` is read as `"regions": ["AF"]`.
 
 - Save immediately after **every** answer.
 - Wrap all localStorage access in `try/catch`. If localStorage is unavailable (e.g. blocked in private mode), the game still runs and shows a subtle notice that progress is not being saved.
@@ -144,8 +146,12 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 
 - **Stats bar**: number of mastered countries (score 10), started countries (1–9), never-asked countries; overall progress bar.
 - **Tooltip**: on hover/tap of a country that has already been asked, show its name and score. For never-asked countries, do not reveal the name.
-- **Optional continent filter** (Europe, Asia, Africa, North America, South America, Oceania, Antarctica) that only quizzes countries from that continent. Saved in `settings`.
-- **Settings dialog** behind a ⚙ button in the top bar: the continent filter and the progress actions (export, import, reset). They are rarely needed, so they take no space next to the globe.
+- **Filter sidebar** on the left of the globe in both modes, opened and closed with a tab ("‹ Filter" / "› Filter") in the middle of its outer edge; closed, the tab waits at the left edge of the screen. Ticks choose which countries are asked; both groups combine, and each mode keeps its own choice in `settings`:
+  - **Regions:** Europa, Naher Osten, Asien, Afrika, Nordamerika, Südamerika, Ozeanien, Antarktis. The Middle East is the Arabian Peninsula, the Levant, Iraq, Iran, Egypt and Turkey; Cyprus stays in Europe and the Caucasus in Asia.
+  - **Difficulty:** every country has exactly one level. *Einfach*: about 60 very well-known countries. *Schwer*: everything that is not a UN member (territories, dependencies, disputed areas) and UN island states smaller than about 1000 km². *Mittel*: all other UN members. The lists live in `data/countries.js`.
+  - Each tick shows how many countries it covers, and the sidebar says how many are asked. A choice without any country says so; then every country comes up until the choice changes.
+  - On a wide screen a click on the tab pins the sidebar beside the globe (it starts pinned, or as last left); like the Mac dock, moving the mouse onto the tab or to the left edge of the screen only peeks: the sidebar slides in over the globe and slides out a moment after the mouse leaves it. Running off the left edge of the window keeps it open. On small screens it slides over the globe, starts closed and closes with Escape.
+- **Settings dialog** behind a ⚙ button in the top bar: the progress actions (export, import, reset). They are rarely needed, so they take no space next to the globe.
 - **Game screen like a HUD**: the globe takes the whole height below the top bar, and everything else floats over it:
   - the question in a light green comic caption box at the top, in dark blue letters ("Welches Land ist markiert?", or "Wo liegt **Frankreich**?" with the name big); clicks go through it to the globe;
   - the controls in a small rounded dock at the bottom center: the input with "Prüfen"/"Weiter" and "Weiß ich nicht", or in "Länder finden" just "Weiß ich nicht" and "Weiter";
@@ -169,7 +175,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 ├── style.css
 ├── images/modes/       # card pictures
 ├── src/
-│   ├── game.js        # shared by all modes: startup, game loop, stats, settings
+│   ├── game.js        # shared by all modes: startup, game loop, stats, filters, settings
 │   ├── name-countries.js # "Länder benennen": type the name
 │   ├── find-countries.js # "Länder finden": click the country
 │   ├── map.js         # globe rendering, turning, zoom, coloring
@@ -179,7 +185,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 │   └── colors.js      # score → color
 ├── data/
 │   ├── world.json     # simplified Natural Earth data
-│   ├── countries.js   # list of quizzed countries + continent
+│   ├── countries.js   # list of quizzed countries + region and difficulty
 │   └── aliases.js     # alternative German names
 ├── vendor/
 │   └── d3-geo …       # locally bundled libraries
@@ -221,6 +227,7 @@ Local testing: because of ES modules, serve via a local web server, e.g. `python
 - [ ] First answer starts at 5 (correct) or 3 (wrong/"I don't know"); later correct = +1, wrong/"I don't know" = −1; bounds 0 and 10 are respected.
 - [ ] Colors match the table above; "never asked" and "score 0" are distinguishable.
 - [ ] Progress persists after reloading and after closing the browser.
+- [ ] The filter sidebar opens and closes in both modes; region and difficulty ticks combine, only matching countries are asked, and the choice survives a reload.
 - [ ] Export produces a JSON file, import restores the same state, invalid files are rejected.
 - [ ] Small countries are plain shapes without rings, and the globe turns to the asked country.
 - [ ] The globe turns and zooms smoothly, and borders stay sharp at every zoom level.

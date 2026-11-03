@@ -76,16 +76,20 @@ function pixelAt(page, location) {
 
 const view = (page) => page.evaluate(() => document.querySelector('#map').mapTestApi.view());
 
-// The continent filter and the progress actions live in the settings dialog.
+// The progress actions live in the settings dialog.
 async function openSettings(page) {
   await page.click('#settings-btn');
   await expect(page.locator('#settings')).toBeVisible();
 }
 
-async function chooseContinent(page, continent) {
-  await openSettings(page);
-  await page.selectOption('#continent-filter', continent);
-  await page.click('#settings-close');
+const filter = (page, group, code) => page.locator(`#filters input[name="${group}"][value="${code}"]`);
+
+// Leaves only the given codes of a filter group ticked.
+async function keepOnly(page, group, codes) {
+  for (const input of await page.locator(`#filters input[name="${group}"]`).all()) {
+    if (codes.includes(await input.getAttribute('value'))) await input.check();
+    else await input.uncheck();
+  }
 }
 
 async function clickCountry(page, code) {
@@ -223,7 +227,7 @@ test('score stays within 0 and 10', async ({ page }) => {
 
 test('colors match the progress table and survive a reload', async ({ page }) => {
   await open(page);
-  await seed(page, { DE: entry(10), FR: entry(1), ES: entry(0) }, { continent: 'AF' });
+  await seed(page, { DE: entry(10), FR: entry(1), ES: entry(0) }, { regions: ['AF'] });
   await expect.poll(() => fill(page, 'DE')).toBe(await tokenRgb(page, '--score-10'));
   await expect.poll(() => fill(page, 'FR')).toBe(await tokenRgb(page, '--score-1'));
   const zero = await fill(page, 'ES');
@@ -236,19 +240,179 @@ test('colors match the progress table and survive a reload', async ({ page }) =>
   await page.reload();
   await expect.poll(() => targetCode(page)).toBeTruthy();
   await expect.poll(() => fill(page, 'DE')).toBe(await tokenRgb(page, '--score-10'));
-  await expect(page.locator('#continent-filter')).toHaveValue('AF');
+  await expect(filter(page, 'regions', 'AF')).toBeChecked();
+  await expect(filter(page, 'regions', 'EU')).not.toBeChecked();
 });
 
-test('continent filter only asks countries from that continent', async ({ page }) => {
+test('region filter only asks countries from that region', async ({ page }) => {
   await open(page);
-  await chooseContinent(page, 'SA');
+  await keepOnly(page, 'regions', ['SA']);
   const southAmerica = ['AR', 'BO', 'BR', 'CL', 'CO', 'EC', 'GY', 'PE', 'PY', 'SR', 'UY', 'VE', 'FK', 'GF'];
   for (let i = 0; i < 15; i++) {
     expect(southAmerica).toContain(await targetCode(page));
     await page.click('#dont-know-btn');
     await page.keyboard.press('Enter');
   }
-  expect((await stored(page)).settings.continent).toBe('SA');
+  expect((await stored(page)).settings.regions).toEqual(['SA']);
+});
+
+test('regions and difficulty combine, and the choice survives a reload', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('#filters')).toBeVisible();
+  await expect(page.locator('#filters input:checked')).toHaveCount(11);
+  await expect(page.locator('#filter-summary')).toHaveText('250 Länder werden abgefragt.');
+  await expect(page.locator('#filters label', { hasText: 'Naher Osten' })).toContainText('16');
+
+  await keepOnly(page, 'regions', ['SA']);
+  await keepOnly(page, 'levels', ['easy']);
+  await expect(page.locator('#filter-summary')).toHaveText('6 Länder werden abgefragt.');
+  expect((await stored(page)).settings).toMatchObject({ regions: ['SA'], levels: ['easy'] });
+  const easySouthAmerica = ['AR', 'BR', 'CL', 'CO', 'PE', 'VE'];
+  for (let i = 0; i < 10; i++) {
+    expect(easySouthAmerica).toContain(await targetCode(page));
+    await page.click('#dont-know-btn');
+    await page.keyboard.press('Enter');
+  }
+
+  await page.reload();
+  await expect.poll(() => targetCode(page)).toBeTruthy();
+  expect(easySouthAmerica).toContain(await targetCode(page));
+  await expect(filter(page, 'levels', 'easy')).toBeChecked();
+  await expect(filter(page, 'levels', 'hard')).not.toBeChecked();
+});
+
+test('a choice without countries says so and keeps the question', async ({ page }) => {
+  await open(page);
+  await keepOnly(page, 'regions', ['AN']);
+  const code = await targetCode(page);
+  expect(['AQ', 'BV', 'GS', 'HM', 'TF']).toContain(code);
+  await filter(page, 'levels', 'hard').uncheck();
+  await expect(page.locator('#filter-summary')).toHaveText(/^Keine Länder für diese Auswahl/);
+  expect(await targetCode(page)).toBe(code);
+  // Every country comes up until the filters change.
+  await page.click('#dont-know-btn');
+  await page.keyboard.press('Enter');
+  expect(await targetCode(page)).toBeTruthy();
+});
+
+test('the filters sit on the left and fold away by the tab at their edge', async ({ page }) => {
+  await open(page);
+  const toggle = page.locator('#filters-btn');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  const panel = await page.locator('#filters').boundingBox();
+  const globe = await page.locator('#map').boundingBox();
+  expect(panel.x).toBe(0);
+  expect(globe.x).toBeGreaterThanOrEqual(panel.x + panel.width);
+  // The tab hangs at the middle of the filters' outer edge, then of the screen's.
+  const middleOf = (box) => box.y + box.height / 2;
+  let tab = await toggle.boundingBox();
+  expect(tab.x).toBeCloseTo(panel.x + panel.width, -1);
+  expect(Math.abs(middleOf(tab) - middleOf(panel))).toBeLessThan(2);
+
+  const narrow = globe.width;
+  await toggle.click();
+  await expect(page.locator('#filters')).toBeHidden();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  tab = await toggle.boundingBox();
+  expect(tab.x).toBe(0);
+  await expect.poll(async () => (await page.locator('#map').boundingBox()).width).toBeGreaterThan(narrow + 200);
+  await expect.poll(() => page.evaluate(() => document.querySelector('#map').width)).toBeGreaterThan(narrow + 200);
+
+  await page.reload();
+  await expect.poll(() => targetCode(page)).toBeTruthy();
+  await expect(page.locator('#filters')).toBeHidden();
+  await toggle.click();
+  await expect(page.locator('#filters')).toBeVisible();
+});
+
+test('hovering the tab opens the filters over the globe, leaving closes them, a click keeps them', async ({ page }) => {
+  await open(page);
+  const toggle = page.locator('#filters-btn');
+  const filters = page.locator('#filters');
+  await toggle.click();
+  await expect(filters).toBeHidden();
+  await page.mouse.move(640, 400);
+  const globe = await page.locator('#map').boundingBox();
+
+  await toggle.hover();
+  await expect(filters).toBeVisible();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  // Peeking lies over the globe instead of taking its room.
+  expect(await page.locator('#map').boundingBox()).toEqual(globe);
+  // The mouse may move from the tab into the filters and use them.
+  const box = await filters.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 5 });
+  await expect(filters).toBeVisible();
+  await page.mouse.move(box.x + box.width + 200, box.y + box.height / 2, { steps: 5 });
+  await expect(filters).toBeHidden();
+  expect((await stored(page)).settings.filtersOpen).toBe(false);
+
+  await toggle.hover();
+  await expect(filters).toBeVisible();
+  await toggle.click();
+  await page.mouse.move(box.x + box.width + 200, box.y + box.height / 2, { steps: 5 });
+  await expect(filters).toBeVisible();
+  await expect.poll(async () => (await page.locator('#map').boundingBox()).width).toBeLessThan(globe.width - 200);
+  expect((await stored(page)).settings.filtersOpen).toBe(true);
+});
+
+test('the mouse at the left edge opens the filters, and running off the window keeps them', async ({ page }) => {
+  await open(page);
+  const filters = page.locator('#filters');
+  await page.locator('#filters-btn').click();
+  await page.mouse.move(640, 400);
+  await expect(filters).toBeHidden();
+
+  // Far from the tab, right at the edge of the globe's area
+  const area = await page.locator('.play-area').boundingBox();
+  await page.mouse.move(area.x + 10, area.y + 40, { steps: 5 });
+  await expect(filters).toBeVisible();
+  await page.mouse.move(0, area.y + 40);
+  await page.mouse.move(-20, area.y + 40);
+  await page.waitForTimeout(600);
+  await expect(filters).toBeVisible();
+
+  // In the top bar the edge does not count.
+  await page.mouse.move(640, 400, { steps: 5 });
+  await expect(filters).toBeHidden();
+  await page.mouse.move(5, 20, { steps: 5 });
+  await page.waitForTimeout(300);
+  await expect(filters).toBeHidden();
+});
+
+test.describe('with motion', () => {
+  test.use({ reducedMotion: 'no-preference' });
+
+  test('the filters slide in and out', async ({ page }) => {
+    await open(page);
+    const filters = page.locator('#filters');
+    await page.locator('#filters-btn').click();
+    await page.mouse.move(640, 400);
+    await expect(filters).toBeHidden();
+    await page.mouse.move(5, 400);
+    // Halfway in, the filters are still partly off screen.
+    await expect.poll(async () => (await filters.boundingBox()).x).toBeLessThan(-10);
+    await expect.poll(async () => (await filters.boundingBox()).x).toBe(0);
+    await page.mouse.move(640, 400);
+    await expect.poll(async () => (await filters.boundingBox())?.x ?? -Infinity).toBeLessThan(-10);
+    await expect(filters).toBeHidden();
+  });
+});
+
+test('the globe does not blink empty when the filters open or close', async ({ page }) => {
+  await open(page);
+  const alpha = await page.evaluate(async () => {
+    const canvas = document.querySelector('#map');
+    // Observed after the map's own observer, so this runs right after its resize.
+    const resized = new Promise((resolve) => new ResizeObserver((_, observer) => {
+      observer.disconnect();
+      resolve();
+    }).observe(canvas));
+    document.querySelector('#filters-btn').click();
+    await resized;
+    return canvas.getContext('2d').getImageData(canvas.width / 2, canvas.height / 2, 1, 1).data[3];
+  });
+  expect(alpha).toBe(255);
 });
 
 test('export and import round-trip, invalid files rejected, reset clears', async ({ page }, testInfo) => {
@@ -286,7 +450,7 @@ test('export and import round-trip, invalid files rejected, reset clears', async
 
 test('tooltip hides never-asked countries and the current question', async ({ page }) => {
   await open(page);
-  await seed(page, { DE: entry(7) }, { continent: 'AF' });
+  await seed(page, { DE: entry(7) }, { regions: ['AF'] });
   const tooltip = page.locator('#tooltip');
   await clickCountry(page, 'DE');
   await expect(tooltip).toHaveText('Deutschland: 7/10');
@@ -306,7 +470,7 @@ test('tooltip hides never-asked countries and the current question', async ({ pa
 test('countries with a curved shape can be clicked', async ({ page }) => {
   const codes = ['IL', 'SO', 'VN', 'BM', 'CC', 'IO'];
   await open(page);
-  await seed(page, Object.fromEntries(codes.map((code) => [code, entry(7)])), { continent: 'SA' });
+  await seed(page, Object.fromEntries(codes.map((code) => [code, entry(7)])), { regions: ['SA'] });
   for (const code of codes) {
     await clickCountry(page, code);
     const name = await page.evaluate(async (c) => (await import('/data/countries.js')).COUNTRY_BY_CODE.get(c).name, code);
@@ -320,7 +484,7 @@ test('small countries are plain shapes and, when asked, only get the outline, no
   for (const code of ['VA', 'MC', 'MT', 'NR', 'GI', 'TK']) expect(await api('hasShape', code)).toBe(true);
 
   const oceania = await page.evaluate(async () => (await import('/data/countries.js')).COUNTRIES.filter((c) => c.continent === 'OC').map((c) => c.code));
-  await seed(page, Object.fromEntries(oceania.filter((code) => code !== 'NR').map((code) => [code, entry(10)])), { continent: 'OC' });
+  await seed(page, Object.fromEntries(oceania.filter((code) => code !== 'NR').map((code) => [code, entry(10)])), { regions: ['OC'] });
   for (let i = 0; i < 100 && (await targetCode(page)) !== 'NR'; i++) {
     await page.click('#dont-know-btn');
     await page.keyboard.press('Enter');
@@ -382,7 +546,7 @@ for (const colorScheme of ['light', 'dark']) {
 
 test('jumping to a new country zooms in only moderately', async ({ page }) => {
   await open(page);
-  await chooseContinent(page, 'OC');
+  await keepOnly(page, 'regions', ['OC']);
   for (let i = 0; i < 10; i++) {
     expect((await view(page)).k).toBeLessThanOrEqual(3);
     await page.click('#dont-know-btn');
@@ -392,7 +556,7 @@ test('jumping to a new country zooms in only moderately', async ({ page }) => {
 
 test('the globe turns the asked country to the front and center', async ({ page }) => {
   await open(page);
-  await chooseContinent(page, 'SA');
+  await keepOnly(page, 'regions', ['SA']);
   for (let i = 0; i < 5; i++) {
     const code = await targetCode(page);
     const { point, facing, middle } = await page.evaluate((c) => {
@@ -589,6 +753,22 @@ test.describe('on a phone', () => {
     await expect(page.locator('#feedback')).toHaveClass(/bad/);
   });
 
+  test('the filters start closed and slide over the globe', async ({ page }) => {
+    await open(page);
+    await expect(page.locator('#filters')).toBeHidden();
+    const globe = await page.locator('#map').boundingBox();
+    await page.tap('#filters-btn');
+    await expect(page.locator('#filters')).toBeVisible();
+    expect(await page.locator('#map').boundingBox()).toEqual(globe);
+    const panel = await page.locator('#filters').boundingBox();
+    expect(panel.x + panel.width).toBeLessThanOrEqual(375);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+    await page.locator('#filters input[value="EU"]').focus();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#filters')).toBeHidden();
+    await expect(page.locator('#filters-btn')).toBeFocused();
+  });
+
   test('one tap on Prüfen moves on after a right answer, Weiter after a wrong one', async ({ page }) => {
     await open(page);
     const code = await targetCode(page);
@@ -640,11 +820,11 @@ test.describe('on a phone', () => {
   });
 });
 
-test('settings hold the continent filter and progress actions', async ({ page }) => {
+test('settings hold the progress actions', async ({ page }) => {
   await open(page);
-  await expect(page.locator('#continent-filter')).toBeHidden();
+  await expect(page.locator('#export-btn')).toBeHidden();
   await openSettings(page);
-  await expect(page.locator('#continent-filter')).toBeVisible();
+  await expect(page.locator('#export-btn')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.locator('#settings')).toBeHidden();
   await expect(page.locator('#answer-input')).toBeFocused();

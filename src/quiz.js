@@ -74,8 +74,17 @@ export function selectionWeight(entry) {
   return 10 - entry.score;
 }
 
+// The countries the filters let through. A missing group means all of it.
+export function filterCountries(countries, { regions, levels } = {}) {
+  return countries.filter(
+    (country) => (!regions || regions.includes(country.continent)) && (!levels || levels.includes(country.level)),
+  );
+}
+
+// Avoids asking the same country twice in a row, unless it is the only one left.
 export function pickNextCountry(pool, progress, previousCode, random = Math.random) {
-  const candidates = pool.filter((country) => country.code !== previousCode);
+  const others = pool.filter((country) => country.code !== previousCode);
+  const candidates = others.length ? others : pool;
   const weights = candidates.map((country) => selectionWeight(progress[country.code]));
   let remaining = random() * weights.reduce((sum, weight) => sum + weight, 0);
   for (let i = 0; i < candidates.length; i++) {
