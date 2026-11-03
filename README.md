@@ -50,7 +50,7 @@ Additionally, a **"Weiß ich nicht"** ("I don't know") button that counts as wro
 
 1. The game **names** a country ("Wo liegt Frankreich?"). Nothing is marked, and the globe stays where the player left it.
 2. The player turns and zooms the globe and **clicks or taps** the country.
-3. A click on the named country is **correct**; the country is marked where it is, without moving the view. Small countries (those that get a ring) also count when the click lands within the ring's radius of them, because they are hard to hit.
+3. A click on the named country is **correct**; the country is marked where it is, without moving the view. Small countries (under 8,000 km²) also count when the click lands within 11 pixels of them, because they are hard to hit.
 4. A click on a **different** country is wrong: the game names the clicked country, marks the right one and turns it to the front.
 5. A click on the ocean or on land that is not quizzed is no answer; a hint says so.
 6. After a correct answer the next country follows on its own after a short pause (about a second); "Weiter", Enter or a click on the globe skips the pause. After a wrong answer the game waits for "Weiter", Enter or a click (or tap) anywhere on the globe, so the player can see where the country is. Turning or zooming the globe in the meantime does not move on.
@@ -82,9 +82,9 @@ Each country has a **score from 0 to 10**, or has **never been asked**.
 |---|---|---|
 | not present | country never asked | no fill color (neutral light gray/white, outline only) |
 | 0 | asked before, currently 0 points | gray (clearly distinguishable from "never asked") |
-| 1 | 1 point | dark red |
-| 2–9 | intermediate levels | gradient via orange/olive |
-| 10 | mastered | dark green |
+| 1 | 1 point | light red |
+| 2–9 | intermediate levels | gradient via orange and yellow (5) to light green |
+| 10 | mastered | green |
 
 Rules:
 - **First answer for a country**: correct starts at 5, wrong or "I don't know" starts at 3.
@@ -92,12 +92,7 @@ Rules:
 - **Later wrong answer** or "I don't know": −1 (minimum 0).
 - Once a country has been asked, it never returns to the "never asked" state.
 
-Color calculation (guideline, may be visually tuned):
-```js
-// score 1..10 → hue 0° (red) to 120° (green), dark tones
-const hue = ((score - 1) / 9) * 120;
-const color = `hsl(${hue}, 70%, 30%)`;
-```
+Colors are light and friendly: ten tokens `--score-1` to `--score-10` in `style.css`, with the hue rising from red (0°) over yellow (about 50°) to green (about 125°) and a lightness of at least 40%. `src/colors.js` maps a score to its token. Legend numbers are dark, so they stay readable on the light colors.
 Colors must be clearly visible in both light and dark mode. A small **legend** shows the color scale.
 
 ---
@@ -140,7 +135,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 - **Country scope**: all 249 ISO 3166-1 entries plus Kosovo, including dependent territories such as Greenland and French Guiana. Anything else in the map data is drawn but **not asked** and colored neutrally. The list of quizzed countries lives in one central file (`data/countries.js`) so it is easy to adjust.
 - **Turn and zoom** the globe: drag to turn it, mouse wheel or pinch to zoom. Turning stops at the poles. After a quick drag the globe keeps turning and slows down within about a second, unless the player prefers reduced motion.
 - When a country is asked, the globe **turns it to the front and center** and zooms in moderately, so neighboring land stays in view.
-- **Very small countries** (e.g. Vatican City, Monaco, Malta, Pacific and Caribbean island states) are drawn only as their shapes, with no permanent markers. Entries under 40 km² are enlarged to 40 km² so they can be seen. Only while one is being asked, an unfilled **ring** shows where it is.
+- **Very small countries** (e.g. Vatican City, Monaco, Malta, Pacific and Caribbean island states) are drawn only as their shapes, with no permanent markers. Entries under 40 km² are enlarged to 40 km² so they can be seen. While one is asked it gets the same outline as every asked country, which is enough to spot it; there is no extra ring.
 - Projection: orthographic, so the map looks like a globe seen from space.
 
 ---
@@ -151,10 +146,16 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 - **Tooltip**: on hover/tap of a country that has already been asked, show its name and score. For never-asked countries, do not reveal the name.
 - **Optional continent filter** (Europe, Asia, Africa, North America, South America, Oceania, Antarctica) that only quizzes countries from that continent. Saved in `settings`.
 - **Settings dialog** behind a ⚙ button in the top bar: the continent filter and the progress actions (export, import, reset). They are rarely needed, so they take no space next to the globe.
-- **Small screens** (narrow, or phones held sideways): one layout for all devices, only CSS adapts it. Everything outside the globe shrinks to one row above (menu link, stats as colored dots, ⚙, a thin progress line) and one below (input, "Prüfen"/"Weiter", "?" for "Weiß ich nicht"). The result appears over the bottom of the globe instead of in its own row.
+- **Game screen like a HUD**: the globe takes the whole height below the top bar, and everything else floats over it:
+  - the question in a light green comic caption box at the top, in dark blue letters ("Welches Land ist markiert?", or "Wo liegt **Frankreich**?" with the name big); clicks go through it to the globe;
+  - the controls in a small rounded dock at the bottom center: the input with "Prüfen"/"Weiter" and "Weiß ich nicht", or in "Länder finden" just "Weiß ich nicht" and "Weiter";
+  - the result just above the dock: a comic burst with the verdict ("Richtig!", "Falsch!", "Schade!"), the country and the new score as a badge in its color. Hints, e.g. a click on the ocean, show without burst or score;
+  - the legend upright at the right edge, scores 0 to 10 with 10 at the top. Never-asked countries have no swatch: they are plain land.
+- **Small screens** (narrow, or phones held sideways): one layout for all devices, only CSS adapts it. The top bar shrinks to one row (menu link, stats as colored dots, ⚙, a thin progress line), the dock spans the width, "Weiß ich nicht" in "Länder benennen" becomes "?", and the legend lies flat above the dock. Even the longest country name fits the caption box.
 - **On-screen keyboard**: the page is sized to the area above the keyboard, so the answer row stays visible and the globe takes the rest.
 - Keyboard control: the input field automatically gets focus for each new country and stays editable, so a phone keyboard stays open. Enter submits; after a correct answer the next country follows by itself, after a wrong one Enter or typing moves on.
 - Supports light and dark mode (`prefers-color-scheme`).
+- **Comic look** matching the menu: thick ink outlines and hard offset shadows on panels, buttons, cards and the globe; a comic sunburst behind the globe (rays from the globe's center, halftone dots growing towards the edges, a few comic stars; drawn by `tools/globe-background.js`, with a dark variant); Bangers for titles, buttons, the asked name and the result; the light green of the titles for the main action ("Prüfen", "Weiter"), the highlight around the asked country (with an ink edge, so it shows on the beige land) and focus rings. Buttons press down when clicked and the result pops in, except with reduced motion. Bangers draws ß like a B, so ß comes from the body font. In dark mode interface lines are light, because black lines vanish on dark panels.
 
 ---
 
@@ -221,7 +222,7 @@ Local testing: because of ES modules, serve via a local web server, e.g. `python
 - [ ] Colors match the table above; "never asked" and "score 0" are distinguishable.
 - [ ] Progress persists after reloading and after closing the browser.
 - [ ] Export produces a JSON file, import restores the same state, invalid files are rejected.
-- [ ] Small countries are plain shapes, get a ring only while asked, and the globe turns to the asked country.
+- [ ] Small countries are plain shapes without rings, and the globe turns to the asked country.
 - [ ] The globe turns and zooms smoothly, and borders stay sharp at every zoom level.
 - [ ] Usable on mobile (touch zoom, input, no horizontal scrollbar), with most of the screen left for the globe even while the keyboard is open.
 - [ ] Game works even when localStorage is unavailable (with a notice).

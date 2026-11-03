@@ -23,7 +23,7 @@ startGame({
     });
     dontKnowButton.addEventListener('click', () => {
       if (game.isAnswered) return;
-      game.finish(false, `Schade. Hier liegt ${game.current.name}`);
+      game.finish(false, 'Schade!', `${game.current.name} liegt hier`);
       game.map.highlight(game.current.code);
     });
   },
@@ -52,16 +52,16 @@ startGame({
     }
     const { code, name } = game.current;
     if (game.map.hits(code, event.clientX, event.clientY)) {
-      game.finish(true, `Richtig: ${name}`);
+      game.finish(true, 'Richtig!', name);
       game.map.highlight(code, { focus: false });
       return true;
     }
     const clicked = game.map.codeAt(event.clientX, event.clientY);
     if (!clicked) {
-      game.setFeedback('Dort ist kein Land aus dem Quiz.');
+      game.setFeedback('Dort ist kein Land aus dem Quiz.', 'hint');
       return true;
     }
-    game.finish(false, `Falsch, das ist ${COUNTRY_BY_CODE.get(clicked).name}. Hier liegt ${name}`);
+    game.finish(false, 'Falsch!', `Das ist ${COUNTRY_BY_CODE.get(clicked).name}. ${name} liegt hier`);
     game.map.highlight(code);
     return true;
   },

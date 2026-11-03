@@ -6,9 +6,19 @@ const DEGREES = 180 / Math.PI;
 const RADIANS = Math.PI / 180;
 const EARTH_RADIUS_KM = 6371;
 const BORDER_WIDTH_PX = 0.8;
-const TARGET_WIDTH_PX = 2.5;
-const TARGET_RING_MAX_AREA_KM2 = 8000;
-const TARGET_RING_RADIUS_PX = 11;
+// Comic look, like the land in the menu: a thick ink outline around the globe and
+// a hard shadow offset to the bottom right.
+const GLOBE_OUTLINE_PX = 3;
+const GLOBE_SHADOW_PX = [6, 7];
+const TARGET_WIDTH_PX = 3;
+// The light green highlight gets an ink edge on both sides, or it would vanish
+// on the beige land.
+const TARGET_EDGE_PX = 1.5;
+// Countries smaller than this are hard to hit: in "Länder finden" a click this
+// close to them counts too.
+const SMALL_AREA_KM2 = 8000;
+const SMALL_HIT_RADIUS_PX = 11;
+const SMALL_FLASH_WIDTH_PX = 8;
 // Globe radius at zoom 1, as a share of the smaller canvas side.
 const GLOBE_SIZE = 0.45;
 // Beyond this the map data runs out of detail and borders turn angular.
@@ -44,7 +54,7 @@ function polygonsOf(geometry) {
   return geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
 }
 
-// Largest polygon of a shape: drives the target ring and auto-zoom, so that e.g.
+// Largest polygon of a shape: drives the auto-zoom, so that e.g.
 // Alaska or far-away islands do not pull the view away from the mainland.
 function largestPolygon(shape) {
   const areas = shape.polygons.map((coordinates) => geoArea({ type: 'Polygon', coordinates }));
@@ -195,6 +205,13 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     const started = performance.now();
     context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     context.clearRect(0, 0, cssWidth, cssHeight);
+    context.save();
+    context.translate(...GLOBE_SHADOW_PX);
+    context.beginPath();
+    path({ type: 'Sphere' });
+    context.fillStyle = resolveColor('var(--globe-shadow)');
+    context.fill();
+    context.restore();
     context.beginPath();
     path({ type: 'Sphere' });
     context.fillStyle = resolveColor('var(--ocean)');
@@ -212,6 +229,8 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     }
     context.beginPath();
     path({ type: 'Sphere' });
+    context.lineWidth = GLOBE_OUTLINE_PX;
+    context.strokeStyle = resolveColor('var(--ink)');
     context.stroke();
     lastDrawMs = performance.now() - started;
   }
@@ -220,32 +239,30 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     targetContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     targetContext.clearRect(0, 0, cssWidth, cssHeight);
     if (!target) return;
-    targetContext.strokeStyle = resolveColor('var(--target)');
-    targetContext.lineWidth = TARGET_WIDTH_PX;
     targetContext.lineJoin = 'round';
     targetContext.beginPath();
-    if (traceShape(targetContext, targetPath, target.shape)) targetContext.stroke();
-    if (traceRing(targetContext, target.ring)) targetContext.stroke();
+    if (!traceShape(targetContext, targetPath, target.shape)) return;
+    targetContext.strokeStyle = resolveColor('var(--ink)');
+    targetContext.lineWidth = TARGET_WIDTH_PX + 2 * TARGET_EDGE_PX;
+    targetContext.stroke();
+    targetContext.strokeStyle = resolveColor('var(--target)');
+    targetContext.lineWidth = TARGET_WIDTH_PX;
+    targetContext.stroke();
   }
 
-  // Adds a small country's ring to the current path. Returns false when it is hidden.
-  function traceRing(ctx, ring) {
-    if (!ring || geoDistance(center, ring) >= Math.PI / 2) return false;
-    const [x, y] = projection(ring);
-    ctx.beginPath();
-    ctx.arc(x, y, TARGET_RING_RADIUS_PX, 0, 2 * Math.PI);
-    return true;
-  }
-
-  // Small countries are filled together with their ring, or they could not be seen.
+  // Small countries also get a thick outline in the flash color, or a fill of a
+  // few pixels could not be seen.
   function drawFlash() {
     flashContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     flashContext.clearRect(0, 0, cssWidth, cssHeight);
     if (!flashing) return;
-    flashContext.fillStyle = resolveColor(`var(--flash-${flashing.kind})`);
+    flashContext.fillStyle = flashContext.strokeStyle = resolveColor(`var(--flash-${flashing.kind})`);
+    flashContext.lineJoin = 'round';
+    flashContext.lineWidth = SMALL_FLASH_WIDTH_PX;
     flashContext.beginPath();
-    if (traceShape(flashContext, flashPath, flashing.shape)) flashContext.fill();
-    if (traceRing(flashContext, flashing.ring)) flashContext.fill();
+    if (!traceShape(flashContext, flashPath, flashing.shape)) return;
+    flashContext.fill();
+    if (isSmall(flashing.shape)) flashContext.stroke();
   }
 
   function scheduleDraw() {
@@ -405,13 +422,12 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     }
   }
 
-  const isSmall = (shape) => geoArea(shape.feature) * EARTH_RADIUS_KM ** 2 < TARGET_RING_MAX_AREA_KM2;
-  const ringOf = (shape) => (isSmall(shape) ? shape.caps[largestPolygon(shape)].center : null);
+  const isSmall = (shape) => geoArea(shape.feature) * EARTH_RADIUS_KM ** 2 < SMALL_AREA_KM2;
 
   // Marks a country and, unless `focus` is false, turns it to the front and center.
   function highlight(code, { focus = true } = {}) {
     const shape = shapeByCode.get(code);
-    target = { code, shape, ring: ringOf(shape) };
+    target = { code, shape };
     if (focus) focusOn(shape, MAX_AUTO_ZOOM, true);
     scheduleDraw();
   }
@@ -429,7 +445,7 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     flashing?.animation.cancel();
     const shape = shapeByCode.get(code);
     const animation = flashCanvas.animate(keyframes, durationMs);
-    flashing = { code, kind, shape, ring: ringOf(shape), animation };
+    flashing = { code, kind, shape, animation };
     animation.onfinish = () => {
       if (flashing?.animation !== animation) return;
       flashing = null;
@@ -479,13 +495,13 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
   }
 
   // True if a click lands on the country. Small countries are hard to hit, so a
-  // click as close as their ring's radius counts too.
+  // click within a few pixels of them counts too.
   function hits(code, clientX, clientY) {
     if (codeAt(clientX, clientY) === code) return true;
     const shape = shapeByCode.get(code);
     if (!isSmall(shape)) return false;
     const rect = canvas.getBoundingClientRect();
-    return screenDistance(shape, [clientX - rect.left, clientY - rect.top]) <= TARGET_RING_RADIUS_PX;
+    return screenDistance(shape, [clientX - rect.left, clientY - rect.top]) <= SMALL_HIT_RADIUS_PX;
   }
 
   function showTooltip(event) {
@@ -523,8 +539,9 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
   // A canvas has no elements to inspect, so the browser tests go through this.
   canvas.mapTestApi = {
     targetCode: () => target?.code,
+    // The point the globe turns to the center for a country.
+    centerOf: (code) => { const shape = shapeByCode.get(code); return shape.caps[largestPolygon(shape)].center; },
     flashing: () => (flashing ? { code: flashing.code, kind: flashing.kind } : null),
-    hasTargetRing: () => Boolean(target?.ring),
     hasShape: (code) => shapeByCode.has(code),
     colorOf: (code) => resolveColor(shapeByCode.get(code).color),
     shapeCount: () => shapes.length,
