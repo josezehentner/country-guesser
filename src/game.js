@@ -37,8 +37,23 @@ export function startGame(mode) {
     finish,
   };
 
-  function setFeedback(text, kind = '') {
-    feedback.textContent = text;
+  // Shows the result over the globe: a comic burst with the verdict ("Richtig!"),
+  // a line of text and, after an answer, the country's new score as a badge in its
+  // color. Without arguments it clears the result.
+  function setFeedback(text = '', kind = '', { verdict = '', score } = {}) {
+    const parts = [];
+    const part = (className, content) => {
+      const element = document.createElement('span');
+      element.className = className;
+      element.textContent = content;
+      parts.push(element);
+      return element;
+    };
+    if (verdict) part('verdict', verdict);
+    if (text) part('feedback-text', text);
+    if (score !== undefined) part('score-chip', `${score}/${MAX_SCORE}`).style.background = scoreColor(score);
+    // Spaces between the parts, so the text reads well, also to screen readers.
+    feedback.replaceChildren(...parts.flatMap((element, i) => (i ? [' ', element] : [element])));
     feedback.className = `feedback ${kind}`;
     // The result pops in like a comic sound word. `scale` leaves the phone
     // layout's centering transform alone.
@@ -121,13 +136,13 @@ export function startGame(mode) {
     return entry.score;
   }
 
-  // Scores the current question and shows `message` with the new score. After a
-  // correct answer the next country follows by itself; a wrong one waits for the
-  // player, so the right answer can be seen.
-  function finish(correct, message) {
+  // Scores the current question and shows the verdict and `text` with the new
+  // score. After a correct answer the next country follows by itself; a wrong one
+  // waits for the player, so the right answer can be seen.
+  function finish(correct, verdict, text) {
     const score = recordAnswer(correct);
     game.isAnswered = true;
-    setFeedback(`${message} (${score}/${MAX_SCORE})`, correct ? 'good' : 'bad');
+    setFeedback(text, correct ? 'good' : 'bad', { verdict, score });
     mode.answered(game, correct);
     if (correct) nextTimer = setTimeout(nextQuestion, mode.nextDelayMs);
   }

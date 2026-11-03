@@ -146,7 +146,12 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 - **Tooltip**: on hover/tap of a country that has already been asked, show its name and score. For never-asked countries, do not reveal the name.
 - **Optional continent filter** (Europe, Asia, Africa, North America, South America, Oceania, Antarctica) that only quizzes countries from that continent. Saved in `settings`.
 - **Settings dialog** behind a ⚙ button in the top bar: the continent filter and the progress actions (export, import, reset). They are rarely needed, so they take no space next to the globe.
-- **Small screens** (narrow, or phones held sideways): one layout for all devices, only CSS adapts it. Everything outside the globe shrinks to one row above (menu link, stats as colored dots, ⚙, a thin progress line) and one below (input, "Prüfen"/"Weiter", "?" for "Weiß ich nicht"). The result appears over the bottom of the globe instead of in its own row.
+- **Game screen like a HUD**: the globe takes the whole height below the top bar, and everything else floats over it:
+  - the question in a yellow comic caption box at the top ("Welches Land ist markiert?", or "Wo liegt **Frankreich**?" with the name big in magenta); clicks go through it to the globe;
+  - the controls in a small rounded dock at the bottom center: the input with "Prüfen"/"Weiter" and "Weiß ich nicht", or in "Länder finden" just "Weiß ich nicht" and "Weiter";
+  - the result just above the dock: a comic burst with the verdict ("Richtig!", "Falsch!", "Schade!"), the country and the new score as a badge in its color. Hints, e.g. a click on the ocean, show without burst or score;
+  - the legend upright at the right edge, with 10 at the top.
+- **Small screens** (narrow, or phones held sideways): one layout for all devices, only CSS adapts it. The top bar shrinks to one row (menu link, stats as colored dots, ⚙, a thin progress line), the dock spans the width, "Weiß ich nicht" in "Länder benennen" becomes "?", and the legend lies flat above the dock. Even the longest country name fits the caption box.
 - **On-screen keyboard**: the page is sized to the area above the keyboard, so the answer row stays visible and the globe takes the rest.
 - Keyboard control: the input field automatically gets focus for each new country and stays editable, so a phone keyboard stays open. Enter submits; after a correct answer the next country follows by itself, after a wrong one Enter or typing moves on.
 - Supports light and dark mode (`prefers-color-scheme`).

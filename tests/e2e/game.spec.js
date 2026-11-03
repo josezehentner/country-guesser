@@ -626,6 +626,17 @@ test('settings hold the continent filter and progress actions', async ({ page })
   await expect(page.locator('#settings')).toBeHidden();
 });
 
+test('the controls float in a dock over the globe, which reaches the bottom', async ({ page }) => {
+  await open(page);
+  const [panel, map] = await Promise.all(['.panel', '#map-wrap'].map((s) => page.locator(s).boundingBox()));
+  const viewport = page.viewportSize();
+  expect(map.y + map.height).toBe(viewport.height);
+  expect(panel.y).toBeGreaterThan(map.y);
+  expect(panel.y + panel.height).toBeLessThan(viewport.height);
+  expect(panel.width).toBeLessThan(viewport.width / 2);
+  await expect(page.locator('#prompt')).toHaveText('Welches Land ist markiert?');
+});
+
 test('on a wide screen the buttons keep their full labels', async ({ page }) => {
   await open(page);
   expect(await page.locator('#dont-know-btn').innerText()).toBe('Weiß ich nicht');

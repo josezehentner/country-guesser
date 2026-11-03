@@ -77,7 +77,7 @@ test('clicking the named country is correct, saves its own progress and the next
   const code = await askedCode(page);
   await clickCountry(page, code);
   await expect(page.locator('#feedback')).toHaveClass(/good/);
-  await expect(page.locator('#feedback')).toHaveText(`Richtig: ${await nameOf(page, code)} (5/10)`);
+  await expect(page.locator('#feedback')).toHaveText(`Richtig! ${await nameOf(page, code)} 5/10`);
   expect((await stored(page)).countries[code]).toMatchObject({ score: 5, seen: 1, correct: 1 });
   expect(await stored(page, NAME_MODE_KEY)).toBeNull();
   expect(await mapApi(page, 'colorOf', code)).toBe('hsl(50, 90%, 60%)');
@@ -180,7 +180,7 @@ test('clicking another country is wrong, names both and turns to the right one',
   const other = await otherCode(page);
   await clickCountry(page, other);
   await expect(page.locator('#feedback')).toHaveClass(/bad/);
-  await expect(page.locator('#feedback')).toHaveText(`Falsch, das ist ${await nameOf(page, other)}. Hier liegt ${await nameOf(page, code)} (3/10)`);
+  await expect(page.locator('#feedback')).toHaveText(`Falsch! Das ist ${await nameOf(page, other)}. ${await nameOf(page, code)} liegt hier 3/10`);
   expect((await stored(page)).countries).toEqual({ [code]: expect.objectContaining({ score: 3, seen: 1, correct: 0 }) });
   expect(await mapApi(page, 'targetCode')).toBe(code);
   expect((await mapApi(page, 'view')).k).toBeLessThanOrEqual(3);
@@ -198,7 +198,7 @@ test('"Weiß ich nicht" counts as wrong and shows the country', async ({ page })
   await open(page);
   const code = await askedCode(page);
   await page.click('#dont-know-btn');
-  await expect(page.locator('#feedback')).toHaveText(`Schade. Hier liegt ${await nameOf(page, code)} (3/10)`);
+  await expect(page.locator('#feedback')).toHaveText(`Schade! ${await nameOf(page, code)} liegt hier 3/10`);
   expect((await stored(page)).countries[code]).toMatchObject({ score: 3, correct: 0 });
   expect(await mapApi(page, 'targetCode')).toBe(code);
   await expect(page.locator('#dont-know-btn')).toBeDisabled();
@@ -251,6 +251,39 @@ test('a click right next to a small country counts as a hit', async ({ page }) =
   expect(await mapApi(page, 'hasTargetRing')).toBe(true);
 });
 
+test('the question box sits on the globe and lets clicks through', async ({ page }) => {
+  await open(page);
+  const [caption, map] = await Promise.all(['#prompt', '#map-wrap'].map((s) => page.locator(s).boundingBox()));
+  expect(caption.y).toBeGreaterThanOrEqual(map.y);
+  await expect(page.locator('#prompt')).toHaveCSS('pointer-events', 'none');
+});
+
+test('the result shows a verdict burst and the new score in its color', async ({ page }) => {
+  await open(page);
+  await page.click('#dont-know-btn');
+  await expect(page.locator('#feedback .verdict')).toHaveText('Schade!');
+  const chip = page.locator('#feedback .score-chip');
+  await expect(chip).toHaveText('3/10');
+  const [chipColor, scoreColor] = await chip.evaluate((element) => {
+    const probe = document.createElement('span');
+    probe.style.background = 'var(--score-3)';
+    document.body.append(probe);
+    const colors = [getComputedStyle(element).backgroundColor, getComputedStyle(probe).backgroundColor];
+    probe.remove();
+    return colors;
+  });
+  expect(chipColor).toBe(scoreColor);
+});
+
+test('a miss on the ocean shows only a hint, without verdict or score', async ({ page }) => {
+  await open(page);
+  await mapApi(page, 'lookAt', [-30, 0], 1);
+  const { x, y } = await mapApi(page, 'pointAt', [-30, 0]);
+  await page.mouse.click(x, y);
+  await expect(page.locator('#feedback')).toHaveClass(/hint/);
+  await expect(page.locator('#feedback .verdict, #feedback .score-chip')).toHaveCount(0);
+});
+
 test('settings export this mode\'s progress under its own name', async ({ page }) => {
   await open(page);
   await page.click('#settings-btn');
@@ -267,18 +300,23 @@ test('the menu link leads back to the menu', async ({ page }) => {
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 375, height: 667 }, hasTouch: true });
 
-  test('even the longest country name keeps the answer row low', async ({ page }) => {
+  test('even the longest country name fits the question box on screen', async ({ page }) => {
     await open(page);
-    const heights = await page.evaluate(async () => {
+    const boxes = await page.evaluate(async () => {
       const { COUNTRIES } = await import('/data/countries.js');
       const name = document.querySelector('#prompt-name');
-      const panel = document.querySelector('.panel');
+      const caption = document.querySelector('#prompt');
       return COUNTRIES.map((country) => {
         name.textContent = country.name;
-        return panel.getBoundingClientRect().height;
+        const { left, right, height } = caption.getBoundingClientRect();
+        return { left, right, height };
       });
     });
-    expect(Math.max(...heights)).toBeLessThan(65);
+    for (const { left, right, height } of boxes) {
+      expect(left).toBeGreaterThanOrEqual(0);
+      expect(right).toBeLessThanOrEqual(375);
+      expect(height).toBeLessThan(110);
+    }
   });
 
   test('a tap on the country answers, in one row below the globe', async ({ page }) => {

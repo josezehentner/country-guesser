@@ -227,63 +227,113 @@ h1 { margin: 0; font-size: 1.1rem; }
 
 .loading[hidden] { display: none; }
 
+/* The color scale stands upright at the right edge, 10 at the top. */
 .legend {
   position: absolute;
-  left: 10px;
-  bottom: 10px;
+  right: 12px;
+  top: 50%;
+  z-index: 1;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 2px;
-  max-width: calc(100% - 20px);
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 3px;
   margin: 0;
-  padding: 5px 7px;
+  padding: 7px 8px;
   list-style: none;
   background: var(--surface);
   border: 2px solid var(--line);
-  border-radius: 10px;
+  border-radius: 12px;
   box-shadow: var(--shadow);
   font-size: 0.7rem;
+  font-weight: 600;
   color: var(--muted);
+  transform: translateY(-50%);
 }
 
-.legend li { display: flex; align-items: center; gap: 3px; }
-.legend li.gap { margin-right: 6px; }
+.legend li { display: flex; align-items: center; gap: 5px; }
+.legend li.gap { margin-top: 6px; }
 
 .swatch {
   display: inline-grid;
   place-items: center;
-  width: 18px;
-  height: 15px;
+  width: 22px;
+  height: 16px;
   border: 1.5px solid var(--line);
-  border-radius: 3px;
+  border-radius: 4px;
   color: #1d2b36;
   font-family: var(--comic-font);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   letter-spacing: 0.03em;
   line-height: 1;
 }
 
-/* Answer panel */
-.panel {
-  position: relative;
-  z-index: 1;
-  padding: 12px 16px;
-  background: var(--surface);
-  border-top: var(--outline);
+/* The question, as a comic narrator box at the top of the globe. Clicks pass
+   through to the globe. */
+.caption {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  z-index: 2;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  margin: 0;
+  padding: 6px 18px 7px;
+  background: var(--accent);
+  color: #1d2b36;
+  border: var(--outline);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  font-family: var(--comic-font);
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-align: center;
+  overflow-wrap: anywhere;
+  transform: translateX(-50%) rotate(-1.5deg);
+  pointer-events: none;
 }
+.caption strong {
+  font-size: 1.6em;
+  font-weight: 400;
+  color: var(--target);
+  -webkit-text-stroke: 0.08em #1d2b36;
+  paint-order: stroke fill;
+}
+/* Only holds the focus between answers, it is not a control. */
+.caption:focus { outline: none; }
 
-.answer { display: flex; flex-wrap: wrap; gap: 10px; }
+/* The controls float in a small dock at the bottom of the globe, which takes the
+   whole height of the page. */
+body { position: relative; }
+
+.panel {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  z-index: 3;
+  width: min(500px, calc(100% - 24px));
+  padding: 8px;
+  background: var(--surface);
+  border: var(--outline);
+  border-radius: 999px;
+  box-shadow: var(--shadow-big);
+  transform: translateX(-50%);
+}
+/* Only buttons: as wide as they are */
+.panel.compact { width: max-content; max-width: calc(100% - 24px); }
+
+.answer { display: flex; align-items: center; gap: 8px; }
 
 /* 16px or more keeps iOS Safari from zooming when the input is focused */
 .answer input {
-  flex: 1 1 200px;
+  flex: 1 1 auto;
   min-width: 0;
-  padding: 7px 12px;
+  height: 42px;
+  padding: 0 16px;
   background: var(--bg);
   color: var(--text);
   border: var(--outline);
-  border-radius: var(--radius);
+  border-radius: 999px;
   font: inherit;
   font-size: 18px;
   font-weight: 600;
@@ -291,20 +341,6 @@ h1 { margin: 0; font-size: 1.1rem; }
 
 .answer input::placeholder { color: var(--muted); font-weight: 400; }
 .answer input:focus { outline: none; box-shadow: 0 0 0 3px var(--target); }
-
-/* The name to find, in the place of the answer input */
-.answer .prompt { flex: 1 1 200px; min-width: 0; align-self: center; margin: 0; overflow-wrap: anywhere; line-height: 1.15; }
-.prompt strong {
-  font-family: var(--comic-font);
-  font-size: 1.7rem;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  color: var(--target);
-  -webkit-text-stroke: 0.08em var(--ink);
-  paint-order: stroke fill;
-}
-/* Only holds the focus between answers, it is not a control. */
-.answer .prompt:focus { outline: none; }
 
 /* Chunky comic buttons that press down */
 button, select {
@@ -333,24 +369,77 @@ button:disabled { opacity: 0.45; box-shadow: none; cursor: default; }
 
 button.primary { background: var(--accent); color: var(--accent-text); }
 
-/* The result, in big comic letters */
+.answer button { flex: none; height: 42px; padding: 0 18px; border-radius: 999px; }
+
+/* The result floats above the dock: a comic burst with the verdict, the country
+   and its new score. */
 .feedback {
-  min-height: 1.4em;
-  margin: 10px 0 0;
-  font-family: var(--comic-font);
-  font-size: 1.35rem;
-  letter-spacing: 0.04em;
-  line-height: 1.2;
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 18px);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: min(560px, calc(100vw - 24px));
+  margin: 0;
+  padding: 8px 16px 8px 10px;
+  background: var(--surface);
+  border: var(--outline);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  font-weight: 700;
+  line-height: 1.25;
+  transform: translateX(-50%);
+  pointer-events: none;
 }
-.feedback.good { color: var(--good); }
-.feedback.bad { color: var(--bad); }
+.feedback:empty { display: none; }
+.feedback.hint, .feedback:not(:has(.verdict)) { padding: 8px 16px; }
+
+.verdict {
+  position: relative;
+  isolation: isolate;
+  flex: none;
+  margin: -26px 0 -26px -30px;
+  padding: 22px 20px;
+  color: #1d2b36;
+  font-family: var(--comic-font);
+  font-size: 1.6rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  transform: rotate(-8deg);
+}
+/* The burst: an ink star with the colored star a little smaller on top */
+.verdict::before, .verdict::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  clip-path: polygon(50% 0%, 58% 17%, 72% 5%, 71% 23%, 89% 19%, 81% 35%, 99% 39%, 84% 50%, 99% 61%, 81% 65%, 89% 81%, 71% 77%, 72% 95%, 58% 83%, 50% 100%, 42% 83%, 28% 95%, 29% 77%, 11% 81%, 19% 65%, 1% 61%, 16% 50%, 1% 39%, 19% 35%, 11% 19%, 29% 23%, 28% 5%, 42% 17%);
+}
+.verdict::before { inset: -4px -8px; background: #1d2b36; }
+.verdict::after { inset: 0 -4px; background: var(--comic-land); }
+.feedback.bad .verdict::after { background: var(--score-1); }
+
+.score-chip {
+  flex: none;
+  padding: 1px 9px;
+  color: #1d2b36;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  font-family: var(--comic-font);
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
 
 .label-short { display: none; }
 
 /* Bangers draws ß like a B, so it comes from the body font. */
 .eszett { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-weight: 800; }
 
-.notice { margin: 6px 0 0; color: var(--muted); font-size: 0.8rem; }
+.notice { margin: 6px 12px 2px; color: var(--muted); font-size: 0.8rem; text-align: center; }
 
 /* Settings */
 .settings {
@@ -399,40 +488,37 @@ button.primary { background: var(--accent); color: var(--accent-text); }
   .icon-button { padding: 1px 8px; border-width: 2px; box-shadow: 2px 2px 0 var(--line); }
   .back { font-size: 1rem; }
 
-  .panel { padding: 7px 10px; }
-  .answer { flex-wrap: nowrap; gap: 7px; }
-  .answer input, .answer .prompt { flex: 1 1 auto; }
-  .answer input { padding: 5px 10px; }
-  /* Two lines at most, even for the longest names */
-  .answer .prompt { font-size: 0.85rem; line-height: 1.05; }
-  .prompt strong { font-size: 1.15rem; letter-spacing: 0.02em; }
-  .answer button { flex: none; min-width: 44px; padding: 5px 12px; }
-  .answer .label-long { display: none; }
-  .answer .label-short { display: inline; }
+  .panel { bottom: 8px; width: min(500px, calc(100% - 16px)); padding: 6px; }
+  .panel.compact { width: max-content; max-width: calc(100% - 16px); }
+  .answer { gap: 6px; }
+  .answer input { height: 40px; padding: 0 14px; font-size: 16px; }
+  .answer button { height: 40px; min-width: 44px; padding: 0 14px; }
+  .answer:not(.buttons-only) .label-long { display: none; }
+  .answer:not(.buttons-only) .label-short { display: inline; }
 
-  /* The result floats over the bottom of the globe as a speech bubble. */
-  .feedback {
-    position: absolute;
+  .caption { top: 10px; padding: 4px 14px 5px; font-size: 1.1rem; }
+  .caption strong { font-size: 1.35em; letter-spacing: 0.02em; }
+
+  .feedback { bottom: calc(100% + 14px); gap: 10px; font-size: 0.95rem; }
+  .verdict { margin: -22px 0 -22px -24px; padding: 18px 16px; font-size: 1.35rem; }
+
+  /* Lying down above the dock: at the side it would cover the globe. */
+  .legend {
+    top: auto;
+    right: auto;
     left: 50%;
-    bottom: calc(100% + 48px);
-    z-index: 3;
-    width: max-content;
-    max-width: calc(100% - 24px);
-    min-height: 0;
-    margin: 0;
-    padding: 6px 14px;
-    background: var(--surface);
-    border: var(--outline);
-    border-radius: 14px;
-    box-shadow: var(--shadow);
-    font-size: 1.2rem;
+    bottom: 76px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px;
+    max-width: calc(100% - 16px);
+    padding: 4px 6px;
+    font-size: 0.65rem;
     transform: translateX(-50%);
-    pointer-events: none;
   }
-  .feedback:empty { display: none; }
-
-  .legend { font-size: 0.65rem; left: 8px; bottom: 8px; }
-  .swatch { width: 15px; }
+  .legend li.gap { margin: 0 5px 0 0; }
+  .swatch { width: 16px; height: 14px; font-size: 0.7rem; }
 }
 
 /* Mode menu */
