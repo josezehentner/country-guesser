@@ -82,9 +82,9 @@ Each country has a **score from 0 to 10**, or has **never been asked**.
 |---|---|---|
 | not present | country never asked | no fill color (neutral light gray/white, outline only) |
 | 0 | asked before, currently 0 points | gray (clearly distinguishable from "never asked") |
-| 1 | 1 point | dark red |
-| 2–9 | intermediate levels | gradient via orange/olive |
-| 10 | mastered | dark green |
+| 1 | 1 point | light red |
+| 2–9 | intermediate levels | gradient via orange and yellow (5) to light green |
+| 10 | mastered | green |
 
 Rules:
 - **First answer for a country**: correct starts at 5, wrong or "I don't know" starts at 3.
@@ -92,12 +92,7 @@ Rules:
 - **Later wrong answer** or "I don't know": −1 (minimum 0).
 - Once a country has been asked, it never returns to the "never asked" state.
 
-Color calculation (guideline, may be visually tuned):
-```js
-// score 1..10 → hue 0° (red) to 120° (green), dark tones
-const hue = ((score - 1) / 9) * 120;
-const color = `hsl(${hue}, 70%, 30%)`;
-```
+Colors are light and friendly: ten tokens `--score-1` to `--score-10` in `style.css`, with the hue rising from red (0°) over yellow (about 50°) to green (about 125°) and a lightness of at least 40%. `src/colors.js` maps a score to its token. Legend numbers are dark, so they stay readable on the light colors.
 Colors must be clearly visible in both light and dark mode. A small **legend** shows the color scale.
 
 ---
@@ -155,7 +150,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 - **On-screen keyboard**: the page is sized to the area above the keyboard, so the answer row stays visible and the globe takes the rest.
 - Keyboard control: the input field automatically gets focus for each new country and stays editable, so a phone keyboard stays open. Enter submits; after a correct answer the next country follows by itself, after a wrong one Enter or typing moves on.
 - Supports light and dark mode (`prefers-color-scheme`).
-- **Comic look** matching the menu: thick ink outlines and hard offset shadows on panels, buttons, cards and the globe; halftone water behind the globe; Bangers for titles, buttons, the asked name and the result; comic yellow for the main action. Buttons press down when clicked and the result pops in, except with reduced motion. Bangers draws ß like a B, so ß comes from the body font. In dark mode interface lines are light, because black lines vanish on dark panels.
+- **Comic look** matching the menu: thick ink outlines and hard offset shadows on panels, buttons, cards and the globe; a comic sunburst behind the globe (rays from the globe's center, halftone dots growing towards the edges, a few comic stars; drawn by `tools/globe-background.js`, with a dark variant); Bangers for titles, buttons, the asked name and the result; comic yellow for the main action. Buttons press down when clicked and the result pops in, except with reduced motion. Bangers draws ß like a B, so ß comes from the body font. In dark mode interface lines are light, because black lines vanish on dark panels.
 
 ---
 

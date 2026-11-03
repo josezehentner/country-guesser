@@ -60,6 +60,20 @@ test('scoreColor follows the progress table', () => {
   assert.equal(scoreColor(undefined), 'var(--never)');
   assert.equal(scoreColor(0), 'var(--score-zero)');
   assert.notEqual(scoreColor(undefined), scoreColor(0));
-  assert.equal(scoreColor(1), 'hsl(0, 70%, var(--score-lightness))');
-  assert.equal(scoreColor(10), 'hsl(120, 70%, var(--score-lightness))');
+  for (let score = 1; score <= 10; score++) assert.equal(scoreColor(score), `var(--score-${score})`);
+});
+
+// The tokens live in style.css: red over yellow to green, every step light.
+test('score colors run from light red over yellow to green', () => {
+  const css = readFileSync(new URL('../../style.css', import.meta.url), 'utf8');
+  const palette = Array.from({ length: 10 }, (_, i) => {
+    const match = css.match(new RegExp(`--score-${i + 1}: hsl\\((\\d+), (\\d+)%, (\\d+)%\\)`));
+    assert.ok(match, `--score-${i + 1}`);
+    return { hue: Number(match[1]), lightness: Number(match[3]) };
+  });
+  assert.ok(palette[0].hue <= 10, 'starts red');
+  assert.ok(palette[4].hue >= 45 && palette[4].hue <= 60, 'yellow in the middle');
+  assert.ok(palette[9].hue >= 110 && palette[9].hue <= 135, 'ends green');
+  for (let i = 1; i < 10; i++) assert.ok(palette[i].hue > palette[i - 1].hue, `hue rises at ${i + 1}`);
+  for (const { lightness } of palette) assert.ok(lightness >= 40, 'light, not dark');
 });

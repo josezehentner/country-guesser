@@ -8,9 +8,8 @@
   --muted: #55606b;
   --border: #1d2b36;
   --ocean: #add8e6;
-  /* Halftone water behind the globe, a shade deeper than the globe's own ocean */
-  --space: #7cc6e8;
-  --space-dots: #9ad5ef;
+  /* Behind the globe, under the comic sunburst (images/globe-background.svg) */
+  --space: #fff4cf;
   --ink: #1d2b36;
   /* Outlines and shadows of the interface; the globe and lettering keep --ink */
   --line: #1d2b36;
@@ -20,8 +19,19 @@
   --comic-shadow: #6fae4f;
   --never: #f5e6c8;
   --country-stroke: #000000;
-  --score-zero: #8d8f93;
-  --score-lightness: 30%;
+  /* Progress from red over yellow to green, light and friendly. Score 0 is a
+     gray that stays clearly apart from the beige of never-asked countries. */
+  --score-zero: #aeb2b8;
+  --score-1: hsl(0, 78%, 66%);
+  --score-2: hsl(14, 82%, 64%);
+  --score-3: hsl(28, 86%, 62%);
+  --score-4: hsl(40, 90%, 60%);
+  --score-5: hsl(50, 90%, 60%);
+  --score-6: hsl(62, 70%, 56%);
+  --score-7: hsl(78, 58%, 54%);
+  --score-8: hsl(95, 50%, 52%);
+  --score-9: hsl(110, 46%, 48%);
+  --score-10: hsl(125, 48%, 42%);
   --target: #e6007e;
   /* Comic yellow for the main action */
   --accent: #ffd23f;
@@ -42,8 +52,7 @@
     --text: #f1f3f5;
     --muted: #aab4bf;
     --border: #000000;
-    --space: #173a52;
-    --space-dots: #1f4a66;
+    --space: #13263a;
     --ink: #000000;
     /* Black lines vanish on dark panels */
     --line: #8da2b8;
@@ -126,8 +135,8 @@ h1 { margin: 0; font-size: 1.1rem; }
 
 /* Small dots in the colors of the legend */
 .stat-dot { display: inline-block; width: 11px; height: 11px; border: 2px solid var(--line); border-radius: 50%; }
-.stat-dot.mastered { background: hsl(120, 70%, var(--score-lightness)); }
-.stat-dot.started { background: hsl(40, 70%, var(--score-lightness)); }
+.stat-dot.mastered { background: var(--score-10); }
+.stat-dot.started { background: var(--score-5); }
 .stat-dot.never { background: var(--never); }
 
 .icon-button { padding: 3px 9px; font-size: 1.2rem; line-height: 1.2; }
@@ -156,7 +165,11 @@ h1 { margin: 0; font-size: 1.1rem; }
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
-  background: radial-gradient(var(--space-dots) 2px, transparent 2.5px) 0 0 / 16px 16px, var(--space);
+  background: var(--space) url("images/globe-background.svg") center / cover no-repeat;
+}
+
+@media (prefers-color-scheme: dark) {
+  .map-wrap { background-image: url("images/globe-background-dark.svg"); }
 }
 
 #map { display: block; width: 100%; height: 100%; touch-action: none; }
@@ -244,7 +257,7 @@ h1 { margin: 0; font-size: 1.1rem; }
   height: 15px;
   border: 1.5px solid var(--line);
   border-radius: 3px;
-  color: #fff;
+  color: #1d2b36;
   font-family: var(--comic-font);
   font-size: 0.75rem;
   letter-spacing: 0.03em;

@@ -2,8 +2,16 @@ import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 
 const KEY = 'countryquiz.v1';
-const DARK_RED = 'rgb(130, 23, 23)';
-const DARK_GREEN = 'rgb(23, 130, 23)';
+// The color a CSS token draws as on a canvas, e.g. '--score-10'.
+function tokenRgb(page, token) {
+  return page.evaluate((t) => {
+    const context = document.createElement('canvas').getContext('2d');
+    context.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(t).trim();
+    context.fillRect(0, 0, 1, 1);
+    const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
+    return `rgb(${r}, ${g}, ${b})`;
+  }, token);
+}
 const entry = (score) => ({ score, seen: 12, correct: 11, lastSeen: '2026-10-29T18:00:00Z' });
 
 async function open(page) {
@@ -127,7 +135,7 @@ test('first correct answer starts at 5, saves, colors the country and Enter move
   await expect(page.locator('#feedback')).toHaveClass(/good/);
   await expect(page.locator('#feedback')).toContainText('5/10');
   expect((await stored(page)).countries[code]).toMatchObject({ score: 5, seen: 1, correct: 1 });
-  expect(await page.evaluate((c) => document.querySelector('#map').mapTestApi.colorOf(c), code)).toBe(`hsl(${(4 / 9) * 120}, 70%, 30%)`);
+  expect(await page.evaluate((c) => document.querySelector('#map').mapTestApi.colorOf(c), code)).toBe('hsl(50, 90%, 60%)');
   await expect(page.locator('#stat-started')).toHaveText('1');
   await expect(page.locator('#stat-never')).toHaveText('249');
 
@@ -216,8 +224,8 @@ test('score stays within 0 and 10', async ({ page }) => {
 test('colors match the progress table and survive a reload', async ({ page }) => {
   await open(page);
   await seed(page, { DE: entry(10), FR: entry(1), ES: entry(0) }, { continent: 'AF' });
-  await expect.poll(() => fill(page, 'DE')).toBe(DARK_GREEN);
-  await expect.poll(() => fill(page, 'FR')).toBe(DARK_RED);
+  await expect.poll(() => fill(page, 'DE')).toBe(await tokenRgb(page, '--score-10'));
+  await expect.poll(() => fill(page, 'FR')).toBe(await tokenRgb(page, '--score-1'));
   const zero = await fill(page, 'ES');
   const never = await fill(page, 'PT');
   expect(zero).not.toBe(never);
@@ -227,7 +235,7 @@ test('colors match the progress table and survive a reload', async ({ page }) =>
 
   await page.reload();
   await expect.poll(() => targetCode(page)).toBeTruthy();
-  await expect.poll(() => fill(page, 'DE')).toBe(DARK_GREEN);
+  await expect.poll(() => fill(page, 'DE')).toBe(await tokenRgb(page, '--score-10'));
   await expect(page.locator('#continent-filter')).toHaveValue('AF');
 });
 
@@ -330,6 +338,14 @@ for (const colorScheme of ['light', 'dark']) {
       await expect.poll(() => fill(page, 'PT')).toBe('rgb(245, 230, 200)');
       await expect.poll(() => pixelAt(page, [-30, 0])).toBe('rgb(173, 216, 230)');
       expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--country-stroke').trim())).toBe('#000000');
+    });
+
+    test('the globe sits on the comic sunburst', async ({ page }) => {
+      const file = colorScheme === 'dark' ? 'globe-background-dark.svg' : 'globe-background.svg';
+      const loaded = page.waitForResponse((response) => response.url().endsWith(`/images/${file}`) && response.ok());
+      await open(page);
+      await loaded;
+      expect(await page.evaluate(() => getComputedStyle(document.querySelector('#map-wrap')).backgroundImage)).toContain(`images/${file}`);
     });
   });
 }

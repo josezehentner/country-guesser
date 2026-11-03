@@ -80,7 +80,7 @@ test('clicking the named country is correct, saves its own progress and the next
   await expect(page.locator('#feedback')).toHaveText(`Richtig: ${await nameOf(page, code)} (5/10)`);
   expect((await stored(page)).countries[code]).toMatchObject({ score: 5, seen: 1, correct: 1 });
   expect(await stored(page, NAME_MODE_KEY)).toBeNull();
-  expect(await mapApi(page, 'colorOf', code)).toBe(`hsl(${(4 / 9) * 120}, 70%, 30%)`);
+  expect(await mapApi(page, 'colorOf', code)).toBe('hsl(50, 90%, 60%)');
   expect(await mapApi(page, 'targetCode')).toBe(code);
   await expect(page.locator('#stat-started')).toHaveText('1');
 
