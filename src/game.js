@@ -1,14 +1,24 @@
-// What every mode shares: progress, stats, legend, settings and the globe.
+// What every mode shares: progress, stats, legend, filters, settings and the globe.
 // A mode only decides how a question is asked and answered.
-import { COUNTRIES, COUNTRY_BY_CODE, CONTINENTS } from '../data/countries.js';
+import { COUNTRIES, COUNTRY_BY_CODE, CONTINENTS, LEVELS } from '../data/countries.js';
 import { scoreColor } from './colors.js';
 import { createMap } from './map.js';
-import { nextScore, pickNextCountry } from './quiz.js';
+import { filterCountries, nextScore, pickNextCountry } from './quiz.js';
 import { emptyProgress, exportProgress, loadProgress, parseImport, saveProgress } from './storage.js';
 
 export const MAX_SCORE = 10;
 
 export const byId = (id) => document.getElementById(id);
+
+// Same breakpoint as in style.css: there the filters cover the globe instead of
+// sitting beside it.
+const SMALL_SCREEN = '(max-width: 640px), (max-height: 500px)';
+
+// The filter groups in the sidebar, each one a list of codes in the settings.
+const FILTER_GROUPS = [
+  { key: 'regions', boxId: 'region-filters', options: CONTINENTS, field: 'continent' },
+  { key: 'levels', boxId: 'level-filters', options: LEVELS, field: 'level' },
+];
 
 // `mode` provides:
 //   storageKey, exportPrefix  where its progress is kept and how exports are named
@@ -21,7 +31,6 @@ export const byId = (id) => document.getElementById(id);
 //   focus()                   puts the keyboard focus where the player continues
 export function startGame(mode) {
   const feedback = byId('feedback');
-  const continentFilter = byId('continent-filter');
   const importFile = byId('import-file');
 
   let progress = loadProgress(mode.storageKey);
@@ -86,9 +95,12 @@ export function startGame(mode) {
     for (let score = 1; score <= MAX_SCORE; score++) addItem(scoreColor(score), '', String(score));
   }
 
+  const filteredCountries = () => filterCountries(COUNTRIES, progress.settings);
+
+  // With nothing left to ask, every country comes up until the filters change.
   function currentPool() {
-    const continent = progress.settings.continent;
-    return continent ? COUNTRIES.filter((country) => country.continent === continent) : COUNTRIES;
+    const pool = filteredCountries();
+    return pool.length ? pool : COUNTRIES;
   }
 
   function nextQuestion() {
@@ -142,17 +154,6 @@ export function startGame(mode) {
     // Messages and confirmations of these actions would be hidden behind the dialog.
     for (const id of ['export-btn', 'import-btn', 'reset-btn']) byId(id).addEventListener('click', () => settings.close());
 
-    for (const [code, name] of Object.entries(CONTINENTS)) {
-      continentFilter.add(new Option(name, code));
-    }
-    continentFilter.value = progress.settings.continent ?? '';
-    continentFilter.addEventListener('change', () => {
-      if (continentFilter.value) progress.settings.continent = continentFilter.value;
-      else delete progress.settings.continent;
-      persist();
-      nextQuestion();
-    });
-
     byId('export-btn').addEventListener('click', () => exportProgress(progress, mode.exportPrefix));
 
     byId('import-btn').addEventListener('click', () => importFile.click());
@@ -173,9 +174,72 @@ export function startGame(mode) {
     });
   }
 
+  function setupFilters() {
+    for (const { key, boxId, options, field } of FILTER_GROUPS) {
+      const box = byId(boxId);
+      for (const [code, label] of Object.entries(options)) {
+        const option = document.createElement('label');
+        option.className = 'filter-option';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.name = key;
+        input.value = code;
+        const count = document.createElement('span');
+        count.className = 'filter-count';
+        count.textContent = COUNTRIES.filter((country) => country[field] === code).length;
+        option.append(input, label, count);
+        box.append(option);
+      }
+      // All ticked is the same as no filter, so later additions to the data show up.
+      box.addEventListener('change', () => {
+        const inputs = [...box.querySelectorAll('input')];
+        if (inputs.every((input) => input.checked)) delete progress.settings[key];
+        else progress.settings[key] = inputs.filter((input) => input.checked).map((input) => input.value);
+        persist();
+        renderFilters();
+        if (game.map && filteredCountries().length) nextQuestion();
+      });
+    }
+
+    const panel = byId('filters');
+    const toggle = byId('filters-btn');
+    const small = window.matchMedia(SMALL_SCREEN);
+    const setOpen = (open) => {
+      panel.hidden = !open;
+      toggle.setAttribute('aria-expanded', String(open));
+    };
+    // On a phone the open filters cover the globe, so they always start closed there.
+    setOpen(!small.matches && progress.settings.filtersOpen !== false);
+    toggle.addEventListener('click', () => {
+      setOpen(panel.hidden);
+      if (small.matches) return;
+      progress.settings.filtersOpen = !panel.hidden;
+      persist();
+    });
+    panel.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || !small.matches) return;
+      setOpen(false);
+      toggle.focus();
+    });
+    renderFilters();
+  }
+
+  function renderFilters() {
+    for (const { key, boxId } of FILTER_GROUPS) {
+      const selected = progress.settings[key];
+      for (const input of byId(boxId).querySelectorAll('input')) input.checked = !selected || selected.includes(input.value);
+    }
+    const count = filteredCountries().length;
+    const summary = byId('filter-summary');
+    summary.textContent = count
+      ? `${count} ${count === 1 ? 'Land wird' : 'Länder werden'} abgefragt.`
+      : 'Keine Länder für diese Auswahl. Bis du etwas auswählst, kommen alle dran.';
+    summary.classList.toggle('empty', !count);
+  }
+
   function replaceProgress(next) {
     progress = next;
-    continentFilter.value = progress.settings.continent ?? '';
+    renderFilters();
     persist();
     renderAll();
     nextQuestion();
@@ -203,6 +267,8 @@ export function startGame(mode) {
   }
 
   fitToVisibleArea();
+  // The filters do not need the map, so they are ready while it loads.
+  setupFilters();
   start();
 }
 

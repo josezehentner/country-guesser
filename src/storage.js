@@ -1,4 +1,4 @@
-import { COUNTRY_BY_CODE, CONTINENTS } from '../data/countries.js';
+import { COUNTRY_BY_CODE, CONTINENTS, LEVELS } from '../data/countries.js';
 
 // Each mode keeps its own progress under its own key.
 export const STORAGE_KEY = 'countryquiz.v1';
@@ -19,9 +19,24 @@ function isValidEntry(entry) {
   );
 }
 
+// Keeps the known, distinct codes of a filter list. An empty list stays empty (the
+// player unticked everything), but one with only unknown codes means no filter.
+function sanitizeList(list, known) {
+  if (!Array.isArray(list)) return undefined;
+  const codes = [...new Set(list.filter((code) => typeof code === 'string' && Object.hasOwn(known, code)))];
+  return codes.length || !list.length ? codes : undefined;
+}
+
+// Older versions kept a single `continent`; it becomes a one-region filter.
 function sanitizeSettings(settings) {
-  const continent = settings?.continent;
-  return typeof continent === 'string' && Object.hasOwn(CONTINENTS, continent) ? { continent } : {};
+  const result = {};
+  if (settings === null || typeof settings !== 'object') return result;
+  const regions = sanitizeList(settings.regions ?? (typeof settings.continent === 'string' ? [settings.continent] : undefined), CONTINENTS);
+  const levels = sanitizeList(settings.levels, LEVELS);
+  if (regions) result.regions = regions;
+  if (levels) result.levels = levels;
+  if (typeof settings.filtersOpen === 'boolean') result.filtersOpen = settings.filtersOpen;
+  return result;
 }
 
 function copyEntry({ score, seen, correct, lastSeen }) {

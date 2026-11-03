@@ -68,16 +68,20 @@ function pixelAt(page, location) {
 
 const view = (page) => page.evaluate(() => document.querySelector('#map').mapTestApi.view());
 
-// The continent filter and the progress actions live in the settings dialog.
+// The progress actions live in the settings dialog.
 async function openSettings(page) {
   await page.click('#settings-btn');
   await expect(page.locator('#settings')).toBeVisible();
 }
 
-async function chooseContinent(page, continent) {
-  await openSettings(page);
-  await page.selectOption('#continent-filter', continent);
-  await page.click('#settings-close');
+const filter = (page, group, code) => page.locator(`#filters input[name="${group}"][value="${code}"]`);
+
+// Leaves only the given codes of a filter group ticked.
+async function keepOnly(page, group, codes) {
+  for (const input of await page.locator(`#filters input[name="${group}"]`).all()) {
+    if (codes.includes(await input.getAttribute('value'))) await input.check();
+    else await input.uncheck();
+  }
 }
 
 async function clickCountry(page, code) {
@@ -215,7 +219,7 @@ test('score stays within 0 and 10', async ({ page }) => {
 
 test('colors match the progress table and survive a reload', async ({ page }) => {
   await open(page);
-  await seed(page, { DE: entry(10), FR: entry(1), ES: entry(0) }, { continent: 'AF' });
+  await seed(page, { DE: entry(10), FR: entry(1), ES: entry(0) }, { regions: ['AF'] });
   await expect.poll(() => fill(page, 'DE')).toBe(DARK_GREEN);
   await expect.poll(() => fill(page, 'FR')).toBe(DARK_RED);
   const zero = await fill(page, 'ES');
@@ -228,19 +232,77 @@ test('colors match the progress table and survive a reload', async ({ page }) =>
   await page.reload();
   await expect.poll(() => targetCode(page)).toBeTruthy();
   await expect.poll(() => fill(page, 'DE')).toBe(DARK_GREEN);
-  await expect(page.locator('#continent-filter')).toHaveValue('AF');
+  await expect(filter(page, 'regions', 'AF')).toBeChecked();
+  await expect(filter(page, 'regions', 'EU')).not.toBeChecked();
 });
 
-test('continent filter only asks countries from that continent', async ({ page }) => {
+test('region filter only asks countries from that region', async ({ page }) => {
   await open(page);
-  await chooseContinent(page, 'SA');
+  await keepOnly(page, 'regions', ['SA']);
   const southAmerica = ['AR', 'BO', 'BR', 'CL', 'CO', 'EC', 'GY', 'PE', 'PY', 'SR', 'UY', 'VE', 'FK', 'GF'];
   for (let i = 0; i < 15; i++) {
     expect(southAmerica).toContain(await targetCode(page));
     await page.click('#dont-know-btn');
     await page.keyboard.press('Enter');
   }
-  expect((await stored(page)).settings.continent).toBe('SA');
+  expect((await stored(page)).settings.regions).toEqual(['SA']);
+});
+
+test('regions and difficulty combine, and the choice survives a reload', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('#filters')).toBeVisible();
+  await expect(page.locator('#filters input:checked')).toHaveCount(11);
+  await expect(page.locator('#filter-summary')).toHaveText('250 Länder werden abgefragt.');
+  await expect(page.locator('#filters label', { hasText: 'Naher Osten' })).toContainText('16');
+
+  await keepOnly(page, 'regions', ['SA']);
+  await keepOnly(page, 'levels', ['easy']);
+  await expect(page.locator('#filter-summary')).toHaveText('6 Länder werden abgefragt.');
+  expect((await stored(page)).settings).toMatchObject({ regions: ['SA'], levels: ['easy'] });
+  const easySouthAmerica = ['AR', 'BR', 'CL', 'CO', 'PE', 'VE'];
+  for (let i = 0; i < 10; i++) {
+    expect(easySouthAmerica).toContain(await targetCode(page));
+    await page.click('#dont-know-btn');
+    await page.keyboard.press('Enter');
+  }
+
+  await page.reload();
+  await expect.poll(() => targetCode(page)).toBeTruthy();
+  expect(easySouthAmerica).toContain(await targetCode(page));
+  await expect(filter(page, 'levels', 'easy')).toBeChecked();
+  await expect(filter(page, 'levels', 'hard')).not.toBeChecked();
+});
+
+test('a choice without countries says so and keeps the question', async ({ page }) => {
+  await open(page);
+  await keepOnly(page, 'regions', ['AN']);
+  const code = await targetCode(page);
+  expect(['AQ', 'BV', 'GS', 'HM', 'TF']).toContain(code);
+  await filter(page, 'levels', 'hard').uncheck();
+  await expect(page.locator('#filter-summary')).toHaveText(/^Keine Länder für diese Auswahl/);
+  expect(await targetCode(page)).toBe(code);
+  // Every country comes up until the filters change.
+  await page.click('#dont-know-btn');
+  await page.keyboard.press('Enter');
+  expect(await targetCode(page)).toBeTruthy();
+});
+
+test('the filters fold away and give the globe the room', async ({ page }) => {
+  await open(page);
+  const toggle = page.locator('#filters-btn');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  const narrow = (await page.locator('#map').boundingBox()).width;
+  await toggle.click();
+  await expect(page.locator('#filters')).toBeHidden();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect.poll(async () => (await page.locator('#map').boundingBox()).width).toBeGreaterThan(narrow + 200);
+  await expect.poll(() => page.evaluate(() => document.querySelector('#map').width)).toBeGreaterThan(narrow + 200);
+
+  await page.reload();
+  await expect.poll(() => targetCode(page)).toBeTruthy();
+  await expect(page.locator('#filters')).toBeHidden();
+  await toggle.click();
+  await expect(page.locator('#filters')).toBeVisible();
 });
 
 test('export and import round-trip, invalid files rejected, reset clears', async ({ page }, testInfo) => {
@@ -278,7 +340,7 @@ test('export and import round-trip, invalid files rejected, reset clears', async
 
 test('tooltip hides never-asked countries and the current question', async ({ page }) => {
   await open(page);
-  await seed(page, { DE: entry(7) }, { continent: 'AF' });
+  await seed(page, { DE: entry(7) }, { regions: ['AF'] });
   const tooltip = page.locator('#tooltip');
   await clickCountry(page, 'DE');
   await expect(tooltip).toHaveText('Deutschland: 7/10');
@@ -298,7 +360,7 @@ test('tooltip hides never-asked countries and the current question', async ({ pa
 test('countries with a curved shape can be clicked', async ({ page }) => {
   const codes = ['IL', 'SO', 'VN', 'BM', 'CC', 'IO'];
   await open(page);
-  await seed(page, Object.fromEntries(codes.map((code) => [code, entry(7)])), { continent: 'SA' });
+  await seed(page, Object.fromEntries(codes.map((code) => [code, entry(7)])), { regions: ['SA'] });
   for (const code of codes) {
     await clickCountry(page, code);
     const name = await page.evaluate(async (c) => (await import('/data/countries.js')).COUNTRY_BY_CODE.get(c).name, code);
@@ -312,7 +374,7 @@ test('small countries are plain shapes and only the asked one gets a ring', asyn
   for (const code of ['VA', 'MC', 'MT', 'NR', 'GI', 'TK']) expect(await api('hasShape', code)).toBe(true);
 
   const oceania = await page.evaluate(async () => (await import('/data/countries.js')).COUNTRIES.filter((c) => c.continent === 'OC').map((c) => c.code));
-  await seed(page, Object.fromEntries(oceania.filter((code) => code !== 'NR').map((code) => [code, entry(10)])), { continent: 'OC' });
+  await seed(page, Object.fromEntries(oceania.filter((code) => code !== 'NR').map((code) => [code, entry(10)])), { regions: ['OC'] });
   for (let i = 0; i < 100 && (await targetCode(page)) !== 'NR'; i++) {
     await page.click('#dont-know-btn');
     await page.keyboard.press('Enter');
@@ -336,7 +398,7 @@ for (const colorScheme of ['light', 'dark']) {
 
 test('jumping to a new country zooms in only moderately', async ({ page }) => {
   await open(page);
-  await chooseContinent(page, 'OC');
+  await keepOnly(page, 'regions', ['OC']);
   for (let i = 0; i < 10; i++) {
     expect((await view(page)).k).toBeLessThanOrEqual(3);
     await page.click('#dont-know-btn');
@@ -346,7 +408,7 @@ test('jumping to a new country zooms in only moderately', async ({ page }) => {
 
 test('the globe turns the asked country to the front and center', async ({ page }) => {
   await open(page);
-  await chooseContinent(page, 'SA');
+  await keepOnly(page, 'regions', ['SA']);
   for (let i = 0; i < 5; i++) {
     const code = await targetCode(page);
     const { point, facing, middle } = await page.evaluate((c) => {
@@ -543,6 +605,22 @@ test.describe('on a phone', () => {
     await expect(page.locator('#feedback')).toHaveClass(/bad/);
   });
 
+  test('the filters start closed and slide over the globe', async ({ page }) => {
+    await open(page);
+    await expect(page.locator('#filters')).toBeHidden();
+    const globe = await page.locator('#map').boundingBox();
+    await page.tap('#filters-btn');
+    await expect(page.locator('#filters')).toBeVisible();
+    expect(await page.locator('#map').boundingBox()).toEqual(globe);
+    const panel = await page.locator('#filters').boundingBox();
+    expect(panel.x + panel.width).toBeLessThanOrEqual(375);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+    await page.locator('#filters input[value="EU"]').focus();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#filters')).toBeHidden();
+    await expect(page.locator('#filters-btn')).toBeFocused();
+  });
+
   test('one tap on Prüfen moves on after a right answer, Weiter after a wrong one', async ({ page }) => {
     await open(page);
     const code = await targetCode(page);
@@ -594,11 +672,11 @@ test.describe('on a phone', () => {
   });
 });
 
-test('settings hold the continent filter and progress actions', async ({ page }) => {
+test('settings hold the progress actions', async ({ page }) => {
   await open(page);
-  await expect(page.locator('#continent-filter')).toBeHidden();
+  await expect(page.locator('#export-btn')).toBeHidden();
   await openSettings(page);
-  await expect(page.locator('#continent-filter')).toBeVisible();
+  await expect(page.locator('#export-btn')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.locator('#settings')).toBeHidden();
   await expect(page.locator('#answer-input')).toBeFocused();

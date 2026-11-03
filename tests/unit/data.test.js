@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { geoArea } from '../../vendor/d3.bundle.js';
 import { ALIASES } from '../../data/aliases.js';
-import { CONTINENTS, COUNTRIES, COUNTRY_BY_CODE } from '../../data/countries.js';
+import { CONTINENTS, COUNTRIES, COUNTRY_BY_CODE, LEVELS, NOT_UN_MEMBERS } from '../../data/countries.js';
 import { scoreColor } from '../../src/colors.js';
 
 const world = JSON.parse(readFileSync(new URL('../../data/world.json', import.meta.url)));
@@ -30,6 +30,24 @@ test('every quizzed country has a name, a continent and a map shape', () => {
     assert.ok(Object.hasOwn(CONTINENTS, continent), `${code} continent`);
     assert.ok(ids.has(code), `${code} is missing from the map`);
   }
+});
+
+test('every country has a difficulty level, and the 193 UN members are not all hard', () => {
+  for (const { code, level } of COUNTRIES) assert.ok(Object.hasOwn(LEVELS, level), `${code} level`);
+  for (const code of NOT_UN_MEMBERS) {
+    assert.ok(COUNTRY_BY_CODE.has(code), code);
+    assert.equal(COUNTRY_BY_CODE.get(code).level, 'hard', code);
+  }
+  assert.equal(COUNTRIES.length - NOT_UN_MEMBERS.size, 193);
+  const level = (code) => COUNTRY_BY_CODE.get(code).level;
+  for (const code of ['DE', 'US', 'BR', 'CN', 'EG']) assert.equal(level(code), 'easy', code);
+  for (const code of ['SK', 'MT', 'SG', 'BO']) assert.equal(level(code), 'medium', code);
+  for (const code of ['NR', 'TV', 'GL', 'XK', 'TW', 'EH']) assert.equal(level(code), 'hard', code);
+});
+
+test('the Middle East is its own region', () => {
+  for (const code of ['EG', 'TR', 'SA', 'IR', 'IL', 'PS']) assert.equal(COUNTRY_BY_CODE.get(code).continent, 'ME', code);
+  for (const code of ['CY', 'GE', 'AM', 'AZ', 'LY']) assert.notEqual(COUNTRY_BY_CODE.get(code).continent, 'ME', code);
 });
 
 test('map features have unique ids and map data stays under 3 MB', () => {

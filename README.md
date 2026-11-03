@@ -113,9 +113,11 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
     "AT": { "score": 7, "seen": 12, "correct": 9, "lastSeen": "2026-10-30T21:00:00Z" },
     "FR": { "score": 10, "seen": 15, "correct": 13, "lastSeen": "2026-10-29T18:00:00Z" }
   },
-  "settings": {}
+  "settings": { "regions": ["EU", "ME"], "levels": ["easy", "medium"], "filtersOpen": true }
 }
 ```
+
+`settings` is optional throughout: a missing `regions` or `levels` means all of them, an empty list means none. `filtersOpen` remembers whether the filter sidebar is open on a wide screen. An older `"continent": "AF"` is read as `"regions": ["AF"]`.
 
 - Save immediately after **every** answer.
 - Wrap all localStorage access in `try/catch`. If localStorage is unavailable (e.g. blocked in private mode), the game still runs and shows a subtle notice that progress is not being saved.
@@ -149,9 +151,13 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 
 - **Stats bar**: number of mastered countries (score 10), started countries (1–9), never-asked countries; overall progress bar.
 - **Tooltip**: on hover/tap of a country that has already been asked, show its name and score. For never-asked countries, do not reveal the name.
-- **Optional continent filter** (Europe, Asia, Africa, North America, South America, Oceania, Antarctica) that only quizzes countries from that continent. Saved in `settings`.
-- **Settings dialog** behind a ⚙ button in the top bar: the continent filter and the progress actions (export, import, reset). They are rarely needed, so they take no space next to the globe.
-- **Small screens** (narrow, or phones held sideways): one layout for all devices, only CSS adapts it. Everything outside the globe shrinks to one row above (menu link, stats as colored dots, ⚙, a thin progress line) and one below (input, "Prüfen"/"Weiter", "?" for "Weiß ich nicht"). The result appears over the bottom of the globe instead of in its own row.
+- **Filter sidebar** on the right of the globe in both modes, opened and closed with the "☰ Filter" button in the top bar. Ticks choose which countries are asked; both groups combine, and each mode keeps its own choice in `settings`:
+  - **Regions:** Europa, Naher Osten, Asien, Afrika, Nordamerika, Südamerika, Ozeanien, Antarktis. The Middle East is the Arabian Peninsula, the Levant, Iraq, Iran, Egypt and Turkey; Cyprus stays in Europe and the Caucasus in Asia.
+  - **Difficulty:** every country has exactly one level. *Einfach*: about 60 very well-known countries. *Schwer*: everything that is not a UN member (territories, dependencies, disputed areas) and UN island states smaller than about 1000 km². *Mittel*: all other UN members. The lists live in `data/countries.js`.
+  - Each tick shows how many countries it covers, and the sidebar says how many are asked. A choice without any country says so; then every country comes up until the choice changes.
+  - On a wide screen the sidebar sits beside the globe and starts open (or as last left). On small screens it slides over the globe, starts closed and closes with Escape.
+- **Settings dialog** behind a ⚙ button in the top bar: the progress actions (export, import, reset). They are rarely needed, so they take no space next to the globe.
+- **Small screens** (narrow, or phones held sideways): one layout for all devices, only CSS adapts it. Everything outside the globe shrinks to one row above (menu link, stats as colored dots, ☰, ⚙, a thin progress line) and one below (input, "Prüfen"/"Weiter", "?" for "Weiß ich nicht"). The result appears over the bottom of the globe instead of in its own row.
 - **On-screen keyboard**: the page is sized to the area above the keyboard, so the answer row stays visible and the globe takes the rest.
 - Keyboard control: the input field automatically gets focus for each new country and stays editable, so a phone keyboard stays open. Enter submits; after a correct answer the next country follows by itself, after a wrong one Enter or typing moves on.
 - Supports light and dark mode (`prefers-color-scheme`).
@@ -168,7 +174,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 ├── style.css
 ├── images/modes/       # card pictures
 ├── src/
-│   ├── game.js        # shared by all modes: startup, game loop, stats, settings
+│   ├── game.js        # shared by all modes: startup, game loop, stats, filters, settings
 │   ├── name-countries.js # "Länder benennen": type the name
 │   ├── find-countries.js # "Länder finden": click the country
 │   ├── map.js         # globe rendering, turning, zoom, coloring
@@ -178,7 +184,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 │   └── colors.js      # score → color
 ├── data/
 │   ├── world.json     # simplified Natural Earth data
-│   ├── countries.js   # list of quizzed countries + continent
+│   ├── countries.js   # list of quizzed countries + region and difficulty
 │   └── aliases.js     # alternative German names
 ├── vendor/
 │   └── d3-geo …       # locally bundled libraries
@@ -220,6 +226,7 @@ Local testing: because of ES modules, serve via a local web server, e.g. `python
 - [ ] First answer starts at 5 (correct) or 3 (wrong/"I don't know"); later correct = +1, wrong/"I don't know" = −1; bounds 0 and 10 are respected.
 - [ ] Colors match the table above; "never asked" and "score 0" are distinguishable.
 - [ ] Progress persists after reloading and after closing the browser.
+- [ ] The filter sidebar opens and closes in both modes; region and difficulty ticks combine, only matching countries are asked, and the choice survives a reload.
 - [ ] Export produces a JSON file, import restores the same state, invalid files are rejected.
 - [ ] Small countries are plain shapes, get a ring only while asked, and the globe turns to the asked country.
 - [ ] The globe turns and zooms smoothly, and borders stay sharp at every zoom level.
