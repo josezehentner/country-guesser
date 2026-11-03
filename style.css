@@ -32,9 +32,10 @@
   --score-8: hsl(95, 50%, 52%);
   --score-9: hsl(110, 46%, 48%);
   --score-10: hsl(125, 48%, 42%);
-  --target: #e6007e;
-  /* Comic yellow for the main action */
-  --accent: #ffd23f;
+  /* Highlight of the asked country and focus rings: the green of the titles */
+  --target: #b5e48c;
+  /* Main action, e.g. "Prüfen" and "Weiter": the same light green */
+  --accent: #b5e48c;
   --accent-text: #1d2b36;
   --good: #1a7a35;
   --bad: #c0262d;
@@ -251,7 +252,6 @@ h1 { margin: 0; font-size: 1.1rem; }
 }
 
 .legend li { display: flex; align-items: center; gap: 5px; }
-.legend li.gap { margin-top: 6px; }
 
 .swatch {
   display: inline-grid;
@@ -278,7 +278,7 @@ h1 { margin: 0; font-size: 1.1rem; }
   max-width: calc(100% - 32px);
   margin: 0;
   padding: 6px 18px 7px;
-  background: var(--accent);
+  background: var(--comic-land);
   color: #1d2b36;
   border: var(--outline);
   border-radius: 4px;
@@ -295,9 +295,7 @@ h1 { margin: 0; font-size: 1.1rem; }
 .caption strong {
   font-size: 1.6em;
   font-weight: 400;
-  color: var(--target);
-  -webkit-text-stroke: 0.08em #1d2b36;
-  paint-order: stroke fill;
+  color: #1d2b36;
 }
 /* Only holds the focus between answers, it is not a control. */
 .caption:focus { outline: none; }
@@ -340,7 +338,7 @@ body { position: relative; }
 }
 
 .answer input::placeholder { color: var(--muted); font-weight: 400; }
-.answer input:focus { outline: none; box-shadow: 0 0 0 3px var(--target); }
+.answer input:focus { outline: none; box-shadow: 0 0 0 4px var(--target); }
 
 /* Chunky comic buttons that press down */
 button, select {
@@ -512,12 +510,12 @@ button.primary { background: var(--accent); color: var(--accent-text); }
     flex-wrap: wrap;
     justify-content: center;
     gap: 2px;
+    width: max-content;
     max-width: calc(100% - 16px);
     padding: 4px 6px;
     font-size: 0.65rem;
     transform: translateX(-50%);
   }
-  .legend li.gap { margin: 0 5px 0 0; }
   .swatch { width: 16px; height: 14px; font-size: 0.7rem; }
 }
 

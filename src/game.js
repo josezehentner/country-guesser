@@ -90,20 +90,16 @@ export function startGame(mode) {
 
   function renderLegend() {
     const legend = byId('legend');
-    const addItem = (color, label, swatchText = '', className = '') => {
+    // Scores 0 to 10; never-asked countries need no swatch, they are plain land.
+    for (let score = 0; score <= MAX_SCORE; score++) {
       const item = document.createElement('li');
-      item.className = className;
       const swatch = document.createElement('span');
       swatch.className = 'swatch';
-      swatch.style.background = color;
-      swatch.textContent = swatchText;
+      swatch.style.background = scoreColor(score);
+      swatch.textContent = String(score);
       item.append(swatch);
-      if (label) item.append(label);
       legend.append(item);
-    };
-    addItem(scoreColor(undefined), 'nie gefragt', '', 'gap');
-    addItem(scoreColor(0), '', '0');
-    for (let score = 1; score <= MAX_SCORE; score++) addItem(scoreColor(score), '', String(score));
+    }
   }
 
   function currentPool() {

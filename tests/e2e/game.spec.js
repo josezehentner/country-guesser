@@ -637,6 +637,12 @@ test('the controls float in a dock over the globe, which reaches the bottom', as
   await expect(page.locator('#prompt')).toHaveText('Welches Land ist markiert?');
 });
 
+test('the legend shows the scores 0 to 10 and nothing for never-asked countries', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('#legend li')).toHaveText(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']);
+  await expect(page.locator('#legend')).not.toContainText('nie gefragt');
+});
+
 test('on a wide screen the buttons keep their full labels', async ({ page }) => {
   await open(page);
   expect(await page.locator('#dont-know-btn').innerText()).toBe('Weiß ich nicht');

@@ -10,7 +10,10 @@ const BORDER_WIDTH_PX = 0.8;
 // a hard shadow offset to the bottom right.
 const GLOBE_OUTLINE_PX = 3;
 const GLOBE_SHADOW_PX = [6, 7];
-const TARGET_WIDTH_PX = 2.5;
+const TARGET_WIDTH_PX = 3;
+// The light green highlight gets an ink edge on both sides, or it would vanish
+// on the beige land.
+const TARGET_EDGE_PX = 1.5;
 const TARGET_RING_MAX_AREA_KM2 = 8000;
 const TARGET_RING_RADIUS_PX = 11;
 // Globe radius at zoom 1, as a share of the smaller canvas side.
@@ -219,16 +222,22 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     targetContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     targetContext.clearRect(0, 0, cssWidth, cssHeight);
     if (!target) return;
-    targetContext.strokeStyle = resolveColor('var(--target)');
-    targetContext.lineWidth = TARGET_WIDTH_PX;
     targetContext.lineJoin = 'round';
+    const strokeOutlined = () => {
+      targetContext.strokeStyle = resolveColor('var(--ink)');
+      targetContext.lineWidth = TARGET_WIDTH_PX + 2 * TARGET_EDGE_PX;
+      targetContext.stroke();
+      targetContext.strokeStyle = resolveColor('var(--target)');
+      targetContext.lineWidth = TARGET_WIDTH_PX;
+      targetContext.stroke();
+    };
     targetContext.beginPath();
-    if (traceShape(targetContext, targetPath, target.shape)) targetContext.stroke();
+    if (traceShape(targetContext, targetPath, target.shape)) strokeOutlined();
     if (target.ring && geoDistance(center, target.ring) < Math.PI / 2) {
       const [x, y] = projection(target.ring);
       targetContext.beginPath();
       targetContext.arc(x, y, TARGET_RING_RADIUS_PX, 0, 2 * Math.PI);
-      targetContext.stroke();
+      strokeOutlined();
     }
   }
 

@@ -147,15 +147,15 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 - **Optional continent filter** (Europe, Asia, Africa, North America, South America, Oceania, Antarctica) that only quizzes countries from that continent. Saved in `settings`.
 - **Settings dialog** behind a ⚙ button in the top bar: the continent filter and the progress actions (export, import, reset). They are rarely needed, so they take no space next to the globe.
 - **Game screen like a HUD**: the globe takes the whole height below the top bar, and everything else floats over it:
-  - the question in a yellow comic caption box at the top ("Welches Land ist markiert?", or "Wo liegt **Frankreich**?" with the name big in magenta); clicks go through it to the globe;
+  - the question in a light green comic caption box at the top, in dark blue letters ("Welches Land ist markiert?", or "Wo liegt **Frankreich**?" with the name big); clicks go through it to the globe;
   - the controls in a small rounded dock at the bottom center: the input with "Prüfen"/"Weiter" and "Weiß ich nicht", or in "Länder finden" just "Weiß ich nicht" and "Weiter";
   - the result just above the dock: a comic burst with the verdict ("Richtig!", "Falsch!", "Schade!"), the country and the new score as a badge in its color. Hints, e.g. a click on the ocean, show without burst or score;
-  - the legend upright at the right edge, with 10 at the top.
+  - the legend upright at the right edge, scores 0 to 10 with 10 at the top. Never-asked countries have no swatch: they are plain land.
 - **Small screens** (narrow, or phones held sideways): one layout for all devices, only CSS adapts it. The top bar shrinks to one row (menu link, stats as colored dots, ⚙, a thin progress line), the dock spans the width, "Weiß ich nicht" in "Länder benennen" becomes "?", and the legend lies flat above the dock. Even the longest country name fits the caption box.
 - **On-screen keyboard**: the page is sized to the area above the keyboard, so the answer row stays visible and the globe takes the rest.
 - Keyboard control: the input field automatically gets focus for each new country and stays editable, so a phone keyboard stays open. Enter submits; after a correct answer the next country follows by itself, after a wrong one Enter or typing moves on.
 - Supports light and dark mode (`prefers-color-scheme`).
-- **Comic look** matching the menu: thick ink outlines and hard offset shadows on panels, buttons, cards and the globe; a comic sunburst behind the globe (rays from the globe's center, halftone dots growing towards the edges, a few comic stars; drawn by `tools/globe-background.js`, with a dark variant); Bangers for titles, buttons, the asked name and the result; comic yellow for the main action. Buttons press down when clicked and the result pops in, except with reduced motion. Bangers draws ß like a B, so ß comes from the body font. In dark mode interface lines are light, because black lines vanish on dark panels.
+- **Comic look** matching the menu: thick ink outlines and hard offset shadows on panels, buttons, cards and the globe; a comic sunburst behind the globe (rays from the globe's center, halftone dots growing towards the edges, a few comic stars; drawn by `tools/globe-background.js`, with a dark variant); Bangers for titles, buttons, the asked name and the result; the light green of the titles for the main action ("Prüfen", "Weiter"), the highlight around the asked country (with an ink edge, so it shows on the beige land) and focus rings. Buttons press down when clicked and the result pops in, except with reduced motion. Bangers draws ß like a B, so ß comes from the body font. In dark mode interface lines are light, because black lines vanish on dark panels.
 
 ---
 
