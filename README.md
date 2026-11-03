@@ -1,76 +1,78 @@
 # Country Guesser
 
-Ein Länder-Quiz auf einem drehbaren Globus, im Comic-Stil. Du lernst alle Länder der Welt, und der Globus zeigt dir dabei Land für Land, wie gut du sie schon kennst.
+A country quiz on a globe you can spin, drawn in a comic style. You learn every country in the world, and the globe shows you, country by country, how well you already know them.
 
-**[Jetzt spielen](https://josezehentner.github.io/country-guesser/)**: kostenlos, ohne Anmeldung, im Browser am Computer oder am Handy.
+**[Play now](https://josezehentner.github.io/country-guesser/)**: free, no sign-up, in the browser on a computer or phone.
 
-## Spielmodi
+The game is in German for now; more languages are planned.
 
-### Länder benennen
+## Game modes
 
-Auf dem Globus ist ein Land markiert, und du tippst seinen Namen ein. Ein Druck auf Enter genügt: Bei einer richtigen Antwort geht es von selbst weiter. Bei einer falschen siehst du den richtigen Namen und machst weiter, wenn du so weit bist.
+### Name the countries ("Länder benennen")
 
-Du musst nicht perfekt schreiben. Groß- und Kleinschreibung, fehlende Umlaute („Osterreich“) und kleine Tippfehler sind kein Problem. Auch gängige andere Namen zählen, etwa „USA“, „Amerika“, „UK“ oder „Côte d'Ivoire“.
+A country is marked on the globe, and you type its name. One press of Enter is enough: after a right answer the next country comes up by itself. After a wrong one you see the right name and move on when you are ready.
 
-### Länder finden
+You don't have to spell perfectly. Upper and lower case, missing umlauts ("Osterreich") and small typos are fine. Common other names count too, such as "USA", "Amerika", "UK" or "Côte d'Ivoire".
 
-Das Spiel nennt ein Land, und du suchst es auf dem Globus und klickst es an. Bei sehr kleinen Ländern reicht ein Klick knapp daneben. Liegst du falsch, dreht sich der Globus zum richtigen Land. Mit einem weiteren Klick auf den Globus geht es weiter.
+### Find the countries ("Länder finden")
 
-Beide Modi merken sich deinen Fortschritt getrennt: Ein Land zu erkennen und es zu finden sind zwei verschiedene Dinge.
+The game names a country, and you look for it on the globe and click it. For very small countries a click just next to them is enough. If you are wrong, the globe turns to the right country. Another click on the globe moves on.
 
-## So funktioniert dein Fortschritt
+The two modes keep separate progress: recognizing a country and finding it are two different skills.
 
-Jedes Land hat eine Punktzahl von 0 bis 10, und der Globus färbt es entsprechend ein:
+## How your progress works
 
-- **Beige:** noch nie gefragt
-- **Grau:** 0 Punkte
-- **Rot über Gelb bis Grün:** 1 bis 10 Punkte. Grün heißt: gemeistert.
+Every country has a score from 0 to 10, and the globe colors it to match:
 
-Beim ersten Mal startest du mit 5 Punkten, wenn du richtig liegst, sonst mit 3. Danach bringt jede richtige Antwort einen Punkt, jede falsche oder „Weiß ich nicht“ kostet einen.
+- **Beige:** never asked
+- **Gray:** 0 points
+- **Red through yellow to green:** 1 to 10 points. Green means mastered.
 
-Länder, die du noch nicht gut kennst, kommen öfter dran. Gemeisterte Länder tauchen nur ab und zu zur Wiederholung auf.
+The first time, you start at 5 points if you are right and at 3 if not. After that, every right answer adds a point, and every wrong one or "Weiß ich nicht" ("I don't know") takes one away.
 
-## Länder auswählen
+Countries you don't know well yet come up more often. Mastered countries only show up now and then for review.
 
-Links neben dem Globus wählst du aus, welche Länder abgefragt werden. Fahr mit der Maus an den linken Rand, und die Filter gleiten herein. Ein Klick auf die Lasche hält sie offen. Am Handy tippst du auf die Lasche.
+## Choosing countries
 
-- **Regionen:** Europa, Naher Osten, Asien, Afrika, Nordamerika, Südamerika, Ozeanien und Antarktis.
-- **Schwierigkeit:**
-  - *Einfach* sind rund 60 sehr bekannte Länder wie Deutschland, Brasilien oder Japan.
-  - *Schwer* sind alle Gebiete ohne UN-Mitgliedschaft, etwa Grönland, Kosovo oder Französisch-Polynesien, dazu winzige Inselstaaten wie Nauru oder Tuvalu.
-  - *Mittel* sind alle übrigen Länder.
+The filters left of the globe choose which countries are asked. Move the mouse to the left edge and they slide in; a click on the tab keeps them open. On a phone, tap the tab.
 
-Beides lässt sich kombinieren, zum Beispiel nur die einfachen Länder Afrikas. Insgesamt sind 250 Länder und Gebiete dabei.
+- **Regions:** Europe, Middle East, Asia, Africa, North America, South America, Oceania and Antarctica.
+- **Difficulty:**
+  - *Easy* ("Einfach") is about 60 very well-known countries, such as Germany, Brazil or Japan.
+  - *Hard* ("Schwer") is every territory that is not a UN member, such as Greenland, Kosovo or French Polynesia, plus tiny island states like Nauru or Tuvalu.
+  - *Medium* ("Mittel") is all other countries.
 
-## Bedienung
+You can combine both, for example only the easy countries of Africa. In total there are 250 countries and territories.
 
-| | Computer | Handy |
+## Controls
+
+| | Computer | Phone |
 |---|---|---|
-| Globus drehen | ziehen | wischen |
-| Zoomen | Mausrad | zwei Finger |
-| Antworten (benennen) | tippen und Enter | tippen und „Los“ |
-| Antworten (finden) | Land anklicken | Land antippen |
-| Weiter nach falscher Antwort | Enter, „Weiter“ oder Klick auf den Globus | „Weiter“ oder Tippen auf den Globus |
+| Turn the globe | drag | swipe |
+| Zoom | mouse wheel | pinch |
+| Answer (name) | type and press Enter | type and tap "Go" |
+| Answer (find) | click the country | tap the country |
+| Move on after a wrong answer | Enter, "Weiter" or a click on the globe | "Weiter" or a tap on the globe |
 
-Wer schnell wischt, gibt dem Globus Schwung, und er dreht sich noch ein Stück weiter. Fährst du mit der Maus über ein Land, das schon gefragt wurde, siehst du seinen Namen und seine Punktzahl.
+A quick swipe gives the globe momentum, so it keeps turning for a moment. Hovering over a country that has already been asked shows its name and score.
 
-## Deine Daten
+## Your data
 
-Dein Fortschritt bleibt in deinem Browser auf deinem Gerät. Es gibt keine Anmeldung, keine Werbung und kein Tracking, und das Spiel lädt nichts von fremden Servern.
+Your progress stays in your browser on your device. There is no sign-up, no ads and no tracking, and the game loads nothing from other servers.
 
-Das heißt aber auch: Ein anderes Gerät oder ein anderer Browser fängt bei null an, und in privaten Fenstern wird nichts gespeichert. Über ⚙ kannst du deinen Fortschritt als Datei **exportieren** und auf einem anderen Gerät wieder **importieren**, oder ihn **zurücksetzen**.
+That also means another device or browser starts from zero, and private windows save nothing. Under ⚙ you can **export** your progress as a file and **import** it on another device, or **reset** it.
 
-## Quellen und Lizenz
+## Credits and license
 
-- Landkarte: [Natural Earth](https://www.naturalearthdata.com), gemeinfrei. Damit man sie sieht, sind sehr kleine Länder vergrößert.
-- Globus: [d3](https://d3js.org), ISC-Lizenz.
-- Schrift: [Bangers](https://github.com/googlefonts/bangers), SIL Open Font License.
-- Deutsche Ländernamen: vom Browser selbst (`Intl.DisplayNames`), wo nötig angepasst.
+- Map: [Natural Earth](https://www.naturalearthdata.com), public domain. Very small countries are enlarged so they can be seen.
+- Globe: [d3](https://d3js.org), ISC license.
+- Font: [Bangers](https://github.com/googlefonts/bangers), SIL Open Font License.
+- German country names: from the browser itself (`Intl.DisplayNames`), adjusted where needed.
 
-Das Spiel selbst steht unter der [MIT-Lizenz](LICENSE).
+The game itself is under the [MIT license](LICENSE).
 
-## Für Entwickler
+## For developers
 
-Das Spiel ist eine statische Website aus HTML, CSS und JavaScript, ohne Build-Schritt. Lokal startest du es mit `npm start` und öffnest dann http://localhost:8000. Die Tests laufen mit `npm test`.
+The game is a static website in HTML, CSS and JavaScript, with no build step. Run it locally with `npm start`, then open http://localhost:8000. Run the tests with `npm test`.
 
-Wie das Spiel genau funktionieren soll, steht in der [Spezifikation](docs/specification.md). Wie im Projekt gearbeitet wird, steht in [AGENTS.md](AGENTS.md).
+How the game must behave is in the [specification](docs/specification.md). How work on the project is done is in [AGENTS.md](AGENTS.md).

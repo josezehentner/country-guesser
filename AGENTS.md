@@ -2,7 +2,7 @@
 
 Country Guesser is a static browser game built with plain HTML, CSS and JavaScript (ES modules).
 `docs/specification.md` is the product specification. Read it before changing game behavior, and keep it in sync with intentional changes.
-`README.md` describes the game for players, in German. Update it when a change is visible to them, e.g. a new mode or control.
+`README.md` describes the game for players. Update it when a change is visible to them, e.g. a new mode or control.
 
 ## Non-negotiable constraints
 
@@ -70,7 +70,7 @@ tests/e2e/              Playwright tests for the game in a browser
 package.json            dev tools only, never shipped to players
 .github/workflows/      automated tests on GitHub
 docs/specification.md   product specification
-README.md               description of the game for players, in German
+README.md               description of the game for players
 LICENSE                 license
 ```
 
