@@ -163,6 +163,19 @@ test('a click on the globe skips the pause after a correct answer', async ({ pag
   expect(await askedCode(page)).toBe(next);
 });
 
+test('the asked country lights up green when found, red when another one was clicked', async ({ page }) => {
+  await open(page);
+  let code = await askedCode(page);
+  await clickCountry(page, code);
+  expect(await mapApi(page, 'flashing')).toEqual({ code, kind: 'good' });
+  await page.click('#next-btn');
+
+  code = await askedCode(page);
+  await clickCountry(page, await otherCode(page));
+  // The asked country flashes, not the clicked one.
+  expect(await mapApi(page, 'flashing')).toEqual({ code, kind: 'bad' });
+});
+
 test('a correct click leaves the view where the player found the country', async ({ page }) => {
   await open(page);
   const code = await askedCode(page);
