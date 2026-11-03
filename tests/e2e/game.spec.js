@@ -325,6 +325,37 @@ test('the filters sit on the left and fold away by the tab at their edge', async
   await expect(page.locator('#filters')).toBeVisible();
 });
 
+test('hovering the tab opens the filters over the globe, leaving closes them, a click keeps them', async ({ page }) => {
+  await open(page);
+  const toggle = page.locator('#filters-btn');
+  const filters = page.locator('#filters');
+  await toggle.click();
+  await expect(filters).toBeHidden();
+  await page.mouse.move(640, 400);
+  const globe = await page.locator('#map').boundingBox();
+
+  await toggle.hover();
+  await expect(filters).toBeVisible();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  // Peeking lies over the globe instead of taking its room.
+  expect(await page.locator('#map').boundingBox()).toEqual(globe);
+  // The mouse may move from the tab into the filters and use them.
+  const box = await filters.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 5 });
+  await expect(filters).toBeVisible();
+  await page.mouse.move(box.x + box.width + 200, box.y + box.height / 2, { steps: 5 });
+  await expect(filters).toBeHidden();
+  expect((await stored(page)).settings.filtersOpen).toBe(false);
+
+  await toggle.hover();
+  await expect(filters).toBeVisible();
+  await toggle.click();
+  await page.mouse.move(box.x + box.width + 200, box.y + box.height / 2, { steps: 5 });
+  await expect(filters).toBeVisible();
+  await expect.poll(async () => (await page.locator('#map').boundingBox()).width).toBeLessThan(globe.width - 200);
+  expect((await stored(page)).settings.filtersOpen).toBe(true);
+});
+
 test('the globe does not blink empty when the filters open or close', async ({ page }) => {
   await open(page);
   const alpha = await page.evaluate(async () => {

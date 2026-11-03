@@ -220,21 +220,47 @@ export function startGame(mode) {
     const panel = byId('filters');
     const toggle = byId('filters-btn');
     const small = window.matchMedia(SMALL_SCREEN);
-    const setOpen = (open) => {
-      panel.hidden = !open;
-      toggle.setAttribute('aria-expanded', String(open));
-    };
+    // Pinned filters stay open beside the globe. Hovering the tab with a mouse only
+    // peeks: they open over the globe and close again when the mouse leaves them.
     // On a phone the open filters cover the globe, so they always start closed there.
-    setOpen(!small.matches && progress.settings.filtersOpen !== false);
-    toggle.addEventListener('click', () => {
-      setOpen(panel.hidden);
+    let pinned = !small.matches && progress.settings.filtersOpen !== false;
+    let peeking = false;
+    const render = () => {
+      panel.hidden = !pinned && !peeking;
+      panel.classList.toggle('peek', peeking && !pinned);
+      toggle.setAttribute('aria-expanded', String(!panel.hidden));
+    };
+    const setPinned = (open) => {
+      pinned = open;
+      peeking = false;
+      render();
       if (small.matches) return;
-      progress.settings.filtersOpen = !panel.hidden;
+      progress.settings.filtersOpen = pinned;
       persist();
+    };
+    render();
+    // A click while peeking keeps the filters open.
+    toggle.addEventListener('click', () => setPinned(peeking || !pinned));
+    toggle.addEventListener('pointerenter', (event) => {
+      if (event.pointerType !== 'mouse' || pinned || small.matches) return;
+      peeking = true;
+      render();
     });
+    for (const element of [panel, toggle]) {
+      element.addEventListener('pointerleave', (event) => {
+        if (!peeking || panel.contains(event.relatedTarget) || toggle.contains(event.relatedTarget)) return;
+        peeking = false;
+        render();
+      });
+    }
     panel.addEventListener('keydown', (event) => {
-      if (event.key !== 'Escape' || !small.matches) return;
-      setOpen(false);
+      if (event.key !== 'Escape' || panel.hidden || (!small.matches && !peeking)) return;
+      if (peeking) {
+        peeking = false;
+        render();
+      } else {
+        setPinned(false);
+      }
       toggle.focus();
     });
     renderFilters();
