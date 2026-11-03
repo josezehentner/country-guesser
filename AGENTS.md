@@ -1,7 +1,8 @@
 # Agent Guidelines
 
-Country Quiz is a static browser game built with plain HTML, CSS and JavaScript (ES modules).
-`README.md` is the product specification. Read it before changing game behavior, and keep it in sync with intentional changes.
+Country Guesser is a static browser game built with plain HTML, CSS and JavaScript (ES modules).
+`docs/specification.md` is the product specification. Read it before changing game behavior, and keep it in sync with intentional changes.
+`README.md` describes the game for players, in German. Update it when a change is visible to them, e.g. a new mode or control.
 
 ## Non-negotiable constraints
 
@@ -68,7 +69,9 @@ tests/unit/             Node tests for logic and data
 tests/e2e/              Playwright tests for the game in a browser
 package.json            dev tools only, never shipped to players
 .github/workflows/      automated tests on GitHub
-LICENSE, README.md      license and specification
+docs/specification.md   product specification
+README.md               description of the game for players, in German
+LICENSE                 license
 ```
 
 Planned as they are added:
@@ -105,7 +108,7 @@ Later, if types become useful, add JSDoc comments checked by TypeScript, which n
 ### Branches
 
 - `main` always stays working and deployable. Do not commit features or fixes directly to it.
-- Create one short-lived branch per change, from an up-to-date `main`.
+- Create one short-lived branch per change, from an up-to-date `main`. Right before creating it, fetch `main` from GitHub: another session may have merged minutes ago, and the local `main` does not know yet.
 - Name branches `<type>/<short-kebab-case-description>`, using the commit types below. Examples: `feat/hint-button`, `fix/tooltip-position`, `docs/deployment-guide`.
 - Before creating a branch, tell the owner the proposed name and what it will contain.
 - When a feature on a feature branch is implemented and passes all tests, commit it without waiting to be asked.
@@ -118,7 +121,7 @@ The owner may run several agent sessions at once. Each one works in its own git 
 
 - One session, one worktree, one branch, one pull request. Never switch or change another worktree's branch.
 - Run `npm install` once in a new worktree.
-- Stay within the files the task needs. Shared files such as `style.css`, `src/game.js`, `src/map.js`, `README.md` and `tests/e2e/game.spec.js` cause most conflicts: change them only where the task requires it, and keep those changes small.
+- Stay within the files the task needs. Shared files such as `style.css`, `src/game.js`, `src/map.js`, `docs/specification.md`, `README.md` and `tests/e2e/game.spec.js` cause most conflicts: change them only where the task requires it, and keep those changes small.
 - Pull requests merge one after another. Before a merge, bring the branch up to date with `main`, resolve conflicts in this worktree, run the full suite again, and only then ask to merge.
 
 ### Commits
@@ -152,5 +155,5 @@ Use [Conventional Commits](https://www.conventionalcommits.org/):
 
 - Run `npm test`, plus linting once it exists.
 - Play the affected part of the game in a browser.
-- Check the affected items in the README's acceptance criteria.
+- Check the affected items in the specification's acceptance criteria.
 - Report anything that was not tested.
