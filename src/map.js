@@ -539,6 +539,8 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
   // A canvas has no elements to inspect, so the browser tests go through this.
   canvas.mapTestApi = {
     targetCode: () => target?.code,
+    // The point the globe turns to the center for a country.
+    centerOf: (code) => { const shape = shapeByCode.get(code); return shape.caps[largestPolygon(shape)].center; },
     flashing: () => (flashing ? { code: flashing.code, kind: flashing.kind } : null),
     hasShape: (code) => shapeByCode.has(code),
     colorOf: (code) => resolveColor(shapeByCode.get(code).color),

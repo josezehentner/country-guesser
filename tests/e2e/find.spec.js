@@ -197,14 +197,16 @@ test('clicking another country is wrong, names both and turns to the right one',
   expect((await stored(page)).countries).toEqual({ [code]: expect.objectContaining({ score: 3, seen: 1, correct: 0 }) });
   expect(await mapApi(page, 'targetCode')).toBe(code);
   expect((await mapApi(page, 'view')).k).toBeLessThanOrEqual(3);
+  // Measured at the country's own center: a safe point to click inside a curved
+  // country like Norway or Vietnam can lie far from it.
   const { point, middle } = await page.evaluate((c) => {
     const canvas = document.querySelector('#map');
     const rect = canvas.getBoundingClientRect();
-    return { point: canvas.mapTestApi.pointOf(c), middle: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } };
+    const api = canvas.mapTestApi;
+    return { point: api.pointAt(api.centerOf(c)), middle: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } };
   }, code);
-  // pointOf may move off the centroid by a few pixels to land safely inside.
-  expect(Math.abs(point.x - middle.x)).toBeLessThan(10);
-  expect(Math.abs(point.y - middle.y)).toBeLessThan(10);
+  expect(Math.abs(point.x - middle.x)).toBeLessThan(2);
+  expect(Math.abs(point.y - middle.y)).toBeLessThan(2);
 });
 
 test('"Weiß ich nicht" counts as wrong and shows the country', async ({ page }) => {
