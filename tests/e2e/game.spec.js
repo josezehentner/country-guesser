@@ -381,6 +381,22 @@ test('the globe zooms and rotates', async ({ page }) => {
   expect(after.center[1]).toBeLessThan(before.center[1]);
 });
 
+test('the cursor is a hand only while the globe is dragged', async ({ page }) => {
+  await open(page);
+  const cursor = () => page.evaluate(() => getComputedStyle(document.querySelector('#map')).cursor);
+  await page.mouse.move(600, 300);
+  expect(await cursor()).toBe('auto');
+  await page.mouse.wheel(0, -200);
+  await page.waitForTimeout(100);
+  expect(await cursor()).toBe('auto');
+  await page.mouse.down();
+  expect(await cursor()).toBe('auto');
+  await page.mouse.move(500, 250, { steps: 5 });
+  expect(await cursor()).toBe('grabbing');
+  await page.mouse.up();
+  expect(await cursor()).toBe('auto');
+});
+
 test('dragging past a pole stops at the pole', async ({ page }) => {
   await open(page);
   await page.evaluate(() => document.querySelector('#map').mapTestApi.lookAt([0, 60], 1));
