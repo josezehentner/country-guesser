@@ -14,6 +14,11 @@ export const byId = (id) => document.getElementById(id);
 // sitting beside it.
 const SMALL_SCREEN = '(max-width: 640px), (max-height: 500px)';
 
+// How close to the left edge the mouse opens the filters, and how long they stay
+// after it left them.
+const EDGE_ZONE_PX = 24;
+const PEEK_CLOSE_DELAY_MS = 300;
+
 // The filter groups in the sidebar, each one a list of codes in the settings.
 const FILTER_GROUPS = [
   { key: 'regions', boxId: 'region-filters', options: CONTINENTS, field: 'continent' },
@@ -220,44 +225,62 @@ export function startGame(mode) {
     const panel = byId('filters');
     const toggle = byId('filters-btn');
     const small = window.matchMedia(SMALL_SCREEN);
-    // Pinned filters stay open beside the globe. Hovering the tab with a mouse only
-    // peeks: they open over the globe and close again when the mouse leaves them.
-    // On a phone the open filters cover the globe, so they always start closed there.
+    // Pinned filters stay open beside the globe. Like the Mac dock, a mouse at the
+    // left edge or on the tab only peeks: they slide in over the globe and slide out
+    // a moment after the mouse leaves them. Running off the edge of the window
+    // keeps them open. On a phone the open filters cover the globe, so they always
+    // start closed there.
     let pinned = !small.matches && progress.settings.filtersOpen !== false;
     let peeking = false;
+    // After closing them with a click, the mouse is still on the tab: no peek then
+    // until it has left.
+    let suppressed = false;
+    let closeTimer = null;
+    const isOpen = () => pinned || peeking;
     const render = () => {
-      panel.hidden = !pinned && !peeking;
-      panel.classList.toggle('peek', peeking && !pinned);
-      toggle.setAttribute('aria-expanded', String(!panel.hidden));
+      const column = pinned && !small.matches;
+      panel.classList.toggle('pinned', column);
+      panel.classList.toggle('open', isOpen() && !column);
+      toggle.setAttribute('aria-expanded', String(isOpen()));
+    };
+    const cancelClose = () => {
+      clearTimeout(closeTimer);
+      closeTimer = null;
+    };
+    const setPeeking = (open) => {
+      cancelClose();
+      peeking = open;
+      render();
     };
     const setPinned = (open) => {
       pinned = open;
-      peeking = false;
-      render();
+      suppressed = !open;
+      setPeeking(false);
       if (small.matches) return;
       progress.settings.filtersOpen = pinned;
       persist();
     };
     render();
+    small.addEventListener('change', render);
     // A click while peeking keeps the filters open.
     toggle.addEventListener('click', () => setPinned(peeking || !pinned));
-    toggle.addEventListener('pointerenter', (event) => {
+    document.addEventListener('pointermove', (event) => {
       if (event.pointerType !== 'mouse' || pinned || small.matches) return;
-      peeking = true;
-      render();
+      const area = panel.parentElement.getBoundingClientRect();
+      const atEdge = event.clientX - area.left <= EDGE_ZONE_PX && event.clientY >= area.top && event.clientY <= area.bottom;
+      if (atEdge || panel.contains(event.target) || toggle.contains(event.target)) {
+        cancelClose();
+        if (!peeking && !suppressed) setPeeking(true);
+        return;
+      }
+      suppressed = false;
+      if (peeking && !closeTimer) closeTimer = setTimeout(() => setPeeking(false), PEEK_CLOSE_DELAY_MS);
     });
-    for (const element of [panel, toggle]) {
-      element.addEventListener('pointerleave', (event) => {
-        if (!peeking || panel.contains(event.relatedTarget) || toggle.contains(event.relatedTarget)) return;
-        peeking = false;
-        render();
-      });
-    }
     panel.addEventListener('keydown', (event) => {
-      if (event.key !== 'Escape' || panel.hidden || (!small.matches && !peeking)) return;
+      if (event.key !== 'Escape' || !isOpen() || (pinned && !small.matches)) return;
       if (peeking) {
-        peeking = false;
-        render();
+        suppressed = true;
+        setPeeking(false);
       } else {
         setPinned(false);
       }

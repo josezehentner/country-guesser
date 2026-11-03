@@ -356,6 +356,49 @@ test('hovering the tab opens the filters over the globe, leaving closes them, a 
   expect((await stored(page)).settings.filtersOpen).toBe(true);
 });
 
+test('the mouse at the left edge opens the filters, and running off the window keeps them', async ({ page }) => {
+  await open(page);
+  const filters = page.locator('#filters');
+  await page.locator('#filters-btn').click();
+  await page.mouse.move(640, 400);
+  await expect(filters).toBeHidden();
+
+  // Far from the tab, right at the edge of the globe's area
+  const area = await page.locator('.play-area').boundingBox();
+  await page.mouse.move(area.x + 10, area.y + 40, { steps: 5 });
+  await expect(filters).toBeVisible();
+  await page.mouse.move(0, area.y + 40);
+  await page.mouse.move(-20, area.y + 40);
+  await page.waitForTimeout(600);
+  await expect(filters).toBeVisible();
+
+  // In the top bar the edge does not count.
+  await page.mouse.move(640, 400, { steps: 5 });
+  await expect(filters).toBeHidden();
+  await page.mouse.move(5, 20, { steps: 5 });
+  await page.waitForTimeout(300);
+  await expect(filters).toBeHidden();
+});
+
+test.describe('with motion', () => {
+  test.use({ reducedMotion: 'no-preference' });
+
+  test('the filters slide in and out', async ({ page }) => {
+    await open(page);
+    const filters = page.locator('#filters');
+    await page.locator('#filters-btn').click();
+    await page.mouse.move(640, 400);
+    await expect(filters).toBeHidden();
+    await page.mouse.move(5, 400);
+    // Halfway in, the filters are still partly off screen.
+    await expect.poll(async () => (await filters.boundingBox()).x).toBeLessThan(-10);
+    await expect.poll(async () => (await filters.boundingBox()).x).toBe(0);
+    await page.mouse.move(640, 400);
+    await expect.poll(async () => (await filters.boundingBox())?.x ?? -Infinity).toBeLessThan(-10);
+    await expect(filters).toBeHidden();
+  });
+});
+
 test('the globe does not blink empty when the filters open or close', async ({ page }) => {
   await open(page);
   const alpha = await page.evaluate(async () => {
