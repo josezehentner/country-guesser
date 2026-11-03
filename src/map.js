@@ -265,15 +265,19 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     if (isSmall(flashing.shape)) flashContext.stroke();
   }
 
+  function draw() {
+    drawCount += 1;
+    drawCountries();
+    drawFlash();
+    drawTarget();
+  }
+
   function scheduleDraw() {
     if (drawScheduled) return;
     drawScheduled = true;
     requestAnimationFrame(() => {
       drawScheduled = false;
-      drawCount += 1;
-      drawCountries();
-      drawFlash();
-      drawTarget();
+      draw();
     });
   }
 
@@ -404,7 +408,9 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
       for (const shape of shapes) shape.levels = [];
     }
     updateProjection();
-    scheduleDraw();
+    // Resizing clears the canvas: drawing at once keeps it from blinking empty,
+    // e.g. when the filters open or close.
+    draw();
   }
   new ResizeObserver(resize).observe(canvas);
   resize();

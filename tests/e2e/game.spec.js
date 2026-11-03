@@ -295,14 +295,26 @@ test('a choice without countries says so and keeps the question', async ({ page 
   expect(await targetCode(page)).toBeTruthy();
 });
 
-test('the filters fold away and give the globe the room', async ({ page }) => {
+test('the filters sit on the left and fold away by the tab at their edge', async ({ page }) => {
   await open(page);
   const toggle = page.locator('#filters-btn');
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
-  const narrow = (await page.locator('#map').boundingBox()).width;
+  const panel = await page.locator('#filters').boundingBox();
+  const globe = await page.locator('#map').boundingBox();
+  expect(panel.x).toBe(0);
+  expect(globe.x).toBeGreaterThanOrEqual(panel.x + panel.width);
+  // The tab hangs at the middle of the filters' outer edge, then of the screen's.
+  const middleOf = (box) => box.y + box.height / 2;
+  let tab = await toggle.boundingBox();
+  expect(tab.x).toBeCloseTo(panel.x + panel.width, -1);
+  expect(Math.abs(middleOf(tab) - middleOf(panel))).toBeLessThan(2);
+
+  const narrow = globe.width;
   await toggle.click();
   await expect(page.locator('#filters')).toBeHidden();
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  tab = await toggle.boundingBox();
+  expect(tab.x).toBe(0);
   await expect.poll(async () => (await page.locator('#map').boundingBox()).width).toBeGreaterThan(narrow + 200);
   await expect.poll(() => page.evaluate(() => document.querySelector('#map').width)).toBeGreaterThan(narrow + 200);
 
@@ -311,6 +323,22 @@ test('the filters fold away and give the globe the room', async ({ page }) => {
   await expect(page.locator('#filters')).toBeHidden();
   await toggle.click();
   await expect(page.locator('#filters')).toBeVisible();
+});
+
+test('the globe does not blink empty when the filters open or close', async ({ page }) => {
+  await open(page);
+  const alpha = await page.evaluate(async () => {
+    const canvas = document.querySelector('#map');
+    // Observed after the map's own observer, so this runs right after its resize.
+    const resized = new Promise((resolve) => new ResizeObserver((_, observer) => {
+      observer.disconnect();
+      resolve();
+    }).observe(canvas));
+    document.querySelector('#filters-btn').click();
+    await resized;
+    return canvas.getContext('2d').getImageData(canvas.width / 2, canvas.height / 2, 1, 1).data[3];
+  });
+  expect(alpha).toBe(255);
 });
 
 test('export and import round-trip, invalid files rejected, reset clears', async ({ page }, testInfo) => {

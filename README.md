@@ -146,7 +146,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 
 - **Stats bar**: number of mastered countries (score 10), started countries (1–9), never-asked countries; overall progress bar.
 - **Tooltip**: on hover/tap of a country that has already been asked, show its name and score. For never-asked countries, do not reveal the name.
-- **Filter sidebar** on the right of the globe in both modes, opened and closed with the "☰ Filter" button in the top bar. Ticks choose which countries are asked; both groups combine, and each mode keeps its own choice in `settings`:
+- **Filter sidebar** on the left of the globe in both modes, opened and closed with a tab ("‹ Filter" / "› Filter") in the middle of its outer edge; closed, the tab waits at the left edge of the screen. Ticks choose which countries are asked; both groups combine, and each mode keeps its own choice in `settings`:
   - **Regions:** Europa, Naher Osten, Asien, Afrika, Nordamerika, Südamerika, Ozeanien, Antarktis. The Middle East is the Arabian Peninsula, the Levant, Iraq, Iran, Egypt and Turkey; Cyprus stays in Europe and the Caucasus in Asia.
   - **Difficulty:** every country has exactly one level. *Einfach*: about 60 very well-known countries. *Schwer*: everything that is not a UN member (territories, dependencies, disputed areas) and UN island states smaller than about 1000 km². *Mittel*: all other UN members. The lists live in `data/countries.js`.
   - Each tick shows how many countries it covers, and the sidebar says how many are asked. A choice without any country says so; then every country comes up until the choice changes.
@@ -157,7 +157,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
   - the controls in a small rounded dock at the bottom center: the input with "Prüfen"/"Weiter" and "Weiß ich nicht", or in "Länder finden" just "Weiß ich nicht" and "Weiter";
   - the result just above the dock: a comic burst with the verdict ("Richtig!", "Falsch!", "Schade!"), the country and the new score as a badge in its color. Hints, e.g. a click on the ocean, show without burst or score;
   - the legend upright at the right edge, scores 0 to 10 with 10 at the top. Never-asked countries have no swatch: they are plain land.
-- **Small screens** (narrow, or phones held sideways): one layout for all devices, only CSS adapts it. The top bar shrinks to one row (menu link, stats as colored dots, ☰, ⚙, a thin progress line), the dock spans the width, "Weiß ich nicht" in "Länder benennen" becomes "?", and the legend lies flat above the dock. Even the longest country name fits the caption box.
+- **Small screens** (narrow, or phones held sideways): one layout for all devices, only CSS adapts it. The top bar shrinks to one row (menu link, stats as colored dots, ⚙, a thin progress line), the dock spans the width, "Weiß ich nicht" in "Länder benennen" becomes "?", and the legend lies flat above the dock. Even the longest country name fits the caption box.
 - **On-screen keyboard**: the page is sized to the area above the keyboard, so the answer row stays visible and the globe takes the rest.
 - Keyboard control: the input field automatically gets focus for each new country and stays editable, so a phone keyboard stays open. Enter submits; after a correct answer the next country follows by itself, after a wrong one Enter or typing moves on.
 - Supports light and dark mode (`prefers-color-scheme`).
