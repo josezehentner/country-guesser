@@ -314,7 +314,7 @@ test('countries with a curved shape can be clicked', async ({ page }) => {
   }
 });
 
-test('small countries are plain shapes and only the asked one gets a ring', async ({ page }) => {
+test('small countries are plain shapes and, when asked, only get the outline, no ring', async ({ page }) => {
   await open(page);
   const api = (method, ...args) => page.evaluate(([m, a]) => document.querySelector('#map').mapTestApi[m](...a), [method, args]);
   for (const code of ['VA', 'MC', 'MT', 'NR', 'GI', 'TK']) expect(await api('hasShape', code)).toBe(true);
@@ -326,7 +326,22 @@ test('small countries are plain shapes and only the asked one gets a ring', asyn
     await page.keyboard.press('Enter');
   }
   expect(await targetCode(page)).toBe('NR');
-  expect(await api('hasTargetRing')).toBe(true);
+  // Where the ring used to be, 11 pixels around Nauru, the highlight layer is empty,
+  // while the outline right at the island is drawn.
+  const drawn = await page.evaluate(async () => {
+    const canvas = document.querySelector('#map');
+    const target = document.querySelector('#map-target');
+    canvas.mapTestApi.lookAt([166.93, -0.53], 1);
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+    const { x, y } = canvas.mapTestApi.pointAt([166.93, -0.53]);
+    const rect = canvas.getBoundingClientRect();
+    const scale = target.width / rect.width;
+    const alpha = (dx, dy) => target.getContext('2d').getImageData((x - rect.left + dx) * scale, (y - rect.top + dy) * scale, 1, 1).data[3];
+    return { center: alpha(0, 0), ring: [alpha(11, 0), alpha(-11, 0), alpha(0, 11), alpha(0, -11)] };
+  });
+  expect(drawn.center).toBeGreaterThan(0);
+  expect(drawn.ring).toEqual([0, 0, 0, 0]);
 });
 
 for (const colorScheme of ['light', 'dark']) {

@@ -14,8 +14,10 @@ const TARGET_WIDTH_PX = 3;
 // The light green highlight gets an ink edge on both sides, or it would vanish
 // on the beige land.
 const TARGET_EDGE_PX = 1.5;
-const TARGET_RING_MAX_AREA_KM2 = 8000;
-const TARGET_RING_RADIUS_PX = 11;
+// Countries smaller than this are hard to hit: in "Länder finden" a click this
+// close to them counts too.
+const SMALL_AREA_KM2 = 8000;
+const SMALL_HIT_RADIUS_PX = 11;
 // Globe radius at zoom 1, as a share of the smaller canvas side.
 const GLOBE_SIZE = 0.45;
 // Beyond this the map data runs out of detail and borders turn angular.
@@ -45,7 +47,7 @@ function polygonsOf(geometry) {
   return geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
 }
 
-// Largest polygon of a shape: drives the target ring and auto-zoom, so that e.g.
+// Largest polygon of a shape: drives the auto-zoom, so that e.g.
 // Alaska or far-away islands do not pull the view away from the mainland.
 function largestPolygon(shape) {
   const areas = shape.polygons.map((coordinates) => geoArea({ type: 'Polygon', coordinates }));
@@ -223,22 +225,14 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     targetContext.clearRect(0, 0, cssWidth, cssHeight);
     if (!target) return;
     targetContext.lineJoin = 'round';
-    const strokeOutlined = () => {
-      targetContext.strokeStyle = resolveColor('var(--ink)');
-      targetContext.lineWidth = TARGET_WIDTH_PX + 2 * TARGET_EDGE_PX;
-      targetContext.stroke();
-      targetContext.strokeStyle = resolveColor('var(--target)');
-      targetContext.lineWidth = TARGET_WIDTH_PX;
-      targetContext.stroke();
-    };
     targetContext.beginPath();
-    if (traceShape(targetContext, targetPath, target.shape)) strokeOutlined();
-    if (target.ring && geoDistance(center, target.ring) < Math.PI / 2) {
-      const [x, y] = projection(target.ring);
-      targetContext.beginPath();
-      targetContext.arc(x, y, TARGET_RING_RADIUS_PX, 0, 2 * Math.PI);
-      strokeOutlined();
-    }
+    if (!traceShape(targetContext, targetPath, target.shape)) return;
+    targetContext.strokeStyle = resolveColor('var(--ink)');
+    targetContext.lineWidth = TARGET_WIDTH_PX + 2 * TARGET_EDGE_PX;
+    targetContext.stroke();
+    targetContext.strokeStyle = resolveColor('var(--target)');
+    targetContext.lineWidth = TARGET_WIDTH_PX;
+    targetContext.stroke();
   }
 
   function scheduleDraw() {
@@ -397,12 +391,12 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     }
   }
 
-  const isSmall = (shape) => geoArea(shape.feature) * EARTH_RADIUS_KM ** 2 < TARGET_RING_MAX_AREA_KM2;
+  const isSmall = (shape) => geoArea(shape.feature) * EARTH_RADIUS_KM ** 2 < SMALL_AREA_KM2;
 
   // Marks a country and, unless `focus` is false, turns it to the front and center.
   function highlight(code, { focus = true } = {}) {
     const shape = shapeByCode.get(code);
-    target = { code, shape, ring: isSmall(shape) ? shape.caps[largestPolygon(shape)].center : null };
+    target = { code, shape };
     if (focus) focusOn(shape, MAX_AUTO_ZOOM, true);
     scheduleDraw();
   }
@@ -448,13 +442,13 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
   }
 
   // True if a click lands on the country. Small countries are hard to hit, so a
-  // click as close as their ring's radius counts too.
+  // click within a few pixels of them counts too.
   function hits(code, clientX, clientY) {
     if (codeAt(clientX, clientY) === code) return true;
     const shape = shapeByCode.get(code);
     if (!isSmall(shape)) return false;
     const rect = canvas.getBoundingClientRect();
-    return screenDistance(shape, [clientX - rect.left, clientY - rect.top]) <= TARGET_RING_RADIUS_PX;
+    return screenDistance(shape, [clientX - rect.left, clientY - rect.top]) <= SMALL_HIT_RADIUS_PX;
   }
 
   function showTooltip(event) {
@@ -492,7 +486,6 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
   // A canvas has no elements to inspect, so the browser tests go through this.
   canvas.mapTestApi = {
     targetCode: () => target?.code,
-    hasTargetRing: () => Boolean(target?.ring),
     hasShape: (code) => shapeByCode.has(code),
     colorOf: (code) => resolveColor(shapeByCode.get(code).color),
     shapeCount: () => shapes.length,

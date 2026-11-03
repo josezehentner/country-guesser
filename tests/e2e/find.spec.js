@@ -248,7 +248,7 @@ test('a click right next to a small country counts as a hit', async ({ page }) =
   await expect(page.locator('#feedback')).toHaveText('Dort ist kein Land aus dem Quiz.');
   await page.mouse.click(x + 8, y);
   await expect(page.locator('#feedback')).toHaveClass(/good/);
-  expect(await mapApi(page, 'hasTargetRing')).toBe(true);
+  expect(await mapApi(page, 'targetCode')).toBe('NR');
 });
 
 test('the question box sits on the globe and lets clicks through', async ({ page }) => {

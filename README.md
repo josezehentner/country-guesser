@@ -50,7 +50,7 @@ Additionally, a **"Weiß ich nicht"** ("I don't know") button that counts as wro
 
 1. The game **names** a country ("Wo liegt Frankreich?"). Nothing is marked, and the globe stays where the player left it.
 2. The player turns and zooms the globe and **clicks or taps** the country.
-3. A click on the named country is **correct**; the country is marked where it is, without moving the view. Small countries (those that get a ring) also count when the click lands within the ring's radius of them, because they are hard to hit.
+3. A click on the named country is **correct**; the country is marked where it is, without moving the view. Small countries (under 8,000 km²) also count when the click lands within 11 pixels of them, because they are hard to hit.
 4. A click on a **different** country is wrong: the game names the clicked country, marks the right one and turns it to the front.
 5. A click on the ocean or on land that is not quizzed is no answer; a hint says so.
 6. After a correct answer the next country follows on its own after a short pause (about a second); "Weiter", Enter or a click on the globe skips the pause. After a wrong answer the game waits for "Weiter", Enter or a click (or tap) anywhere on the globe, so the player can see where the country is. Turning or zooming the globe in the meantime does not move on.
@@ -135,7 +135,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 - **Country scope**: all 249 ISO 3166-1 entries plus Kosovo, including dependent territories such as Greenland and French Guiana. Anything else in the map data is drawn but **not asked** and colored neutrally. The list of quizzed countries lives in one central file (`data/countries.js`) so it is easy to adjust.
 - **Turn and zoom** the globe: drag to turn it, mouse wheel or pinch to zoom. Turning stops at the poles. After a quick drag the globe keeps turning and slows down within about a second, unless the player prefers reduced motion.
 - When a country is asked, the globe **turns it to the front and center** and zooms in moderately, so neighboring land stays in view.
-- **Very small countries** (e.g. Vatican City, Monaco, Malta, Pacific and Caribbean island states) are drawn only as their shapes, with no permanent markers. Entries under 40 km² are enlarged to 40 km² so they can be seen. Only while one is being asked, an unfilled **ring** shows where it is.
+- **Very small countries** (e.g. Vatican City, Monaco, Malta, Pacific and Caribbean island states) are drawn only as their shapes, with no permanent markers. Entries under 40 km² are enlarged to 40 km² so they can be seen. While one is asked it gets the same outline as every asked country, which is enough to spot it; there is no extra ring.
 - Projection: orthographic, so the map looks like a globe seen from space.
 
 ---
@@ -221,7 +221,7 @@ Local testing: because of ES modules, serve via a local web server, e.g. `python
 - [ ] Colors match the table above; "never asked" and "score 0" are distinguishable.
 - [ ] Progress persists after reloading and after closing the browser.
 - [ ] Export produces a JSON file, import restores the same state, invalid files are rejected.
-- [ ] Small countries are plain shapes, get a ring only while asked, and the globe turns to the asked country.
+- [ ] Small countries are plain shapes without rings, and the globe turns to the asked country.
 - [ ] The globe turns and zooms smoothly, and borders stay sharp at every zoom level.
 - [ ] Usable on mobile (touch zoom, input, no horizontal scrollbar), with most of the screen left for the globe even while the keyboard is open.
 - [ ] Game works even when localStorage is unavailable (with a notice).
