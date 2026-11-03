@@ -22,7 +22,7 @@
     <div class="progress" id="progress" role="progressbar" aria-label="Gesamtfortschritt" aria-valuemin="0" aria-valuemax="100">
       <div class="progress-fill" id="progress-fill"></div>
     </div>
-    <button type="button" id="filters-btn" class="filters-btn" aria-label="Filter" aria-controls="filters" aria-expanded="false" title="Filter">☰&#xFE0E;<span class="label-long"> Filter</span></button>
+    <button type="button" id="filters-btn" class="icon-button filters-btn" aria-label="Filter" aria-controls="filters" aria-expanded="false" title="Filter">☰&#xFE0E;<span class="label-long"> Filter</span></button>
     <button type="button" id="settings-btn" class="icon-button" aria-label="Einstellungen" aria-haspopup="dialog" title="Einstellungen">⚙&#xFE0E;</button>
   </header>
 
@@ -31,6 +31,7 @@
     <canvas id="map" role="img" aria-label="Globus"></canvas>
     <canvas id="map-target" aria-hidden="true"></canvas>
     <div class="tooltip" id="tooltip" hidden></div>
+    <p class="caption" id="prompt" tabindex="-1" aria-live="polite">Wo liegt <strong id="prompt-name">…</strong>?</p>
     <ul class="legend" id="legend" aria-label="Legende"></ul>
     <p class="loading" id="loading">Karte wird geladen …</p>
   </main>
@@ -49,11 +50,10 @@
   </aside>
   </div>
 
-  <section class="panel">
-    <div class="answer">
-      <p class="prompt" id="prompt" tabindex="-1" aria-live="polite">Wo liegt <strong id="prompt-name">…</strong>?</p>
+  <section class="panel compact">
+    <div class="answer buttons-only">
+      <button type="button" id="dont-know-btn" aria-label="Weiß ich nicht" title="Weiß ich nicht" disabled><span class="label-long">Wei<span class="eszett">ß</span> ich nicht</span><span class="label-short" aria-hidden="true">?</span></button>
       <button type="button" id="next-btn" class="primary" disabled>Weiter</button>
-      <button type="button" id="dont-know-btn" aria-label="Weiß ich nicht" title="Weiß ich nicht" disabled><span class="label-long">Weiß ich nicht</span><span class="label-short" aria-hidden="true">?</span></button>
     </div>
     <p id="feedback" class="feedback" aria-live="polite"></p>
     <p id="storage-notice" class="notice" hidden>Hinweis: Der Fortschritt kann in diesem Browser nicht gespeichert werden.</p>

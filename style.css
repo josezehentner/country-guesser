@@ -1,43 +1,68 @@
+/* Comic look shared by the menu and the modes: thick ink outlines, hard offset
+   shadows, halftone water, and the Bangers font for anything loud. */
 :root {
   color-scheme: light dark;
-  --bg: #f4f5f7;
-  --surface: #ffffff;
-  --text: #1c2128;
-  --muted: #5d6673;
-  --border: #d4d8de;
+  --bg: #fff8e7;
+  --surface: #fffdf6;
+  --text: #1d2b36;
+  --muted: #55606b;
+  --border: #1d2b36;
   --ocean: #add8e6;
-  --space: #e3e8ee;
+  /* Behind the globe, under the comic sunburst (images/globe-background.svg) */
+  --space: #fff4cf;
   --ink: #1d2b36;
+  /* Outlines and shadows of the interface; the globe and lettering keep --ink */
+  --line: #1d2b36;
+  --globe-shadow: #1d2b36;
   /* Land and its shadow in the comic menu background */
   --comic-land: #b5e48c;
   --comic-shadow: #6fae4f;
   --never: #f5e6c8;
   --country-stroke: #000000;
-  --score-zero: #8d8f93;
-  --score-lightness: 30%;
-  --target: #e6007e;
+  /* Progress from red over yellow to green, light and friendly. Score 0 is a
+     gray that stays clearly apart from the beige of never-asked countries. */
+  --score-zero: #aeb2b8;
+  --score-1: hsl(0, 78%, 66%);
+  --score-2: hsl(14, 82%, 64%);
+  --score-3: hsl(28, 86%, 62%);
+  --score-4: hsl(40, 90%, 60%);
+  --score-5: hsl(50, 90%, 60%);
+  --score-6: hsl(62, 70%, 56%);
+  --score-7: hsl(78, 58%, 54%);
+  --score-8: hsl(95, 50%, 52%);
+  --score-9: hsl(110, 46%, 48%);
+  --score-10: hsl(125, 48%, 42%);
+  /* Highlight of the asked country and focus rings: the green of the titles */
+  --target: #b5e48c;
   /* The asked country lights up in these after an answer. */
   --flash-good: #22c55e;
   --flash-bad: #ef4444;
-  --accent: #0b57d0;
-  --accent-text: #ffffff;
+  /* Main action, e.g. "Prüfen" and "Weiter": the same light green */
+  --accent: #b5e48c;
+  --accent-text: #1d2b36;
   --good: #1a7a35;
-  --bad: #b3261e;
+  --bad: #c0262d;
+  --outline: 3px solid var(--line);
+  --shadow: 3px 3px 0 var(--line);
+  --shadow-big: 6px 7px 0 var(--line);
+  --radius: 12px;
+  --comic-font: "Bangers", "Comic Sans MS", system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #12161b;
-    --surface: #1b2128;
-    --text: #e8eaed;
-    --muted: #a1a9b3;
-    --border: #38414b;
-    --space: #0a0d12;
+    --bg: #141c26;
+    --surface: #1f2a37;
+    --text: #f1f3f5;
+    --muted: #aab4bf;
+    --border: #000000;
+    --space: #13263a;
     --ink: #000000;
-    --accent: #8ab4f8;
-    --accent-text: #10151b;
+    /* Black lines vanish on dark panels */
+    --line: #8da2b8;
+    --globe-shadow: #000000;
     --good: #6dd58c;
-    --bad: #f2a29c;
+    --bad: #ff8f8a;
   }
 }
 
@@ -48,7 +73,7 @@ html, body { height: 100%; margin: 0; }
 body {
   display: flex;
   flex-direction: column;
-  /* Set by main.js to the area above an on-screen keyboard */
+  /* Set by game.js to the area above an on-screen keyboard */
   height: var(--visible-height, 100dvh);
   overflow: hidden;
   background: var(--bg);
@@ -65,65 +90,125 @@ body {
   white-space: nowrap;
 }
 
+@font-face {
+  font-family: "Bangers";
+  src: url("fonts/bangers/Bangers-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
 /* Top bar */
 .topbar {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 20px;
+  gap: 4px 18px;
   padding: 8px 16px;
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  border-bottom: var(--outline);
 }
 
 h1 { margin: 0; font-size: 1.1rem; }
 
-.stats { display: flex; gap: 16px; margin: 0; font-size: 0.85rem; }
-.stats div { display: flex; gap: 5px; }
-.stats dt { display: flex; align-items: center; gap: 5px; color: var(--muted); }
-
-/* Small dots in the colors of the legend, shown instead of the labels when space is short */
-.stat-dot { display: none; width: 10px; height: 10px; border: 1px solid var(--country-stroke); border-radius: 50%; }
-.stat-dot.mastered { background: hsl(120, 70%, var(--score-lightness)); }
-.stat-dot.started { background: hsl(40, 70%, var(--score-lightness)); }
-.stat-dot.never { background: var(--never); }
-
-.icon-button { padding: 4px 10px; font-size: 1.15rem; line-height: 1; }
-.stats dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
-
-.progress {
-  flex: 1 1 120px;
-  height: 8px;
-  overflow: hidden;
-  background: var(--border);
-  border-radius: 4px;
+/* Same lettering as the menu title, smaller */
+.topbar h1 {
+  color: var(--comic-land);
+  font-family: var(--comic-font);
+  font-size: 1.9rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  -webkit-text-stroke: 0.12em var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 0.06em 0.07em 0 var(--comic-shadow);
 }
 
-.progress-fill { width: 0; height: 100%; background: var(--good); transition: width 0.3s; }
+.stats { display: flex; gap: 8px; margin: 0; font-size: 0.85rem; }
+.stats div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  background: var(--bg);
+  border: 2px solid var(--line);
+  border-radius: 999px;
+}
+.stats dt { display: flex; align-items: center; gap: 5px; color: var(--muted); }
+.stats dd { margin: 0; font-family: var(--comic-font); font-size: 1.15rem; letter-spacing: 0.04em; line-height: 1.2; }
 
-.filters-btn { padding: 4px 10px; }
+/* Small dots in the colors of the legend */
+.stat-dot { display: inline-block; width: 11px; height: 11px; border: 2px solid var(--line); border-radius: 50%; }
+.stat-dot.mastered { background: var(--score-10); }
+.stat-dot.started { background: var(--score-5); }
+.stat-dot.never { background: var(--never); }
+
+.icon-button { padding: 3px 9px; font-size: 1.2rem; line-height: 1.2; }
+
+/* An energy bar: thick frame, striped fill */
+.progress {
+  flex: 1 1 120px;
+  height: 16px;
+  overflow: hidden;
+  background: var(--bg);
+  border: 2px solid var(--line);
+  border-radius: 999px;
+}
+
+.progress-fill {
+  width: 0;
+  height: 100%;
+  background: repeating-linear-gradient(-45deg, var(--comic-land) 0 8px, var(--comic-shadow) 8px 16px);
+  border-right: 2px solid var(--line);
+  transition: width 0.3s;
+}
 
 /* Map and the filter sidebar beside it */
 .play-area { position: relative; display: flex; flex: 1 1 auto; min-height: 0; }
-.map-wrap { position: relative; flex: 1 1 auto; min-width: 0; overflow: hidden; background: var(--space); }
+.map-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--space) url("images/globe-background.svg") center / cover no-repeat;
+}
+
+@media (prefers-color-scheme: dark) {
+  .map-wrap { background-image: url("images/globe-background-dark.svg"); }
+}
 
 .filters {
   flex: none;
   width: 240px;
   overflow-y: auto;
-  padding: 12px 14px;
+  padding: 14px 16px;
   background: var(--surface);
-  border-left: 1px solid var(--border);
+  border-left: var(--outline);
 }
 .filters[hidden] { display: none; }
-.filters h2 { margin: 0 0 8px; font-size: 1rem; }
-.filters fieldset { margin: 0 0 12px; padding: 0; border: 0; }
-.filters legend { margin-bottom: 4px; padding: 0; color: var(--muted); font-size: 0.85rem; }
-.filter-option { display: flex; align-items: center; gap: 8px; padding: 3px 0; cursor: pointer; }
-.filter-option input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); cursor: pointer; }
-.filter-count { margin-left: auto; color: var(--muted); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
-.filter-summary { margin: 0; color: var(--muted); font-size: 0.85rem; }
+.filters h2 { margin: 0 0 10px; font-family: var(--comic-font); font-size: 1.7rem; font-weight: 400; letter-spacing: 0.04em; line-height: 1; }
+.filters fieldset { margin: 0 0 14px; padding: 0; border: 0; }
+.filters legend { margin-bottom: 4px; padding: 0; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+.filter-option { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-weight: 600; cursor: pointer; }
+.filter-option input { width: 18px; height: 18px; margin: 0; accent-color: var(--comic-shadow); cursor: pointer; }
+.filter-option input:focus-visible { outline: 3px solid var(--target); outline-offset: 2px; }
+.filter-count {
+  margin-left: auto;
+  padding: 0 7px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  font-family: var(--comic-font);
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+.filter-summary { margin: 0; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
 .filter-summary.empty { color: var(--bad); }
+
+/* The dock stays centered under the globe while the filters sit beside it. */
+@media not ((max-width: 640px) or (max-height: 500px)) {
+  body:has(.filters:not([hidden])) .panel { left: calc(50% - 120px); }
+}
 
 #map { display: block; width: 100%; height: 100%; touch-action: none; }
 /* The hand only shows while the globe is being dragged (set by map.js). */
@@ -152,15 +237,18 @@ h1 { margin: 0; font-size: 1.1rem; }
   .progress-fill { transition: none; }
 }
 
+/* A small speech bubble */
 .tooltip {
   position: absolute;
   z-index: 2;
-  max-width: 220px;
-  padding: 3px 8px;
+  max-width: 240px;
+  padding: 4px 10px;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-size: 0.85rem;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  font-size: 0.9rem;
+  font-weight: 700;
   pointer-events: none;
   white-space: nowrap;
 }
@@ -171,120 +259,271 @@ h1 { margin: 0; font-size: 1.1rem; }
   display: grid;
   place-items: center;
   margin: 0;
-  color: var(--muted);
+  color: var(--text);
+  font-family: var(--comic-font);
+  font-size: 1.6rem;
+  letter-spacing: 0.04em;
 }
 
 .loading[hidden] { display: none; }
 
+/* The color scale stands upright at the right edge, 10 at the top. */
 .legend {
   position: absolute;
-  left: 8px;
-  bottom: 8px;
+  right: 12px;
+  top: 50%;
+  z-index: 1;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 2px;
-  max-width: calc(100% - 16px);
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 3px;
   margin: 0;
-  padding: 4px 6px;
+  padding: 7px 8px;
   list-style: none;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
   font-size: 0.7rem;
+  font-weight: 600;
   color: var(--muted);
+  transform: translateY(-50%);
 }
 
-.legend li { display: flex; align-items: center; gap: 3px; }
-.legend li.gap { margin-right: 6px; }
+.legend li { display: flex; align-items: center; gap: 5px; }
 
 .swatch {
   display: inline-grid;
   place-items: center;
-  width: 18px;
-  height: 14px;
-  border: 1px solid var(--country-stroke);
-  border-radius: 2px;
-  color: #fff;
-  font-size: 0.62rem;
+  width: 22px;
+  height: 16px;
+  border: 1.5px solid var(--line);
+  border-radius: 4px;
+  color: #1d2b36;
+  font-family: var(--comic-font);
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
   line-height: 1;
 }
 
-/* Answer panel */
-.panel {
-  padding: 10px 16px;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
+/* The question, as a comic narrator box at the top of the globe. Clicks pass
+   through to the globe. */
+.caption {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  z-index: 2;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  margin: 0;
+  padding: 6px 18px 7px;
+  background: var(--comic-land);
+  color: #1d2b36;
+  border: var(--outline);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  font-family: var(--comic-font);
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  text-align: center;
+  overflow-wrap: anywhere;
+  transform: translateX(-50%) rotate(-1.5deg);
+  pointer-events: none;
 }
-
-.answer { display: flex; flex-wrap: wrap; gap: 8px; }
-
-/* 16px keeps iOS Safari from zooming when the input is focused */
-.answer input {
-  flex: 1 1 200px;
-  min-width: 0;
-  padding: 8px 10px;
-  background: var(--bg);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font: inherit;
-  font-size: 16px;
+.caption strong {
+  font-size: 1.6em;
+  font-weight: 400;
+  color: #1d2b36;
 }
-
-/* The name to find, in the place of the answer input */
-.answer .prompt { flex: 1 1 200px; min-width: 0; align-self: center; margin: 0; overflow-wrap: anywhere; }
 /* Only holds the focus between answers, it is not a control. */
-.answer .prompt:focus { outline: none; }
+.caption:focus { outline: none; }
 
-button, select {
-  padding: 8px 12px;
+/* The controls float in a small dock at the bottom of the globe, which takes the
+   whole height of the page. */
+body { position: relative; }
+
+.panel {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  z-index: 3;
+  width: min(500px, calc(100% - 24px));
+  padding: 8px;
+  background: var(--surface);
+  border: var(--outline);
+  border-radius: 999px;
+  box-shadow: var(--shadow-big);
+  transform: translateX(-50%);
+}
+/* Only buttons: as wide as they are */
+.panel.compact { width: max-content; max-width: calc(100% - 24px); }
+
+.answer { display: flex; align-items: center; gap: 8px; }
+
+/* 16px or more keeps iOS Safari from zooming when the input is focused */
+.answer input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 42px;
+  padding: 0 16px;
   background: var(--bg);
   color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  border: var(--outline);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.answer input::placeholder { color: var(--muted); font-weight: 400; }
+.answer input:focus { outline: none; box-shadow: 0 0 0 4px var(--target); }
+
+/* Chunky comic buttons that press down */
+button, select {
+  padding: 7px 14px;
+  background: var(--surface);
+  color: var(--text);
+  border: var(--outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   font: inherit;
   cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s;
 }
 
-button:disabled { opacity: 0.5; cursor: default; }
+button {
+  font-family: var(--comic-font);
+  font-size: 1.2rem;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
 
-button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+button:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--line); }
+button:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--line); }
+button:focus-visible, select:focus-visible { outline: 3px solid var(--target); outline-offset: 2px; }
+button:disabled { opacity: 0.45; box-shadow: none; cursor: default; }
 
-.feedback { min-height: 1.4em; margin: 8px 0 0; font-weight: 600; }
-.feedback.good { color: var(--good); }
-.feedback.bad { color: var(--bad); }
+button.primary { background: var(--accent); color: var(--accent-text); }
+
+.answer button { flex: none; height: 42px; padding: 0 18px; border-radius: 999px; }
+
+/* The result floats above the dock: a comic burst with the verdict, the country
+   and its new score. */
+.feedback {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 18px);
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: max-content;
+  max-width: min(560px, calc(100vw - 24px));
+  margin: 0;
+  padding: 8px 16px 8px 10px;
+  background: var(--surface);
+  border: var(--outline);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  font-weight: 700;
+  line-height: 1.25;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.feedback:empty { display: none; }
+.feedback.hint, .feedback:not(:has(.verdict)) { padding: 8px 16px; }
+
+.verdict {
+  position: relative;
+  isolation: isolate;
+  flex: none;
+  margin: -26px 0 -26px -30px;
+  padding: 22px 20px;
+  color: #1d2b36;
+  font-family: var(--comic-font);
+  font-size: 1.6rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  transform: rotate(-8deg);
+}
+/* The burst: an ink star with the colored star a little smaller on top */
+.verdict::before, .verdict::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  clip-path: polygon(50% 0%, 58% 17%, 72% 5%, 71% 23%, 89% 19%, 81% 35%, 99% 39%, 84% 50%, 99% 61%, 81% 65%, 89% 81%, 71% 77%, 72% 95%, 58% 83%, 50% 100%, 42% 83%, 28% 95%, 29% 77%, 11% 81%, 19% 65%, 1% 61%, 16% 50%, 1% 39%, 19% 35%, 11% 19%, 29% 23%, 28% 5%, 42% 17%);
+}
+.verdict::before { inset: -4px -8px; background: #1d2b36; }
+.verdict::after { inset: 0 -4px; background: var(--comic-land); }
+.feedback.bad .verdict::after { background: var(--score-1); }
+
+.score-chip {
+  flex: none;
+  padding: 1px 9px;
+  color: #1d2b36;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  font-family: var(--comic-font);
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
 
 .label-short { display: none; }
 
-.notice { margin: 6px 0 0; color: var(--muted); font-size: 0.8rem; }
+/* Bangers draws ß like a B, so it comes from the body font. */
+.eszett { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-weight: 800; }
+
+.notice { margin: 6px 12px 2px; color: var(--muted); font-size: 0.8rem; text-align: center; }
 
 /* Settings */
 .settings {
-  width: min(360px, calc(100% - 32px));
-  padding: 16px 18px 18px;
+  width: min(380px, calc(100% - 32px));
+  padding: 18px 20px 20px;
   background: var(--surface);
   color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: var(--outline);
+  border-radius: 16px;
+  box-shadow: var(--shadow-big);
 }
 
-.settings::backdrop { background: rgb(0 0 0 / 0.4); }
-.settings h2 { margin: 0 0 14px; font-size: 1.1rem; }
-.setting { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.setting-group { margin: 16px 0 6px; color: var(--muted); font-size: 0.85rem; }
-.setting-actions { display: flex; flex-wrap: wrap; gap: 6px; }
-#settings-close { display: block; width: 100%; margin-top: 18px; }
+.settings::backdrop { background: rgb(0 0 0 / 0.45); }
+.settings h2 { margin: 0 0 14px; font-family: var(--comic-font); font-size: 2rem; font-weight: 400; letter-spacing: 0.04em; line-height: 1; }
+.setting { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-weight: 600; }
+.setting select { box-shadow: none; font-weight: 600; }
+.setting-group { margin: 18px 0 8px; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+.setting-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#settings-close { display: block; width: 100%; margin-top: 20px; }
+
+.back {
+  padding: 2px 10px;
+  background: var(--bg);
+  color: var(--text);
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  box-shadow: 2px 2px 0 var(--line);
+  font-family: var(--comic-font);
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+}
+.back:hover { background: var(--accent); color: var(--accent-text); }
+.back:focus-visible { outline: 3px solid var(--target); outline-offset: 2px; }
 
 /* Small screens, and phones held sideways: everything outside the map shrinks to
    one row above and one below, so the globe keeps room next to the keyboard. */
 @media (max-width: 640px), (max-height: 500px) {
-  .topbar { position: relative; flex-wrap: nowrap; gap: 12px; padding: 6px 10px 8px; }
+  .topbar { flex-wrap: nowrap; gap: 8px; padding: 5px 10px 9px; }
   .topbar h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .stats { gap: 12px; margin-right: auto; font-size: 0.85rem; }
+  .stats { gap: 5px; margin-right: auto; }
+  .stats div { padding: 1px 7px; gap: 4px; }
   .stats .label-long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .stat-dot { display: inline-block; }
-  .progress { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 0; }
+  .progress { position: absolute; left: 0; right: 0; bottom: 0; height: 5px; border: 0; border-top: 2px solid var(--line); border-radius: 0; }
+  .progress-fill { border-right-width: 0; }
+  .icon-button { padding: 1px 8px; border-width: 2px; box-shadow: 2px 2px 0 var(--line); }
+  .back { font-size: 1rem; }
   .filters-btn .label-long { display: none; }
 
   /* The filters slide over the globe instead of taking width from it. */
@@ -295,50 +534,43 @@ button.primary { background: var(--accent); color: var(--accent-text); border-co
     bottom: 0;
     z-index: 4;
     width: min(280px, 85%);
-    box-shadow: -4px 0 16px rgb(0 0 0 / 0.2);
+    box-shadow: -6px 0 0 rgb(0 0 0 / 0.15);
   }
 
-  .panel { position: relative; padding: 8px 10px; }
-  .answer { flex-wrap: nowrap; gap: 6px; }
-  .answer input, .answer .prompt { flex: 1 1 auto; }
-  .answer button { flex: none; min-width: 44px; }
-  .answer .label-long { display: none; }
-  .answer .label-short { display: inline; }
+  .panel { bottom: 8px; width: min(500px, calc(100% - 16px)); padding: 6px; }
+  .panel.compact { width: max-content; max-width: calc(100% - 16px); }
+  .answer { gap: 6px; }
+  .answer input { height: 40px; padding: 0 14px; font-size: 16px; }
+  .answer button { height: 40px; min-width: 44px; padding: 0 14px; }
+  .answer:not(.buttons-only) .label-long { display: none; }
+  .answer:not(.buttons-only) .label-short { display: inline; }
 
-  /* The result floats over the bottom of the globe instead of taking a row. */
-  .feedback {
-    position: absolute;
+  .caption { top: 10px; padding: 4px 14px 5px; font-size: 1.1rem; }
+  .caption strong { font-size: 1.35em; letter-spacing: 0.02em; }
+
+  .feedback { bottom: calc(100% + 14px); gap: 10px; font-size: 0.95rem; }
+  .verdict { margin: -22px 0 -22px -24px; padding: 18px 16px; font-size: 1.35rem; }
+
+  /* Lying down above the dock: at the side it would cover the globe. */
+  .legend {
+    top: auto;
+    right: auto;
     left: 50%;
-    bottom: calc(100% + 44px);
-    z-index: 3;
+    bottom: 76px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2px;
     width: max-content;
-    max-width: calc(100% - 24px);
-    min-height: 0;
-    margin: 0;
-    padding: 6px 12px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgb(0 0 0 / 0.15);
+    max-width: calc(100% - 16px);
+    padding: 4px 6px;
+    font-size: 0.65rem;
     transform: translateX(-50%);
-    pointer-events: none;
   }
-  .feedback:empty { display: none; }
-
-  .legend { font-size: 0.65rem; }
-  .swatch { width: 15px; }
+  .swatch { width: 16px; height: 14px; font-size: 0.7rem; }
 }
-
-.back { color: var(--accent); font-size: 0.9rem; text-decoration: none; }
-.back:hover { text-decoration: underline; }
 
 /* Mode menu */
-@font-face {
-  font-family: "Bangers";
-  src: url("fonts/bangers/Bangers-Regular.ttf") format("truetype");
-  font-display: swap;
-}
-
 body.menu { display: block; height: auto; min-height: 100dvh; overflow: auto; }
 
 /* Comic world map behind the menu, on its own fixed layer: background-attachment:
@@ -363,7 +595,7 @@ body.menu::before {
 .menu-header h1 {
   margin: 0;
   color: var(--comic-land);
-  font-family: "Bangers", "Comic Sans MS", system-ui, sans-serif;
+  font-family: var(--comic-font);
   font-size: clamp(3rem, 11vw, 5.5rem);
   font-weight: 400;
   letter-spacing: 0.04em;
@@ -377,26 +609,29 @@ body.menu::before {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 300px));
   justify-content: center;
-  gap: 16px;
-  padding: 28px 16px 32px;
+  gap: 22px;
+  padding: 28px 16px 36px;
   list-style: none;
 }
 
+/* Each card is a comic panel */
 .mode-card {
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: var(--outline);
+  border-radius: 16px;
+  box-shadow: var(--shadow-big);
   color: inherit;
   text-decoration: none;
-  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
 
-a.mode-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 6px 18px rgb(0 0 0 / 0.12); }
-a.mode-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+a.mode-card:hover { transform: translate(-2px, -3px) rotate(-1deg); box-shadow: 9px 10px 0 var(--line); }
+a.mode-card:active { transform: translate(4px, 5px); box-shadow: 1px 1px 0 var(--line); }
+a.mode-card:focus-visible { outline: 4px solid var(--target); outline-offset: 3px; }
 
 .mode-image {
   display: block;
@@ -405,17 +640,17 @@ a.mode-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2p
   aspect-ratio: 16 / 10;
   object-fit: cover;
   background: var(--space);
-  border-bottom: 1px solid var(--border);
+  border-bottom: var(--outline);
 }
 
-.mode-text { padding: 12px 14px 14px; }
-.mode-card h2 { margin: 0; font-size: 1.05rem; }
-.mode-card p { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; }
+.mode-text { padding: 12px 16px 16px; }
+.mode-card h2 { margin: 0; font-family: var(--comic-font); font-size: 1.75rem; font-weight: 400; letter-spacing: 0.04em; line-height: 1.05; }
+.mode-card p { margin: 4px 0 0; color: var(--muted); font-size: 0.95rem; }
 
-.mode-card.soon { border-style: dashed; }
-.mode-card.soon .mode-image { display: grid; place-items: center; color: var(--muted); font-size: 2rem; }
+.mode-card.soon { border-style: dashed; box-shadow: none; }
+.mode-card.soon .mode-image { display: grid; place-items: center; color: var(--muted); font-family: var(--comic-font); font-size: 3rem; }
 
 @media (prefers-reduced-motion: reduce) {
-  .mode-card { transition: none; }
+  .mode-card, button { transition: none; }
   a.mode-card:hover { transform: none; }
 }

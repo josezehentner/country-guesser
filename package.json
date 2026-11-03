@@ -9,7 +9,7 @@
     "test:unit": "node --test \"tests/unit/*.test.js\"",
     "test:e2e": "playwright test",
     "build:vendor": "esbuild tools/d3-bundle.js --bundle --format=esm --minify --legal-comments=none --outfile=vendor/d3.bundle.js",
-    "build:images": "node tools/mode-images.js && node tools/menu-background.js"
+    "build:images": "node tools/mode-images.js && node tools/menu-background.js && node tools/globe-background.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",

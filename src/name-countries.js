@@ -9,9 +9,9 @@ const dontKnowButton = byId('dont-know-btn');
 
 const focusInput = () => input.focus({ preventScroll: true });
 
-function answer(game, correct, wrongPrefix) {
+function answer(game, correct, wrongVerdict) {
   const { name } = game.current;
-  game.finish(correct, correct ? `Richtig: ${name}` : `${wrongPrefix} Das ist ${name}`);
+  game.finish(correct, correct ? 'Richtig!' : wrongVerdict, correct ? name : `Das ist ${name}`);
 }
 
 startGame({
@@ -24,7 +24,7 @@ startGame({
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       if (game.isAnswered) game.nextQuestion();
-      else if (input.value.trim()) answer(game, isCorrectAnswer(input.value, game.current.code), 'Falsch.');
+      else if (input.value.trim()) answer(game, isCorrectAnswer(input.value, game.current.code), 'Falsch!');
     });
     // Typing the next answer during the pause moves on at once and keeps the letters.
     input.addEventListener('input', () => {
@@ -34,7 +34,7 @@ startGame({
       input.value = typed;
     });
     dontKnowButton.addEventListener('click', () => {
-      if (!game.isAnswered) answer(game, false, 'Schade.');
+      if (!game.isAnswered) answer(game, false, 'Schade!');
     });
     input.disabled = false;
     submitButton.disabled = false;

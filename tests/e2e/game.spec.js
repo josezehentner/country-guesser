@@ -2,8 +2,16 @@ import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 
 const KEY = 'countryquiz.v1';
-const DARK_RED = 'rgb(130, 23, 23)';
-const DARK_GREEN = 'rgb(23, 130, 23)';
+// The color a CSS token draws as on a canvas, e.g. '--score-10'.
+function tokenRgb(page, token) {
+  return page.evaluate((t) => {
+    const context = document.createElement('canvas').getContext('2d');
+    context.fillStyle = getComputedStyle(document.documentElement).getPropertyValue(t).trim();
+    context.fillRect(0, 0, 1, 1);
+    const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
+    return `rgb(${r}, ${g}, ${b})`;
+  }, token);
+}
 const entry = (score) => ({ score, seen: 12, correct: 11, lastSeen: '2026-10-29T18:00:00Z' });
 
 async function open(page) {
@@ -131,7 +139,7 @@ test('first correct answer starts at 5, saves, colors the country and Enter move
   await expect(page.locator('#feedback')).toHaveClass(/good/);
   await expect(page.locator('#feedback')).toContainText('5/10');
   expect((await stored(page)).countries[code]).toMatchObject({ score: 5, seen: 1, correct: 1 });
-  expect(await page.evaluate((c) => document.querySelector('#map').mapTestApi.colorOf(c), code)).toBe(`hsl(${(4 / 9) * 120}, 70%, 30%)`);
+  expect(await page.evaluate((c) => document.querySelector('#map').mapTestApi.colorOf(c), code)).toBe('hsl(50, 90%, 60%)');
   await expect(page.locator('#stat-started')).toHaveText('1');
   await expect(page.locator('#stat-never')).toHaveText('249');
 
@@ -220,8 +228,8 @@ test('score stays within 0 and 10', async ({ page }) => {
 test('colors match the progress table and survive a reload', async ({ page }) => {
   await open(page);
   await seed(page, { DE: entry(10), FR: entry(1), ES: entry(0) }, { regions: ['AF'] });
-  await expect.poll(() => fill(page, 'DE')).toBe(DARK_GREEN);
-  await expect.poll(() => fill(page, 'FR')).toBe(DARK_RED);
+  await expect.poll(() => fill(page, 'DE')).toBe(await tokenRgb(page, '--score-10'));
+  await expect.poll(() => fill(page, 'FR')).toBe(await tokenRgb(page, '--score-1'));
   const zero = await fill(page, 'ES');
   const never = await fill(page, 'PT');
   expect(zero).not.toBe(never);
@@ -231,7 +239,7 @@ test('colors match the progress table and survive a reload', async ({ page }) =>
 
   await page.reload();
   await expect.poll(() => targetCode(page)).toBeTruthy();
-  await expect.poll(() => fill(page, 'DE')).toBe(DARK_GREEN);
+  await expect.poll(() => fill(page, 'DE')).toBe(await tokenRgb(page, '--score-10'));
   await expect(filter(page, 'regions', 'AF')).toBeChecked();
   await expect(filter(page, 'regions', 'EU')).not.toBeChecked();
 });
@@ -368,7 +376,7 @@ test('countries with a curved shape can be clicked', async ({ page }) => {
   }
 });
 
-test('small countries are plain shapes and only the asked one gets a ring', async ({ page }) => {
+test('small countries are plain shapes and, when asked, only get the outline, no ring', async ({ page }) => {
   await open(page);
   const api = (method, ...args) => page.evaluate(([m, a]) => document.querySelector('#map').mapTestApi[m](...a), [method, args]);
   for (const code of ['VA', 'MC', 'MT', 'NR', 'GI', 'TK']) expect(await api('hasShape', code)).toBe(true);
@@ -380,7 +388,37 @@ test('small countries are plain shapes and only the asked one gets a ring', asyn
     await page.keyboard.press('Enter');
   }
   expect(await targetCode(page)).toBe('NR');
-  expect(await api('hasTargetRing')).toBe(true);
+  // Where the ring used to be, 11 pixels around Nauru, the highlight layer is empty,
+  // while the outline right at the island is drawn.
+  const drawn = await page.evaluate(async () => {
+    const canvas = document.querySelector('#map');
+    const target = document.querySelector('#map-target');
+    canvas.mapTestApi.lookAt([166.93, -0.53], 1);
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+    const { x, y } = canvas.mapTestApi.pointAt([166.93, -0.53]);
+    const rect = canvas.getBoundingClientRect();
+    const scale = target.width / rect.width;
+    const alpha = (dx, dy) => target.getContext('2d').getImageData((x - rect.left + dx) * scale, (y - rect.top + dy) * scale, 1, 1).data[3];
+    return { center: alpha(0, 0), ring: [alpha(11, 0), alpha(-11, 0), alpha(0, 11), alpha(0, -11)] };
+  });
+  expect(drawn.center).toBeGreaterThan(0);
+  expect(drawn.ring).toEqual([0, 0, 0, 0]);
+
+  // Without the ring, the flash after an answer outlines a small country thickly,
+  // so it shows as more than a dot.
+  const flashed = await page.evaluate(async () => {
+    const canvas = document.querySelector('#map');
+    document.querySelector('#dont-know-btn').click();
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+    const layer = document.querySelector('.map-flash');
+    const { x, y } = canvas.mapTestApi.pointAt([166.93, -0.53]);
+    const rect = canvas.getBoundingClientRect();
+    const scale = layer.width / rect.width;
+    return layer.getContext('2d').getImageData((x - rect.left + 3) * scale, (y - rect.top) * scale, 1, 1).data[3];
+  });
+  expect(flashed).toBeGreaterThan(0);
 });
 
 for (const colorScheme of ['light', 'dark']) {
@@ -392,6 +430,14 @@ for (const colorScheme of ['light', 'dark']) {
       await expect.poll(() => fill(page, 'PT')).toBe('rgb(245, 230, 200)');
       await expect.poll(() => pixelAt(page, [-30, 0])).toBe('rgb(173, 216, 230)');
       expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--country-stroke').trim())).toBe('#000000');
+    });
+
+    test('the globe sits on the comic sunburst', async ({ page }) => {
+      const file = colorScheme === 'dark' ? 'globe-background-dark.svg' : 'globe-background.svg';
+      const loaded = page.waitForResponse((response) => response.url().endsWith(`/images/${file}`) && response.ok());
+      await open(page);
+      await loaded;
+      expect(await page.evaluate(() => getComputedStyle(document.querySelector('#map-wrap')).backgroundImage)).toContain(`images/${file}`);
     });
   });
 }
@@ -686,6 +732,23 @@ test('settings hold the progress actions', async ({ page }) => {
   await page.click('#reset-btn');
   // Closed first, so the confirmation and messages are not hidden behind it.
   await expect(page.locator('#settings')).toBeHidden();
+});
+
+test('the controls float in a dock over the globe, which reaches the bottom', async ({ page }) => {
+  await open(page);
+  const [panel, map] = await Promise.all(['.panel', '#map-wrap'].map((s) => page.locator(s).boundingBox()));
+  const viewport = page.viewportSize();
+  expect(map.y + map.height).toBe(viewport.height);
+  expect(panel.y).toBeGreaterThan(map.y);
+  expect(panel.y + panel.height).toBeLessThan(viewport.height);
+  expect(panel.width).toBeLessThan(viewport.width / 2);
+  await expect(page.locator('#prompt')).toHaveText('Welches Land ist markiert?');
+});
+
+test('the legend shows the scores 0 to 10 and nothing for never-asked countries', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('#legend li')).toHaveText(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']);
+  await expect(page.locator('#legend')).not.toContainText('nie gefragt');
 });
 
 test('on a wide screen the buttons keep their full labels', async ({ page }) => {

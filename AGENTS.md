@@ -60,6 +60,7 @@ tools/serve.py          local development server without caching
 tools/d3-bundle.js      d3 functions in vendor/d3.bundle.js, rebuilt with `npm run build:vendor`
 tools/mode-images.js    draws the card pictures from the map data
 tools/menu-background.js draws the comic world map behind the menu
+tools/globe-background.js draws the comic sunburst behind the globe
 src/                    one module per responsibility
 data/                   map data, country list, aliases
 vendor/                 third-party code, never edited by hand
