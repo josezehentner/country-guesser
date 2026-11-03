@@ -245,6 +245,7 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText) 
       const previous = gesture;
       gesture = event.transform;
       if (syncing) return;
+      if (event.sourceEvent?.type === 'mousemove') canvas.classList.add('dragging');
       const [x, y] = gesture.apply(previous.invert([cssWidth / 2, cssHeight / 2]));
       const [dx, dy] = [x - cssWidth / 2, y - cssHeight / 2];
       if (gesture.k !== k) dragSteps = null;
@@ -253,6 +254,8 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText) 
       turnBy(dx, dy);
     })
     .on('end', (event) => {
+      // A wheel zoom ends a moment later on its own: only letting go ends a drag.
+      if (event.sourceEvent?.type === 'mouseup') canvas.classList.remove('dragging');
       if (event.sourceEvent && dragSteps) keepTurning(dragSteps);
       dragSteps = [];
     });
