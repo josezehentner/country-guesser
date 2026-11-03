@@ -139,6 +139,7 @@ export function startGame(mode) {
     const score = recordAnswer(correct);
     game.isAnswered = true;
     setFeedback(text, correct ? 'good' : 'bad', { verdict, score });
+    game.map.flash(game.current.code, correct);
     mode.answered(game, correct);
     if (correct) nextTimer = setTimeout(nextQuestion, mode.nextDelayMs);
   }

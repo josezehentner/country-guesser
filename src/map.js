@@ -18,6 +18,7 @@ const TARGET_EDGE_PX = 1.5;
 // close to them counts too.
 const SMALL_AREA_KM2 = 8000;
 const SMALL_HIT_RADIUS_PX = 11;
+const SMALL_FLASH_WIDTH_PX = 8;
 // Globe radius at zoom 1, as a share of the smaller canvas side.
 const GLOBE_SIZE = 0.45;
 // Beyond this the map data runs out of detail and borders turn angular.
@@ -26,6 +27,12 @@ const MAX_ZOOM = 100;
 const MAX_AUTO_ZOOM = 3;
 const TARGET_VIEW_SHARE = 0.2;
 const ZOOM_DURATION_MS = 750;
+// After an answer the asked country lights up once (right) or pulses twice (wrong).
+const FLASH_OPACITY = 0.85;
+const FLASHES = {
+  good: { pulses: 1, durationMs: 600 },
+  bad: { pulses: 2, durationMs: 1000 },
+};
 const START_CENTER = [10, 30];
 // After a quick drag the globe keeps turning and slows down with this time constant.
 // Only movement in the last INERTIA_WINDOW_MS before letting go counts.
@@ -96,6 +103,13 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
   const targetContext = targetCanvas.getContext('2d');
   const path = geoPath(projection, context);
   const targetPath = geoPath(projection, targetContext);
+  // Own layer below the target outline, so animating its opacity repaints nothing else.
+  const flashCanvas = document.createElement('canvas');
+  flashCanvas.className = 'map-flash';
+  flashCanvas.setAttribute('aria-hidden', 'true');
+  targetCanvas.before(flashCanvas);
+  const flashContext = flashCanvas.getContext('2d');
+  const flashPath = geoPath(projection, flashContext);
 
   const shapes = world.features.map((feature) => {
     const polygons = polygonsOf(feature.geometry);
@@ -108,6 +122,7 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
   let radius = 1;
   let lodScale = 0;
   let target = null;
+  let flashing = null;
   let animation = null;
   let drawScheduled = false;
   let drawCount = 0;
@@ -235,6 +250,21 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     targetContext.stroke();
   }
 
+  // Small countries also get a thick outline in the flash color, or a fill of a
+  // few pixels could not be seen.
+  function drawFlash() {
+    flashContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    flashContext.clearRect(0, 0, cssWidth, cssHeight);
+    if (!flashing) return;
+    flashContext.fillStyle = flashContext.strokeStyle = resolveColor(`var(--flash-${flashing.kind})`);
+    flashContext.lineJoin = 'round';
+    flashContext.lineWidth = SMALL_FLASH_WIDTH_PX;
+    flashContext.beginPath();
+    if (!traceShape(flashContext, flashPath, flashing.shape)) return;
+    flashContext.fill();
+    if (isSmall(flashing.shape)) flashContext.stroke();
+  }
+
   function scheduleDraw() {
     if (drawScheduled) return;
     drawScheduled = true;
@@ -242,6 +272,7 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
       drawScheduled = false;
       drawCount += 1;
       drawCountries();
+      drawFlash();
       drawTarget();
     });
   }
@@ -363,7 +394,7 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     cssWidth = canvas.clientWidth || 1;
     cssHeight = canvas.clientHeight || 1;
     pixelRatio = window.devicePixelRatio || 1;
-    for (const element of [canvas, targetCanvas]) {
+    for (const element of [canvas, flashCanvas, targetCanvas]) {
       element.width = Math.round(cssWidth * pixelRatio);
       element.height = Math.round(cssHeight * pixelRatio);
     }
@@ -398,6 +429,28 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     const shape = shapeByCode.get(code);
     target = { code, shape };
     if (focus) focusOn(shape, MAX_AUTO_ZOOM, true);
+    scheduleDraw();
+  }
+
+  // Lights the country up in green, or pulses it twice in red, after an answer. It
+  // runs on while the next question already turns the globe. With reduced motion
+  // the color shows steadily for the same time instead of pulsing.
+  function flash(code, correct) {
+    const kind = correct ? 'good' : 'bad';
+    const { pulses, durationMs } = FLASHES[kind];
+    const steady = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const keyframes = steady
+      ? [{ opacity: FLASH_OPACITY }, { opacity: FLASH_OPACITY }]
+      : [{ opacity: 0 }, ...Array.from({ length: pulses }, () => [{ opacity: FLASH_OPACITY }, { opacity: 0 }]).flat()];
+    flashing?.animation.cancel();
+    const shape = shapeByCode.get(code);
+    const animation = flashCanvas.animate(keyframes, durationMs);
+    flashing = { code, kind, shape, animation };
+    animation.onfinish = () => {
+      if (flashing?.animation !== animation) return;
+      flashing = null;
+      scheduleDraw();
+    };
     scheduleDraw();
   }
 
@@ -486,6 +539,7 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
   // A canvas has no elements to inspect, so the browser tests go through this.
   canvas.mapTestApi = {
     targetCode: () => target?.code,
+    flashing: () => (flashing ? { code: flashing.code, kind: flashing.kind } : null),
     hasShape: (code) => shapeByCode.has(code),
     colorOf: (code) => resolveColor(shapeByCode.get(code).color),
     shapeCount: () => shapes.length,
@@ -506,5 +560,5 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     isFacing: (location) => geoDistance(center, location) < Math.PI / 2,
   };
 
-  return { setColor, highlight, clearHighlight, hideTooltip, codeAt, hits };
+  return { setColor, highlight, flash, clearHighlight, hideTooltip, codeAt, hits };
 }

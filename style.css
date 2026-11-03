@@ -34,6 +34,9 @@
   --score-10: hsl(125, 48%, 42%);
   /* Highlight of the asked country and focus rings: the green of the titles */
   --target: #b5e48c;
+  /* The asked country lights up in these after an answer. */
+  --flash-good: #22c55e;
+  --flash-bad: #ef4444;
   /* Main action, e.g. "Prüfen" and "Weiter": the same light green */
   --accent: #b5e48c;
   --accent-text: #1d2b36;
@@ -177,16 +180,18 @@ h1 { margin: 0; font-size: 1.1rem; }
 /* The hand only shows while the globe is being dragged (set by map.js). */
 #map.dragging { cursor: grabbing; }
 
-/* Separate layer: animating its opacity does not repaint the detailed map. */
-#map-target {
+/* Separate layers: animating their opacity does not repaint the detailed map. */
+#map-target, .map-flash {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
   will-change: opacity;
-  animation: pulse 1.3s ease-in-out infinite;
 }
+#map-target { animation: pulse 1.3s ease-in-out infinite; }
+/* Only visible while map.js animates it after an answer. */
+.map-flash { opacity: 0; }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }

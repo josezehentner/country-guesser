@@ -342,6 +342,21 @@ test('small countries are plain shapes and, when asked, only get the outline, no
   });
   expect(drawn.center).toBeGreaterThan(0);
   expect(drawn.ring).toEqual([0, 0, 0, 0]);
+
+  // Without the ring, the flash after an answer outlines a small country thickly,
+  // so it shows as more than a dot.
+  const flashed = await page.evaluate(async () => {
+    const canvas = document.querySelector('#map');
+    document.querySelector('#dont-know-btn').click();
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+    const layer = document.querySelector('.map-flash');
+    const { x, y } = canvas.mapTestApi.pointAt([166.93, -0.53]);
+    const rect = canvas.getBoundingClientRect();
+    const scale = layer.width / rect.width;
+    return layer.getContext('2d').getImageData((x - rect.left + 3) * scale, (y - rect.top) * scale, 1, 1).data[3];
+  });
+  expect(flashed).toBeGreaterThan(0);
 });
 
 for (const colorScheme of ['light', 'dark']) {
@@ -663,4 +678,63 @@ test('on a wide screen the buttons keep their full labels', async ({ page }) => 
   expect(await page.locator('#dont-know-btn').innerText()).toBe('Weiß ich nicht');
   await expect(page.locator('.stats')).toContainText('Gemeistert');
   await expect(page.locator('h1')).toBeVisible();
+});
+
+// How often the country lights up during the flash layer's animation.
+function flashPulses(page) {
+  return page.evaluate(() => {
+    const [animation] = document.querySelector('.map-flash').getAnimations();
+    const frames = animation?.effect.getKeyframes() ?? [];
+    return frames.filter((frame, i) => Number(frame.opacity) > 0 && Number(frames[i - 1]?.opacity ?? 0) === 0).length;
+  });
+}
+
+const flashing = (page) => page.evaluate(() => document.querySelector('#map').mapTestApi.flashing());
+
+test.describe('answer flash', () => {
+  test.use({ reducedMotion: 'no-preference' });
+
+  test('a right answer lights the country up once in green', async ({ page }) => {
+    await open(page);
+    const code = await targetCode(page);
+    await page.fill('#answer-input', await targetName(page));
+    await page.keyboard.press('Enter');
+    expect(await flashing(page)).toEqual({ code, kind: 'good' });
+    expect(await flashPulses(page)).toBe(1);
+    await expect.poll(() => flashing(page), { timeout: 3000 }).toBeNull();
+  });
+
+  test('a wrong answer pulses the country twice in red', async ({ page }) => {
+    await open(page);
+    const code = await targetCode(page);
+    // Let the globe settle on the country before reading pixels.
+    await page.waitForTimeout(900);
+    await page.click('#dont-know-btn');
+    expect(await flashing(page)).toEqual({ code, kind: 'bad' });
+    expect(await flashPulses(page)).toBe(2);
+    const color = await page.evaluate(async (c) => {
+      const layer = document.querySelector('.map-flash');
+      await new Promise(requestAnimationFrame);
+      await new Promise(requestAnimationFrame);
+      const { x, y } = document.querySelector('#map').mapTestApi.pointOf(c);
+      const rect = layer.getBoundingClientRect();
+      const scale = layer.width / rect.width;
+      const [r, g, b] = layer.getContext('2d').getImageData((x - rect.left) * scale, (y - rect.top) * scale, 1, 1).data;
+      return `rgb(${r}, ${g}, ${b})`;
+    }, code);
+    expect(color).toBe('rgb(239, 68, 68)');
+    await expect.poll(() => flashing(page), { timeout: 3000 }).toBeNull();
+    // A wrong answer still waits for the player.
+    expect(await targetCode(page)).toBe(code);
+  });
+});
+
+test('with reduced motion the flash shows its color without pulsing', async ({ page }) => {
+  await open(page);
+  await page.click('#dont-know-btn');
+  expect((await flashing(page)).kind).toBe('bad');
+  const opacities = await page.evaluate(() =>
+    document.querySelector('.map-flash').getAnimations()[0].effect.getKeyframes().map((frame) => Number(frame.opacity)));
+  expect(new Set(opacities).size).toBe(1);
+  await expect.poll(() => flashing(page), { timeout: 3000 }).toBeNull();
 });
