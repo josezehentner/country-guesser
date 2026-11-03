@@ -30,6 +30,13 @@ test('progress survives a save and load', () => {
   assert.deepEqual(loadProgress(), progress);
 });
 
+test('each mode keeps its own progress under its own key', () => {
+  const progress = { version: 1, countries: { AT: entry }, settings: {} };
+  assert.equal(saveProgress(progress, 'countryquiz.find.v1'), true);
+  assert.deepEqual(loadProgress('countryquiz.find.v1'), progress);
+  assert.deepEqual(loadProgress(), emptyProgress());
+});
+
 test('empty storage loads as empty progress', () => {
   assert.deepEqual(loadProgress(), emptyProgress());
 });
