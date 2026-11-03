@@ -267,6 +267,20 @@ test('the menu link leads back to the menu', async ({ page }) => {
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 375, height: 667 }, hasTouch: true });
 
+  test('even the longest country name keeps the answer row low', async ({ page }) => {
+    await open(page);
+    const heights = await page.evaluate(async () => {
+      const { COUNTRIES } = await import('/data/countries.js');
+      const name = document.querySelector('#prompt-name');
+      const panel = document.querySelector('.panel');
+      return COUNTRIES.map((country) => {
+        name.textContent = country.name;
+        return panel.getBoundingClientRect().height;
+      });
+    });
+    expect(Math.max(...heights)).toBeLessThan(65);
+  });
+
   test('a tap on the country answers, in one row below the globe', async ({ page }) => {
     await open(page);
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);

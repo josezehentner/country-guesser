@@ -6,6 +6,10 @@ const DEGREES = 180 / Math.PI;
 const RADIANS = Math.PI / 180;
 const EARTH_RADIUS_KM = 6371;
 const BORDER_WIDTH_PX = 0.8;
+// Comic look, like the land in the menu: a thick ink outline around the globe and
+// a hard shadow offset to the bottom right.
+const GLOBE_OUTLINE_PX = 3;
+const GLOBE_SHADOW_PX = [6, 7];
 const TARGET_WIDTH_PX = 2.5;
 const TARGET_RING_MAX_AREA_KM2 = 8000;
 const TARGET_RING_RADIUS_PX = 11;
@@ -181,6 +185,13 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     const started = performance.now();
     context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     context.clearRect(0, 0, cssWidth, cssHeight);
+    context.save();
+    context.translate(...GLOBE_SHADOW_PX);
+    context.beginPath();
+    path({ type: 'Sphere' });
+    context.fillStyle = resolveColor('var(--globe-shadow)');
+    context.fill();
+    context.restore();
     context.beginPath();
     path({ type: 'Sphere' });
     context.fillStyle = resolveColor('var(--ocean)');
@@ -198,6 +209,8 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     }
     context.beginPath();
     path({ type: 'Sphere' });
+    context.lineWidth = GLOBE_OUTLINE_PX;
+    context.strokeStyle = resolveColor('var(--ink)');
     context.stroke();
     lastDrawMs = performance.now() - started;
   }

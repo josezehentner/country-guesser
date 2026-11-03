@@ -155,6 +155,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 - **On-screen keyboard**: the page is sized to the area above the keyboard, so the answer row stays visible and the globe takes the rest.
 - Keyboard control: the input field automatically gets focus for each new country and stays editable, so a phone keyboard stays open. Enter submits; after a correct answer the next country follows by itself, after a wrong one Enter or typing moves on.
 - Supports light and dark mode (`prefers-color-scheme`).
+- **Comic look** matching the menu: thick ink outlines and hard offset shadows on panels, buttons, cards and the globe; halftone water behind the globe; Bangers for titles, buttons, the asked name and the result; comic yellow for the main action. Buttons press down when clicked and the result pops in, except with reduced motion. Bangers draws ß like a B, so ß comes from the body font. In dark mode interface lines are light, because black lines vanish on dark panels.
 
 ---
 

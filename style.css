@@ -1,13 +1,20 @@
+/* Comic look shared by the menu and the modes: thick ink outlines, hard offset
+   shadows, halftone water, and the Bangers font for anything loud. */
 :root {
   color-scheme: light dark;
-  --bg: #f4f5f7;
-  --surface: #ffffff;
-  --text: #1c2128;
-  --muted: #5d6673;
-  --border: #d4d8de;
+  --bg: #fff8e7;
+  --surface: #fffdf6;
+  --text: #1d2b36;
+  --muted: #55606b;
+  --border: #1d2b36;
   --ocean: #add8e6;
-  --space: #e3e8ee;
+  /* Halftone water behind the globe, a shade deeper than the globe's own ocean */
+  --space: #7cc6e8;
+  --space-dots: #9ad5ef;
   --ink: #1d2b36;
+  /* Outlines and shadows of the interface; the globe and lettering keep --ink */
+  --line: #1d2b36;
+  --globe-shadow: #1d2b36;
   /* Land and its shadow in the comic menu background */
   --comic-land: #b5e48c;
   --comic-shadow: #6fae4f;
@@ -16,25 +23,33 @@
   --score-zero: #8d8f93;
   --score-lightness: 30%;
   --target: #e6007e;
-  --accent: #0b57d0;
-  --accent-text: #ffffff;
+  /* Comic yellow for the main action */
+  --accent: #ffd23f;
+  --accent-text: #1d2b36;
   --good: #1a7a35;
-  --bad: #b3261e;
+  --bad: #c0262d;
+  --outline: 3px solid var(--line);
+  --shadow: 3px 3px 0 var(--line);
+  --shadow-big: 6px 7px 0 var(--line);
+  --radius: 12px;
+  --comic-font: "Bangers", "Comic Sans MS", system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #12161b;
-    --surface: #1b2128;
-    --text: #e8eaed;
-    --muted: #a1a9b3;
-    --border: #38414b;
-    --space: #0a0d12;
+    --bg: #141c26;
+    --surface: #1f2a37;
+    --text: #f1f3f5;
+    --muted: #aab4bf;
+    --border: #000000;
+    --space: #173a52;
+    --space-dots: #1f4a66;
     --ink: #000000;
-    --accent: #8ab4f8;
-    --accent-text: #10151b;
+    /* Black lines vanish on dark panels */
+    --line: #8da2b8;
+    --globe-shadow: #000000;
     --good: #6dd58c;
-    --bad: #f2a29c;
+    --bad: #ff8f8a;
   }
 }
 
@@ -45,7 +60,7 @@ html, body { height: 100%; margin: 0; }
 body {
   display: flex;
   flex-direction: column;
-  /* Set by main.js to the area above an on-screen keyboard */
+  /* Set by game.js to the area above an on-screen keyboard */
   height: var(--visible-height, 100dvh);
   overflow: hidden;
   background: var(--bg);
@@ -62,44 +77,87 @@ body {
   white-space: nowrap;
 }
 
+@font-face {
+  font-family: "Bangers";
+  src: url("fonts/bangers/Bangers-Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
 /* Top bar */
 .topbar {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 20px;
+  gap: 4px 18px;
   padding: 8px 16px;
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  border-bottom: var(--outline);
 }
 
 h1 { margin: 0; font-size: 1.1rem; }
 
-.stats { display: flex; gap: 16px; margin: 0; font-size: 0.85rem; }
-.stats div { display: flex; gap: 5px; }
-.stats dt { display: flex; align-items: center; gap: 5px; color: var(--muted); }
+/* Same lettering as the menu title, smaller */
+.topbar h1 {
+  color: var(--comic-land);
+  font-family: var(--comic-font);
+  font-size: 1.9rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  -webkit-text-stroke: 0.12em var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 0.06em 0.07em 0 var(--comic-shadow);
+}
 
-/* Small dots in the colors of the legend, shown instead of the labels when space is short */
-.stat-dot { display: none; width: 10px; height: 10px; border: 1px solid var(--country-stroke); border-radius: 50%; }
+.stats { display: flex; gap: 8px; margin: 0; font-size: 0.85rem; }
+.stats div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  background: var(--bg);
+  border: 2px solid var(--line);
+  border-radius: 999px;
+}
+.stats dt { display: flex; align-items: center; gap: 5px; color: var(--muted); }
+.stats dd { margin: 0; font-family: var(--comic-font); font-size: 1.15rem; letter-spacing: 0.04em; line-height: 1.2; }
+
+/* Small dots in the colors of the legend */
+.stat-dot { display: inline-block; width: 11px; height: 11px; border: 2px solid var(--line); border-radius: 50%; }
 .stat-dot.mastered { background: hsl(120, 70%, var(--score-lightness)); }
 .stat-dot.started { background: hsl(40, 70%, var(--score-lightness)); }
 .stat-dot.never { background: var(--never); }
 
-.icon-button { padding: 4px 10px; font-size: 1.15rem; line-height: 1; }
-.stats dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.icon-button { padding: 3px 9px; font-size: 1.2rem; line-height: 1.2; }
 
+/* An energy bar: thick frame, striped fill */
 .progress {
   flex: 1 1 120px;
-  height: 8px;
+  height: 16px;
   overflow: hidden;
-  background: var(--border);
-  border-radius: 4px;
+  background: var(--bg);
+  border: 2px solid var(--line);
+  border-radius: 999px;
 }
 
-.progress-fill { width: 0; height: 100%; background: var(--good); transition: width 0.3s; }
+.progress-fill {
+  width: 0;
+  height: 100%;
+  background: repeating-linear-gradient(-45deg, var(--comic-land) 0 8px, var(--comic-shadow) 8px 16px);
+  border-right: 2px solid var(--line);
+  transition: width 0.3s;
+}
 
 /* Map */
-.map-wrap { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; background: var(--space); }
+.map-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  background: radial-gradient(var(--space-dots) 2px, transparent 2.5px) 0 0 / 16px 16px, var(--space);
+}
 
 #map { display: block; width: 100%; height: 100%; touch-action: none; }
 /* The hand only shows while the globe is being dragged (set by map.js). */
@@ -126,15 +184,18 @@ h1 { margin: 0; font-size: 1.1rem; }
   .progress-fill { transition: none; }
 }
 
+/* A small speech bubble */
 .tooltip {
   position: absolute;
   z-index: 2;
-  max-width: 220px;
-  padding: 3px 8px;
+  max-width: 240px;
+  padding: 4px 10px;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-size: 0.85rem;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  font-size: 0.9rem;
+  font-weight: 700;
   pointer-events: none;
   white-space: nowrap;
 }
@@ -145,26 +206,30 @@ h1 { margin: 0; font-size: 1.1rem; }
   display: grid;
   place-items: center;
   margin: 0;
-  color: var(--muted);
+  color: var(--text);
+  font-family: var(--comic-font);
+  font-size: 1.6rem;
+  letter-spacing: 0.04em;
 }
 
 .loading[hidden] { display: none; }
 
 .legend {
   position: absolute;
-  left: 8px;
-  bottom: 8px;
+  left: 10px;
+  bottom: 10px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 2px;
-  max-width: calc(100% - 16px);
+  max-width: calc(100% - 20px);
   margin: 0;
-  padding: 4px 6px;
+  padding: 5px 7px;
   list-style: none;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
   font-size: 0.7rem;
   color: var(--muted);
 }
@@ -176,131 +241,188 @@ h1 { margin: 0; font-size: 1.1rem; }
   display: inline-grid;
   place-items: center;
   width: 18px;
-  height: 14px;
-  border: 1px solid var(--country-stroke);
-  border-radius: 2px;
+  height: 15px;
+  border: 1.5px solid var(--line);
+  border-radius: 3px;
   color: #fff;
-  font-size: 0.62rem;
+  font-family: var(--comic-font);
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
   line-height: 1;
 }
 
 /* Answer panel */
 .panel {
-  padding: 10px 16px;
+  position: relative;
+  z-index: 1;
+  padding: 12px 16px;
   background: var(--surface);
-  border-top: 1px solid var(--border);
+  border-top: var(--outline);
 }
 
-.answer { display: flex; flex-wrap: wrap; gap: 8px; }
+.answer { display: flex; flex-wrap: wrap; gap: 10px; }
 
-/* 16px keeps iOS Safari from zooming when the input is focused */
+/* 16px or more keeps iOS Safari from zooming when the input is focused */
 .answer input {
   flex: 1 1 200px;
   min-width: 0;
-  padding: 8px 10px;
+  padding: 7px 12px;
   background: var(--bg);
   color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  border: var(--outline);
+  border-radius: var(--radius);
   font: inherit;
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: 600;
 }
 
+.answer input::placeholder { color: var(--muted); font-weight: 400; }
+.answer input:focus { outline: none; box-shadow: 0 0 0 3px var(--target); }
+
 /* The name to find, in the place of the answer input */
-.answer .prompt { flex: 1 1 200px; min-width: 0; align-self: center; margin: 0; overflow-wrap: anywhere; }
+.answer .prompt { flex: 1 1 200px; min-width: 0; align-self: center; margin: 0; overflow-wrap: anywhere; line-height: 1.15; }
+.prompt strong {
+  font-family: var(--comic-font);
+  font-size: 1.7rem;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--target);
+  -webkit-text-stroke: 0.08em var(--ink);
+  paint-order: stroke fill;
+}
 /* Only holds the focus between answers, it is not a control. */
 .answer .prompt:focus { outline: none; }
 
+/* Chunky comic buttons that press down */
 button, select {
-  padding: 8px 12px;
-  background: var(--bg);
+  padding: 7px 14px;
+  background: var(--surface);
   color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  border: var(--outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
   font: inherit;
   cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s;
 }
 
-button:disabled { opacity: 0.5; cursor: default; }
+button {
+  font-family: var(--comic-font);
+  font-size: 1.2rem;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
 
-button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+button:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 var(--line); }
+button:active:not(:disabled) { transform: translate(3px, 3px); box-shadow: 0 0 0 var(--line); }
+button:focus-visible, select:focus-visible { outline: 3px solid var(--target); outline-offset: 2px; }
+button:disabled { opacity: 0.45; box-shadow: none; cursor: default; }
 
-.feedback { min-height: 1.4em; margin: 8px 0 0; font-weight: 600; }
+button.primary { background: var(--accent); color: var(--accent-text); }
+
+/* The result, in big comic letters */
+.feedback {
+  min-height: 1.4em;
+  margin: 10px 0 0;
+  font-family: var(--comic-font);
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
 .feedback.good { color: var(--good); }
 .feedback.bad { color: var(--bad); }
 
 .label-short { display: none; }
 
+/* Bangers draws ß like a B, so it comes from the body font. */
+.eszett { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; font-weight: 800; }
+
 .notice { margin: 6px 0 0; color: var(--muted); font-size: 0.8rem; }
 
 /* Settings */
 .settings {
-  width: min(360px, calc(100% - 32px));
-  padding: 16px 18px 18px;
+  width: min(380px, calc(100% - 32px));
+  padding: 18px 20px 20px;
   background: var(--surface);
   color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: var(--outline);
+  border-radius: 16px;
+  box-shadow: var(--shadow-big);
 }
 
-.settings::backdrop { background: rgb(0 0 0 / 0.4); }
-.settings h2 { margin: 0 0 14px; font-size: 1.1rem; }
-.setting { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.setting-group { margin: 16px 0 6px; color: var(--muted); font-size: 0.85rem; }
-.setting-actions { display: flex; flex-wrap: wrap; gap: 6px; }
-#settings-close { display: block; width: 100%; margin-top: 18px; }
+.settings::backdrop { background: rgb(0 0 0 / 0.45); }
+.settings h2 { margin: 0 0 14px; font-family: var(--comic-font); font-size: 2rem; font-weight: 400; letter-spacing: 0.04em; line-height: 1; }
+.setting { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-weight: 600; }
+.setting select { box-shadow: none; font-weight: 600; }
+.setting-group { margin: 18px 0 8px; color: var(--muted); font-size: 0.85rem; font-weight: 600; }
+.setting-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#settings-close { display: block; width: 100%; margin-top: 20px; }
+
+.back {
+  padding: 2px 10px;
+  background: var(--bg);
+  color: var(--text);
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  box-shadow: 2px 2px 0 var(--line);
+  font-family: var(--comic-font);
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+}
+.back:hover { background: var(--accent); color: var(--accent-text); }
+.back:focus-visible { outline: 3px solid var(--target); outline-offset: 2px; }
 
 /* Small screens, and phones held sideways: everything outside the map shrinks to
    one row above and one below, so the globe keeps room next to the keyboard. */
 @media (max-width: 640px), (max-height: 500px) {
-  .topbar { position: relative; flex-wrap: nowrap; gap: 12px; padding: 6px 10px 8px; }
+  .topbar { flex-wrap: nowrap; gap: 8px; padding: 5px 10px 9px; }
   .topbar h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .stats { gap: 12px; margin-right: auto; font-size: 0.85rem; }
+  .stats { gap: 5px; margin-right: auto; }
+  .stats div { padding: 1px 7px; gap: 4px; }
   .stats .label-long { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .stat-dot { display: inline-block; }
-  .progress { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; border-radius: 0; }
+  .progress { position: absolute; left: 0; right: 0; bottom: 0; height: 5px; border: 0; border-top: 2px solid var(--line); border-radius: 0; }
+  .progress-fill { border-right-width: 0; }
+  .icon-button { padding: 1px 8px; border-width: 2px; box-shadow: 2px 2px 0 var(--line); }
+  .back { font-size: 1rem; }
 
-  .panel { position: relative; padding: 8px 10px; }
-  .answer { flex-wrap: nowrap; gap: 6px; }
+  .panel { padding: 7px 10px; }
+  .answer { flex-wrap: nowrap; gap: 7px; }
   .answer input, .answer .prompt { flex: 1 1 auto; }
-  .answer button { flex: none; min-width: 44px; }
+  .answer input { padding: 5px 10px; }
+  /* Two lines at most, even for the longest names */
+  .answer .prompt { font-size: 0.85rem; line-height: 1.05; }
+  .prompt strong { font-size: 1.15rem; letter-spacing: 0.02em; }
+  .answer button { flex: none; min-width: 44px; padding: 5px 12px; }
   .answer .label-long { display: none; }
   .answer .label-short { display: inline; }
 
-  /* The result floats over the bottom of the globe instead of taking a row. */
+  /* The result floats over the bottom of the globe as a speech bubble. */
   .feedback {
     position: absolute;
     left: 50%;
-    bottom: calc(100% + 44px);
+    bottom: calc(100% + 48px);
     z-index: 3;
     width: max-content;
     max-width: calc(100% - 24px);
     min-height: 0;
     margin: 0;
-    padding: 6px 12px;
+    padding: 6px 14px;
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgb(0 0 0 / 0.15);
+    border: var(--outline);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    font-size: 1.2rem;
     transform: translateX(-50%);
     pointer-events: none;
   }
   .feedback:empty { display: none; }
 
-  .legend { font-size: 0.65rem; }
+  .legend { font-size: 0.65rem; left: 8px; bottom: 8px; }
   .swatch { width: 15px; }
 }
 
-.back { color: var(--accent); font-size: 0.9rem; text-decoration: none; }
-.back:hover { text-decoration: underline; }
-
 /* Mode menu */
-@font-face {
-  font-family: "Bangers";
-  src: url("fonts/bangers/Bangers-Regular.ttf") format("truetype");
-  font-display: swap;
-}
-
 body.menu { display: block; height: auto; min-height: 100dvh; overflow: auto; }
 
 /* Comic world map behind the menu, on its own fixed layer: background-attachment:
@@ -325,7 +447,7 @@ body.menu::before {
 .menu-header h1 {
   margin: 0;
   color: var(--comic-land);
-  font-family: "Bangers", "Comic Sans MS", system-ui, sans-serif;
+  font-family: var(--comic-font);
   font-size: clamp(3rem, 11vw, 5.5rem);
   font-weight: 400;
   letter-spacing: 0.04em;
@@ -339,26 +461,29 @@ body.menu::before {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 300px));
   justify-content: center;
-  gap: 16px;
-  padding: 28px 16px 32px;
+  gap: 22px;
+  padding: 28px 16px 36px;
   list-style: none;
 }
 
+/* Each card is a comic panel */
 .mode-card {
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: var(--outline);
+  border-radius: 16px;
+  box-shadow: var(--shadow-big);
   color: inherit;
   text-decoration: none;
-  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
 
-a.mode-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 6px 18px rgb(0 0 0 / 0.12); }
-a.mode-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+a.mode-card:hover { transform: translate(-2px, -3px) rotate(-1deg); box-shadow: 9px 10px 0 var(--line); }
+a.mode-card:active { transform: translate(4px, 5px); box-shadow: 1px 1px 0 var(--line); }
+a.mode-card:focus-visible { outline: 4px solid var(--target); outline-offset: 3px; }
 
 .mode-image {
   display: block;
@@ -367,17 +492,17 @@ a.mode-card:focus-visible { outline: 3px solid var(--accent); outline-offset: 2p
   aspect-ratio: 16 / 10;
   object-fit: cover;
   background: var(--space);
-  border-bottom: 1px solid var(--border);
+  border-bottom: var(--outline);
 }
 
-.mode-text { padding: 12px 14px 14px; }
-.mode-card h2 { margin: 0; font-size: 1.05rem; }
-.mode-card p { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; }
+.mode-text { padding: 12px 16px 16px; }
+.mode-card h2 { margin: 0; font-family: var(--comic-font); font-size: 1.75rem; font-weight: 400; letter-spacing: 0.04em; line-height: 1.05; }
+.mode-card p { margin: 4px 0 0; color: var(--muted); font-size: 0.95rem; }
 
-.mode-card.soon { border-style: dashed; }
-.mode-card.soon .mode-image { display: grid; place-items: center; color: var(--muted); font-size: 2rem; }
+.mode-card.soon { border-style: dashed; box-shadow: none; }
+.mode-card.soon .mode-image { display: grid; place-items: center; color: var(--muted); font-family: var(--comic-font); font-size: 3rem; }
 
 @media (prefers-reduced-motion: reduce) {
-  .mode-card { transition: none; }
+  .mode-card, button { transition: none; }
   a.mode-card:hover { transform: none; }
 }

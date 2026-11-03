@@ -40,6 +40,11 @@ export function startGame(mode) {
   function setFeedback(text, kind = '') {
     feedback.textContent = text;
     feedback.className = `feedback ${kind}`;
+    // The result pops in like a comic sound word. `scale` leaves the phone
+    // layout's centering transform alone.
+    if (kind && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      feedback.animate([{ scale: 0.6 }, { scale: 1.12 }, { scale: 1 }], { duration: 260, easing: 'ease-out' });
+    }
   }
 
   function persist() {
