@@ -120,6 +120,49 @@ test('after a wrong answer the game waits for "Weiter" or Enter', async ({ page 
   expect(await askedCode(page)).not.toBe(code);
 });
 
+test('after a wrong answer a click anywhere on the globe moves on, dragging it does not', async ({ page }) => {
+  await open(page);
+  const code = await askedCode(page);
+  await clickCountry(page, await otherCode(page));
+  await expect(page.locator('#feedback')).toHaveClass(/bad/);
+  const box = await page.locator('#map').boundingBox();
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+
+  const before = await mapApi(page, 'view');
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - 120, y - 40, { steps: 6 });
+  await page.mouse.up();
+  await expect.poll(() => mapApi(page, 'view')).not.toEqual(before);
+  await page.waitForTimeout(100);
+  expect(await askedCode(page)).toBe(code);
+  await expect(page.locator('#feedback')).toHaveClass(/bad/);
+
+  await page.mouse.click(x, y);
+  await expect(page.locator('#feedback')).toHaveText('');
+  const next = await askedCode(page);
+  expect(next).not.toBe(code);
+  // The click only moved on, it did not answer the new question.
+  expect(Object.keys((await stored(page)).countries)).toEqual([code]);
+  await expect(page.locator('#next-btn')).toBeDisabled();
+});
+
+test('a click on the globe skips the pause after a correct answer', async ({ page }) => {
+  await open(page);
+  const code = await askedCode(page);
+  const { x, y } = await pointIn(page, code);
+  await page.mouse.click(x, y);
+  await expect(page.locator('#feedback')).toHaveClass(/good/);
+  // The click is handled at once, long before the pause of a second is over.
+  await page.mouse.click(x, y);
+  expect(await page.textContent('#feedback')).toBe('');
+  const next = await askedCode(page);
+  expect(next).not.toBe(code);
+  await page.waitForTimeout(1500);
+  expect(await askedCode(page)).toBe(next);
+});
+
 test('a correct click leaves the view where the player found the country', async ({ page }) => {
   await open(page);
   const code = await askedCode(page);
@@ -231,5 +274,16 @@ test.describe('on a phone', () => {
     const { x, y } = await pointIn(page, await askedCode(page));
     await page.touchscreen.tap(x, y);
     await expect(page.locator('#feedback')).toHaveClass(/good/);
+  });
+
+  test('after a wrong answer a tap on the globe moves on', async ({ page }) => {
+    await open(page);
+    const code = await askedCode(page);
+    await page.click('#dont-know-btn');
+    await expect(page.locator('#feedback')).toHaveClass(/bad/);
+    const box = await page.locator('#map').boundingBox();
+    await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+    await expect(page.locator('#feedback')).toHaveText('');
+    expect(await askedCode(page)).not.toBe(code);
   });
 });
