@@ -43,8 +43,13 @@ startGame({
     focusNext();
   },
 
+  // Once answered, a click anywhere on the globe moves on, like "Weiter". Dragging
+  // the globe is no click, so the player can still look around first.
   onSelect(game, event) {
-    if (game.isAnswered) return false;
+    if (game.isAnswered) {
+      game.nextQuestion();
+      return true;
+    }
     const { code, name } = game.current;
     if (game.map.hits(code, event.clientX, event.clientY)) {
       game.finish(true, `Richtig: ${name}`);

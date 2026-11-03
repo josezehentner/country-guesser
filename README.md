@@ -53,7 +53,7 @@ Additionally, a **"Weiß ich nicht"** ("I don't know") button that counts as wro
 3. A click on the named country is **correct**; the country is marked where it is, without moving the view. Small countries (those that get a ring) also count when the click lands within the ring's radius of them, because they are hard to hit.
 4. A click on a **different** country is wrong: the game names the clicked country, marks the right one and turns it to the front.
 5. A click on the ocean or on land that is not quizzed is no answer; a hint says so.
-6. After a correct answer the next country follows on its own after a short pause (about a second); "Weiter" or Enter skips the pause. After a wrong answer the game waits for "Weiter" (or Enter), so the player can see where the country is.
+6. After a correct answer the next country follows on its own after a short pause (about a second); "Weiter", Enter or a click on the globe skips the pause. After a wrong answer the game waits for "Weiter", Enter or a click (or tap) anywhere on the globe, so the player can see where the country is. Turning or zooming the globe in the meantime does not move on.
 7. "Weiß ich nicht" counts as wrong and shows the country.
 
 While a question is open the tooltip names no country at all, because it would give the answer away. Country choice, scoring, colors, stats, legend and settings work as in "Länder benennen".
@@ -215,7 +215,7 @@ Local testing: because of ES modules, serve via a local web server, e.g. `python
 - [ ] Site loads on GitHub Pages without a build step and without console errors.
 - [ ] The start page shows a card per mode with picture, name and short description; cards open their mode, and each mode links back to the menu.
 - [ ] A country is highlighted, input is checked correctly (including umlauts, alternative names, small typos).
-- [ ] "Länder finden" names a country without marking it; clicking it is correct, clicking another country is wrong and shows the right one, the ocean is ignored, and names stay hidden until the answer.
+- [ ] "Länder finden" names a country without marking it; clicking it is correct, clicking another country is wrong and shows the right one, the ocean is ignored, and names stay hidden until the answer. After the answer a click on the globe moves on, dragging it does not.
 - [ ] First answer starts at 5 (correct) or 3 (wrong/"I don't know"); later correct = +1, wrong/"I don't know" = −1; bounds 0 and 10 are respected.
 - [ ] Colors match the table above; "never asked" and "score 0" are distinguishable.
 - [ ] Progress persists after reloading and after closing the browser.
