@@ -18,7 +18,11 @@ You don't have to spell perfectly. Upper and lower case, missing umlauts ("Oster
 
 The game names a country, and you look for it on the globe and click it. For very small countries a click just next to them is enough. If you are wrong, the globe turns to the right country. Another click on the globe moves on.
 
-The two modes keep separate progress: recognizing a country and finding it are two different skills.
+### Learn the capitals ("Hauptstädte lernen")
+
+A country is marked on the globe, and you type its capital. It plays like "Länder benennen": the same tolerance for typos and umlauts, and the answer always shows the country too. German, English and local names count, such as "Peking" or "Beijing". Where a country has more than one capital, such as Bolivia (Sucre and La Paz) or South Africa, each of them is right. Places where nobody lives, such as Antarctica, are left out.
+
+Every mode keeps separate progress: recognizing a country, finding it and knowing its capital are different skills.
 
 ## How your progress works
 
@@ -50,7 +54,7 @@ You can combine both, for example only the easy countries of Africa. In total th
 |---|---|---|
 | Turn the globe | drag | swipe |
 | Zoom | mouse wheel | pinch |
-| Answer (name) | type and press Enter | type and tap "Go" |
+| Answer (name, capital) | type and press Enter | type and tap "Go" |
 | Answer (find) | click the country | tap the country |
 | Move on after a wrong answer | Enter, "Weiter" or a click on the globe | "Weiter" or a tap on the globe |
 
