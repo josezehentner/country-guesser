@@ -18,6 +18,7 @@ test('the menu and every mode are pages of their own', () => {
   assert.ok(pages.includes('index.html'));
   assert.ok(pages.includes('name-countries.html'));
   assert.ok(pages.includes('find-countries.html'));
+  assert.ok(pages.includes('capitals.html'));
 });
 
 test('content security policy only allows the site itself', () => {

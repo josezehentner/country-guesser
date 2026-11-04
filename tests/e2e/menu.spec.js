@@ -43,6 +43,16 @@ test('the "Länder finden" card opens its mode', async ({ page }) => {
   await expect(page.locator('h1')).toHaveText('Länder finden');
 });
 
+test('the "Hauptstädte lernen" card opens its mode', async ({ page }) => {
+  await page.goto('/');
+  const card = page.locator('a.mode-card', { hasText: 'Hauptstädte lernen' });
+  await expect(card.locator('p')).toHaveText('Hauptstadt des markierten Landes nennen.');
+  expect(await card.locator('img').evaluate((image) => image.complete && image.naturalWidth > 0)).toBe(true);
+  await card.click();
+  await expect(page).toHaveURL(/capitals\.html$/);
+  await expect(page.locator('h1')).toHaveText('Hauptstädte lernen');
+});
+
 test('cards work with the keyboard', async ({ page }) => {
   await page.goto('/');
   await page.keyboard.press('Tab');
