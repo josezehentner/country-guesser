@@ -289,22 +289,6 @@ h1 { margin: 0; font-size: 1.1rem; }
   .filters-tab { transition: none; }
 }
 
-/* A small speech bubble */
-.tooltip {
-  position: absolute;
-  z-index: 2;
-  max-width: 240px;
-  padding: 4px 10px;
-  background: var(--surface);
-  border: 2px solid var(--line);
-  border-radius: 10px;
-  box-shadow: var(--shadow);
-  font-size: 0.9rem;
-  font-weight: 700;
-  pointer-events: none;
-  white-space: nowrap;
-}
-
 .loading {
   position: absolute;
   inset: 0;

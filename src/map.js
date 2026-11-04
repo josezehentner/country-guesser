@@ -94,10 +94,8 @@ function clickablePoint(projection, polygon, centroid) {
 
 const ease = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
 
-// `getTooltipText(code)` returns the text to show for a country, or null.
-// `onSelect(event)` is called for a click or tap on the globe and returns true when
-// it used it, so no tooltip shows.
-export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, onSelect = () => false) {
+// `onSelect(event)` is called for a click or tap on the globe.
+export function createMap(canvas, targetCanvas, world, onSelect = () => false) {
   const projection = geoOrthographic().clipAngle(90).precision(0);
   const context = canvas.getContext('2d', { alpha: true });
   const targetContext = targetCanvas.getContext('2d');
@@ -465,10 +463,6 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     scheduleDraw();
   }
 
-  function hideTooltip() {
-    tooltip.hidden = true;
-  }
-
   function codeAt(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
     const point = [clientX - rect.left, clientY - rect.top];
@@ -510,30 +504,8 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     return screenDistance(shape, [clientX - rect.left, clientY - rect.top]) <= SMALL_HIT_RADIUS_PX;
   }
 
-  function showTooltip(event) {
-    const code = codeAt(event.clientX, event.clientY);
-    const text = code ? getTooltipText(code) : null;
-    if (!text) {
-      hideTooltip();
-      return;
-    }
-    tooltip.textContent = text;
-    tooltip.hidden = false;
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left + 12;
-    const y = event.clientY - rect.top + 12;
-    tooltip.style.left = `${Math.min(x, rect.width - tooltip.offsetWidth - 4)}px`;
-    tooltip.style.top = `${Math.min(y, rect.height - tooltip.offsetHeight - 4)}px`;
-  }
-
-  canvas.addEventListener('pointermove', (event) => {
-    if (event.pointerType === 'mouse') showTooltip(event);
-  });
-  canvas.addEventListener('click', (event) => {
-    if (onSelect(event)) hideTooltip();
-    else showTooltip(event);
-  });
-  canvas.addEventListener('pointerleave', hideTooltip);
+  // The globe never names a country on hover or click: that would give answers away.
+  canvas.addEventListener('click', onSelect);
 
   // Screen position of a point on the globe, in client coordinates.
   function clientPoint(location) {
@@ -545,6 +517,7 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
   // A canvas has no elements to inspect, so the browser tests go through this.
   canvas.mapTestApi = {
     targetCode: () => target?.code,
+    codeAt,
     // The point the globe turns to the center for a country.
     centerOf: (code) => { const shape = shapeByCode.get(code); return shape.caps[largestPolygon(shape)].center; },
     flashing: () => (flashing ? { code: flashing.code, kind: flashing.kind } : null),
@@ -568,5 +541,5 @@ export function createMap(canvas, targetCanvas, tooltip, world, getTooltipText, 
     isFacing: (location) => geoDistance(center, location) < Math.PI / 2,
   };
 
-  return { setColor, highlight, flash, clearHighlight, hideTooltip, codeAt, hits };
+  return { setColor, highlight, flash, clearHighlight, codeAt, hits };
 }

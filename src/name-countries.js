@@ -56,8 +56,5 @@ startGame({
     focusInput();
   },
 
-  // The country being asked must not give away its own name.
-  canShowName: (game, code) => game.isAnswered || code !== game.current?.code,
-
   focus: focusInput,
 });
