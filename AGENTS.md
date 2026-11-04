@@ -55,6 +55,7 @@ index.html              mode menu with one card per game mode
 name-countries.html     the "Länder benennen" mode
 find-countries.html     the "Länder finden" mode
 capitals.html           the "Hauptstädte lernen" mode
+find-capitals.html      the "Hauptstädte finden" mode
 style.css               styles for all pages
 images/                 menu background and card pictures, generated with `npm run build:images`
 fonts/                  web fonts with their licenses

@@ -22,7 +22,11 @@ The game names a country, and you look for it on the globe and click it. For ver
 
 A country is marked on the globe, and you type its capital. It plays like "Länder benennen": the same tolerance for typos and umlauts, and the answer always shows the country too. German, English and local names count, such as "Peking" or "Beijing". Where a country has more than one capital, such as Bolivia (Sucre and La Paz) or South Africa, each of them is right. Places where nobody lives, such as Antarctica, are left out.
 
-Every mode keeps separate progress: recognizing a country, finding it and knowing its capital are different skills.
+### Find the capitals ("Hauptstädte finden")
+
+The game names a capital, such as Canberra, and you click the country it belongs to. It plays like "Länder finden". A few capitals have the same name in two places, such as Kingston in Jamaica and on Norfolk Island; then either one is right.
+
+Every mode keeps separate progress: recognizing a country, finding it, knowing its capital and placing a capital are different skills.
 
 ## How your progress works
 
@@ -55,7 +59,7 @@ You can combine both, for example only the easy countries of Africa. In total th
 | Turn the globe | drag | swipe |
 | Zoom | mouse wheel | pinch |
 | Answer (name, capital) | type and press Enter | type and tap "Go" |
-| Answer (find) | click the country | tap the country |
+| Answer (find a country or capital) | click the country | tap the country |
 | Move on after a wrong answer | Enter, "Weiter" or a click on the globe | "Weiter" or a tap on the globe |
 
 A quick swipe gives the globe momentum, so it keeps turning for a moment.
