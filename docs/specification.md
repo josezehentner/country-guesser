@@ -194,7 +194,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 4. **Verify the domain in your GitHub profile** (profile Settings → Pages → Verified domains) so no one else can use it for GitHub Pages.
 5. Enable 2FA on the GitHub account and at the domain registrar, and turn on auto-renewal for the domain.
 
-Local testing: because of ES modules, serve via a local web server: `npm start`, then open `http://localhost:8000`. The project structure is in `AGENTS.md`.
+Local testing: because of ES modules, serve via a local web server: `npm start`, then open `http://localhost:8000`. For a phone in the same Wi-Fi, `npm run start:lan` prints the address to open there. Both send `Cache-Control: no-store`, so a reload always shows the current files, and neither serves hidden files. The project structure is in `AGENTS.md`.
 
 ---
 
