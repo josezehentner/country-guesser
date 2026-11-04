@@ -61,8 +61,5 @@ startGame({
     focusInput();
   },
 
-  // A country's name does not give its capital away.
-  canShowName: () => true,
-
   focus: focusInput,
 });

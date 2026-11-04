@@ -48,26 +48,22 @@ startGame({
   onSelect(game, event) {
     if (game.isAnswered) {
       game.nextQuestion();
-      return true;
+      return;
     }
     const { code, name } = game.current;
     if (game.map.hits(code, event.clientX, event.clientY)) {
       game.finish(true, 'Richtig!', name);
       game.map.highlight(code, { focus: false });
-      return true;
+      return;
     }
     const clicked = game.map.codeAt(event.clientX, event.clientY);
     if (!clicked) {
       game.setFeedback('Dort ist kein Land aus dem Quiz.', 'hint');
-      return true;
+      return;
     }
     game.finish(false, 'Falsch!', `Das ist ${COUNTRY_BY_CODE.get(clicked).name}. ${name} liegt hier`);
     game.map.highlight(code);
-    return true;
   },
-
-  // Names on the globe would give the answer away until it is given.
-  canShowName: (game) => game.isAnswered,
 
   focus: focusNext,
 });

@@ -58,7 +58,7 @@ You can combine both, for example only the easy countries of Africa. In total th
 | Answer (find) | click the country | tap the country |
 | Move on after a wrong answer | Enter, "Weiter" or a click on the globe | "Weiter" or a tap on the globe |
 
-A quick swipe gives the globe momentum, so it keeps turning for a moment. Hovering over a country that has already been asked shows its name and score.
+A quick swipe gives the globe momentum, so it keeps turning for a moment.
 
 ## Your data
 
