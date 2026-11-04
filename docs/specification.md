@@ -25,8 +25,9 @@ The start page is titled **Country Guesser** and is a menu with one **card** per
 |---|---|---|
 | Länder benennen | `name-countries.html` | Markiertes Land erkennen und benennen. |
 | Länder finden | `find-countries.html` | Genanntes Land auf dem Globus finden. |
+| Hauptstädte lernen | `capitals.html` | Hauptstadt des markierten Landes nennen. |
 
-Each mode keeps its own progress: recognizing a country and finding it are different skills.
+Each mode keeps its own progress: recognizing a country, finding it and knowing its capital are different skills.
 
 Card pictures are drawn from the real map data by `tools/mode-images.js`.
 
@@ -36,7 +37,7 @@ Behind the menu is a comic-style world map: light blue water with halftone dots 
 
 ## Gameplay
 
-This section describes the "Länder benennen" mode. "Länder finden" works the other way round, see [below](#mode-länder-finden).
+This section describes the "Länder benennen" mode. "Länder finden" works the other way round, see [below](#mode-länder-finden); "Hauptstädte lernen" asks for the capital instead of the name, see [below](#mode-hauptstädte-lernen).
 
 1. One country on the world map is **highlighted** (clearly marked, e.g. thick outline + pulsing effect).
 2. The player **types the country's name** into an input field and confirms with Enter.
@@ -57,6 +58,16 @@ Additionally, a **"Weiß ich nicht"** ("I don't know") button that counts as wro
 7. "Weiß ich nicht" counts as wrong and shows the country.
 
 Country choice, scoring, colors, the green or red flash of the asked country, stats, legend and settings work as in "Länder benennen".
+
+### Mode "Hauptstädte lernen"
+
+1. A country is **highlighted** as in "Länder benennen", with the question "Welche Hauptstadt hat das markierte Land?".
+2. The player **types the capital** and confirms with Enter. Answer checking works as below, with the capitals of all countries instead of their names: a typo that is just as close to another country's capital does not count (e.g. "Kingston" for Saint Vincent, whose capital is Kingstown). Two places with the same capital (Kingston for Jamaica and Norfolk Island) both accept it.
+3. The result always names the country and its capital ("Bolivien: Sucre (auch La Paz)"), right or wrong. Everything else works as in "Länder benennen": the flash, the pause after a right answer, Enter or typing to move on after a wrong one, and "Weiß ich nicht".
+
+Capitals live in `data/capitals.js`, with their German name, the other spellings that count (German, English or local, e.g. "Peking", "Beijing") and, where a country has several official capitals or a separate seat of government, all of them (e.g. Bolivia: Sucre and La Paz; South Africa: Pretoria, Kapstadt and Bloemfontein; Netherlands: Amsterdam and Den Haag). Each of them is a right answer.
+
+Places without any settlement have no capital and are **not asked** in this mode: Antarctica (AQ), Bouvet Island (BV), Heard and McDonald Islands (HM) and the U.S. Minor Outlying Islands (UM). They are left out of its stats and filter counts too. Uninhabited territories with an administrative seat keep it (South Georgia: King Edward Point; French Southern Territories: Port-aux-Français). A mode can pass its own list of countries to `startGame` for this.
 
 ### Choosing the next country
 
@@ -99,7 +110,7 @@ Colors must be clearly visible in both light and dark mode. A small **legend** s
 
 ## Storage (localStorage)
 
-Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder finden", both in the format below.
+Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder finden", `countryquiz.capitals.v1` for "Hauptstädte lernen", all in the format below.
 
 ```json
 {
@@ -121,7 +132,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 
 ### Export / Import
 
-- **Export**: downloads the mode's progress as `countryquiz-progress-YYYY-MM-DD.json` ("Länder finden": `countryquiz-find-progress-YYYY-MM-DD.json`).
+- **Export**: downloads the mode's progress as `countryquiz-progress-YYYY-MM-DD.json` ("Länder finden": `countryquiz-find-progress-YYYY-MM-DD.json`, "Hauptstädte lernen": `countryquiz-capitals-progress-YYYY-MM-DD.json`).
 - **Import**: select a file, validate its contents, show a confirmation dialog ("Replace current progress?"), then apply.
 - **Reset**: deletes all progress after confirmation.
 
@@ -146,7 +157,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 
 - **Stats bar**: number of mastered countries (score 10), started countries (1–9), never-asked countries; overall progress bar.
 - **No country names on the globe**: hovering, clicking or tapping a country never shows its name or score, in any mode, because that would give answers away.
-- **Filter sidebar** on the left of the globe in both modes, opened and closed with a tab ("‹ Filter" / "› Filter") in the middle of its outer edge; closed, the tab waits at the left edge of the screen. Ticks choose which countries are asked; both groups combine, and each mode keeps its own choice in `settings`:
+- **Filter sidebar** on the left of the globe in every mode, opened and closed with a tab ("‹ Filter" / "› Filter") in the middle of its outer edge; closed, the tab waits at the left edge of the screen. Ticks choose which countries are asked; both groups combine, and each mode keeps its own choice in `settings`:
   - **Regions:** Europa, Naher Osten, Asien, Afrika, Nordamerika, Südamerika, Ozeanien, Antarktis. The Middle East is the Arabian Peninsula, the Levant, Iraq, Iran, Egypt and Turkey; Cyprus stays in Europe and the Caucasus in Asia.
   - **Difficulty:** every country has exactly one level. *Einfach*: about 60 very well-known countries. *Schwer*: everything that is not a UN member (territories, dependencies, disputed areas) and UN island states smaller than about 1000 km². *Mittel*: all other UN members. The lists live in `data/countries.js`.
   - Each tick shows how many countries it covers, and the sidebar says how many are asked. A choice without any country says so; then every country comes up until the choice changes.
@@ -192,13 +203,14 @@ Local testing: because of ES modules, serve via a local web server: `npm start`,
 - [ ] Site loads on GitHub Pages without a build step and without console errors.
 - [ ] The start page shows a card per mode with picture, name and short description; cards open their mode, and each mode links back to the menu.
 - [ ] A country is highlighted, input is checked correctly (including umlauts, alternative names, small typos).
-- [ ] After an answer the asked country lights up green once (correct) or pulses red twice (wrong), in both modes.
+- [ ] After an answer the asked country lights up green once (correct) or pulses red twice (wrong), in every mode.
 - [ ] "Länder finden" names a country without marking it; clicking it is correct, clicking another country is wrong and shows the right one, and the ocean is ignored. After the answer a click on the globe moves on, dragging it does not.
 - [ ] First answer starts at 5 (correct) or 3 (wrong/"I don't know"); later correct = +1, wrong/"I don't know" = −1; bounds 0 and 10 are respected.
 - [ ] Hovering, clicking or tapping a country never shows its name or score, in any mode.
 - [ ] Colors match the table above; "never asked" and "score 0" are distinguishable.
 - [ ] Progress persists after reloading and after closing the browser.
-- [ ] The filter sidebar opens and closes in both modes; region and difficulty ticks combine, only matching countries are asked, and the choice survives a reload.
+- [ ] "Hauptstädte lernen" asks the capital of the highlighted country, accepts every official capital, other spellings and small typos, always shows country and capital afterwards, and never asks places without a capital.
+- [ ] The filter sidebar opens and closes in every mode; region and difficulty ticks combine, only matching countries are asked, and the choice survives a reload.
 - [ ] Export produces a JSON file, import restores the same state, invalid files are rejected.
 - [ ] Small countries are plain shapes without rings, and the globe turns to the asked country.
 - [ ] The globe turns and zooms smoothly, and borders stay sharp at every zoom level.

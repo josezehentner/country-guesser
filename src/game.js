@@ -27,6 +27,7 @@ const FILTER_GROUPS = [
 
 // `mode` provides:
 //   storageKey, exportPrefix  where its progress is kept and how exports are named
+//   countries                 optional: the countries it asks, all of them if missing
 //   nextDelayMs               pause after a correct answer before the next country
 //   setup(game)               wires up its own controls once the map is ready
 //   ask(game)                 shows the new question in game.current
@@ -34,6 +35,7 @@ const FILTER_GROUPS = [
 //   onSelect(game, event)     optional: a click on the globe
 //   focus()                   puts the keyboard focus where the player continues
 export function startGame(mode) {
+  const countries = mode.countries ?? COUNTRIES;
   const feedback = byId('feedback');
   const importFile = byId('import-file');
 
@@ -80,14 +82,14 @@ export function startGame(mode) {
   }
 
   function renderStats() {
-    const entries = Object.values(progress.countries);
+    const entries = countries.map(({ code }) => progress.countries[code]).filter(Boolean);
     const mastered = entries.filter((entry) => entry.score >= MAX_SCORE).length;
     const started = entries.filter((entry) => entry.score >= 1 && entry.score < MAX_SCORE).length;
     const totalScore = entries.reduce((sum, entry) => sum + entry.score, 0);
-    const percent = Math.round((totalScore / (COUNTRIES.length * MAX_SCORE)) * 100);
+    const percent = Math.round((totalScore / (countries.length * MAX_SCORE)) * 100);
     byId('stat-mastered').textContent = mastered;
     byId('stat-started').textContent = started;
-    byId('stat-never').textContent = COUNTRIES.length - entries.length;
+    byId('stat-never').textContent = countries.length - entries.length;
     byId('progress-fill').style.width = `${percent}%`;
     byId('progress').setAttribute('aria-valuenow', percent);
   }
@@ -97,7 +99,7 @@ export function startGame(mode) {
   }
 
   function renderAll() {
-    for (const { code } of COUNTRIES) renderCountry(code);
+    for (const { code } of countries) renderCountry(code);
     renderStats();
   }
 
@@ -115,12 +117,12 @@ export function startGame(mode) {
     }
   }
 
-  const filteredCountries = () => filterCountries(COUNTRIES, progress.settings);
+  const filteredCountries = () => filterCountries(countries, progress.settings);
 
   // With nothing left to ask, every country comes up until the filters change.
   function currentPool() {
     const pool = filteredCountries();
-    return pool.length ? pool : COUNTRIES;
+    return pool.length ? pool : countries;
   }
 
   function nextQuestion() {
@@ -199,7 +201,7 @@ export function startGame(mode) {
         input.value = code;
         const count = document.createElement('span');
         count.className = 'filter-count';
-        count.textContent = COUNTRIES.filter((country) => country[field] === code).length;
+        count.textContent = countries.filter((country) => country[field] === code).length;
         option.append(input, label, count);
         box.append(option);
       }
