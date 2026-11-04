@@ -81,6 +81,6 @@ The game itself is under the [MIT license](LICENSE).
 
 ## For developers
 
-The game is a static website in HTML, CSS and JavaScript, with no build step. Run it locally with `npm start`, then open http://localhost:8000. Run the tests with `npm test`.
+The game is a static website in HTML, CSS and JavaScript, with no build step. Run it locally with `npm start`, then open http://localhost:8000. To try it on a phone, run `npm run start:lan` and open the address it prints on the phone, in the same Wi-Fi. Run the tests with `npm test`.
 
 How the game must behave is in the [specification](docs/specification.md). How work on the project is done is in [AGENTS.md](AGENTS.md).

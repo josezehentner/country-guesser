@@ -23,7 +23,7 @@ ES modules and `fetch` do not work from `file://`, so always use a local server:
 npm start
 ```
 
-Then open http://localhost:8000. This server (`tools/serve.py`) disables browser caching, so changes always show up. To run a second one at the same time, e.g. in another worktree, pick another port: `PORT=8001 npm start`. To test on a phone, run `python3 -m http.server` and open `http://<computer-ip>:8000` on the same Wi-Fi.
+Then open http://localhost:8000. This server (`tools/serve.py`) disables browser caching, so changes always show up. To run a second one at the same time, e.g. in another worktree, pick another port: `PORT=8001 npm start`. To test on a phone, run `npm run start:lan` instead and open the address it prints on a phone in the same Wi-Fi; it caches nothing either. Only then is the server reachable from other devices. It never serves hidden files such as `.git` or `.claude`.
 
 ## Testing
 
