@@ -1,5 +1,6 @@
 import { COUNTRIES } from '../data/countries.js';
 import { ALIASES } from '../data/aliases.js';
+import { CAPITALS, capitalNames } from '../data/capitals.js';
 
 const MAX_SCORE = 10;
 const FIRST_CORRECT_SCORE = 5;
@@ -16,12 +17,13 @@ export function normalize(text) {
     .replace(/[^\p{L}\p{N}]/gu, '');
 }
 
+const uniqueNormalized = (names) => [...new Set(names.map(normalize))];
+
 const namesByCode = new Map(
-  COUNTRIES.map(({ code, name, intlName }) => [
-    code,
-    [...new Set([name, intlName, ...(ALIASES[code] ?? [])].map(normalize))],
-  ]),
+  COUNTRIES.map(({ code, name, intlName }) => [code, uniqueNormalized([name, intlName, ...(ALIASES[code] ?? [])])]),
 );
+
+const capitalsByCode = new Map(Object.keys(CAPITALS).map((code) => [code, uniqueNormalized(capitalNames(code))]));
 
 function levenshtein(a, b) {
   let previous = Array.from({ length: b.length + 1 }, (_, i) => i);
@@ -46,20 +48,27 @@ function isWithinTolerance(input, name) {
 }
 
 // Exact matches always win; a typo only counts if the input is not also close
-// to the name of a different country (e.g. "Ira" could be Irak or Iran).
-export function isCorrectAnswer(input, code) {
+// to an answer for a different code (e.g. "Ira" could be Irak or Iran).
+function matches(answersByCode, input, code) {
   const answer = normalize(input);
   if (!answer) return false;
 
-  const targetNames = namesByCode.get(code);
+  const targetNames = answersByCode.get(code);
+  if (!targetNames) return false;
   if (targetNames.includes(answer)) return true;
   if (!targetNames.some((name) => isWithinTolerance(answer, name))) return false;
 
-  for (const [otherCode, names] of namesByCode) {
+  for (const [otherCode, names] of answersByCode) {
     if (otherCode !== code && names.some((name) => isWithinTolerance(answer, name))) return false;
   }
   return true;
 }
+
+// Whether `input` names the country `code`.
+export const isCorrectAnswer = (input, code) => matches(namesByCode, input, code);
+
+// Whether `input` names the capital of `code`, or one of its official capitals.
+export const isCorrectCapital = (input, code) => matches(capitalsByCode, input, code);
 
 // The first answer sets a starting score; later answers move it by one.
 export function nextScore(entry, correct) {
