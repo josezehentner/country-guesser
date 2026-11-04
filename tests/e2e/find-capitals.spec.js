@@ -35,10 +35,14 @@ function stored(page, key = KEY) {
   return page.evaluate((k) => JSON.parse(localStorage.getItem(k)), key);
 }
 
+const waitForQuestion = (page) => expect.poll(() => askedLabel(page)).not.toBe('…');
+
 async function seed(page, countries, settings = { regions: UNAMBIGUOUS_REGIONS }) {
+  // The page saves its progress once the map has loaded, which would overwrite the seed.
+  await waitForQuestion(page);
   await page.evaluate(([key, value]) => localStorage.setItem(key, JSON.stringify(value)), [KEY, { version: 1, countries, settings }]);
   await page.reload();
-  await expect.poll(() => askedLabel(page)).not.toBe('…');
+  await waitForQuestion(page);
 }
 
 async function open(page, settings) {
