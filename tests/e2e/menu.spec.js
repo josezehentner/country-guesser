@@ -61,10 +61,22 @@ test('cards work with the keyboard', async ({ page }) => {
   await expect(page).toHaveURL(/name-countries\.html$/);
 });
 
-test('modes that are not ready are not links', async ({ page }) => {
+test('the "Hauptstädte finden" card opens its mode', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('.mode-card.soon')).toContainText('Demnächst');
-  await expect(page.locator('.mode-card.soon a, a.mode-card.soon')).toHaveCount(0);
+  const card = page.locator('a.mode-card', { hasText: 'Hauptstädte finden' });
+  await expect(card.locator('p')).toHaveText('Land zur genannten Hauptstadt finden.');
+  expect(await card.locator('img').evaluate((image) => image.complete && image.naturalWidth > 0)).toBe(true);
+  await card.click();
+  await expect(page).toHaveURL(/find-capitals\.html$/);
+  await expect(page.locator('h1')).toHaveText('Hauptstädte finden');
+});
+
+// Every mode is ready, so no card is left as "Demnächst".
+test('every card is a link to a mode', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('.mode-card')).toHaveCount(4);
+  await expect(page.locator('.mode-card.soon')).toHaveCount(0);
+  await expect(page.locator('a.mode-card')).toHaveCount(4);
 });
 
 test.describe('on a phone', () => {

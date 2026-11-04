@@ -19,15 +19,16 @@ This document is the specification for the implementation: it says how the game 
 
 ## Mode Menu
 
-The start page is titled **Country Guesser** and is a menu with one **card** per game mode. Each card has a picture, the mode's name and a very short description, and opens the mode on its own page. Every mode links back to the menu. Modes that are not ready yet are shown as "Demnächst" and cannot be opened.
+The start page is titled **Country Guesser** and is a menu with one **card** per game mode. Each card has a picture, the mode's name and a very short description, and opens the mode on its own page. Every mode links back to the menu. A mode that is not ready yet can be shown as "Demnächst" and cannot be opened.
 
 | Mode | Page | Description |
 |---|---|---|
 | Länder benennen | `name-countries.html` | Markiertes Land erkennen und benennen. |
 | Länder finden | `find-countries.html` | Genanntes Land auf dem Globus finden. |
 | Hauptstädte lernen | `capitals.html` | Hauptstadt des markierten Landes nennen. |
+| Hauptstädte finden | `find-capitals.html` | Land zur genannten Hauptstadt finden. |
 
-Each mode keeps its own progress: recognizing a country, finding it and knowing its capital are different skills.
+Each mode keeps its own progress: recognizing a country, finding it, knowing its capital and placing a capital are different skills.
 
 Card pictures are drawn from the real map data by `tools/mode-images.js`.
 
@@ -37,7 +38,7 @@ Behind the menu is a comic-style world map: light blue water with halftone dots 
 
 ## Gameplay
 
-This section describes the "Länder benennen" mode. "Länder finden" works the other way round, see [below](#mode-länder-finden); "Hauptstädte lernen" asks for the capital instead of the name, see [below](#mode-hauptstädte-lernen).
+This section describes the "Länder benennen" mode. "Länder finden" works the other way round, see [below](#mode-länder-finden); "Hauptstädte lernen" asks for the capital instead of the name, see [below](#mode-hauptstädte-lernen), and "Hauptstädte finden" names a capital whose country is to be clicked, see [below](#mode-hauptstädte-finden).
 
 1. One country on the world map is **highlighted** (clearly marked, e.g. thick outline + pulsing effect).
 2. The player **types the country's name** into an input field and confirms with Enter.
@@ -68,6 +69,15 @@ Country choice, scoring, colors, the green or red flash of the asked country, st
 Capitals live in `data/capitals.js`, with their German name, the other spellings that count (German, English or local, e.g. "Peking", "Beijing") and, where a country has several official capitals or a separate seat of government, all of them (e.g. Bolivia: Sucre and La Paz; South Africa: Pretoria, Kapstadt and Bloemfontein; Netherlands: Amsterdam and Den Haag). Each of them is a right answer.
 
 Places without any settlement have no capital and are **not asked** in this mode: Antarctica (AQ), Bouvet Island (BV), Heard and McDonald Islands (HM) and the U.S. Minor Outlying Islands (UM). They are left out of its stats and filter counts too. Uninhabited territories with an administrative seat keep it (South Georgia: King Edward Point; French Southern Territories: Port-aux-Français). A mode can pass its own list of countries to `startGame` for this.
+
+### Mode "Hauptstädte finden"
+
+1. The game **names a capital** ("Wo liegt **Canberra**?"), with every official capital where there are several ("Wo liegt **Sucre (auch La Paz)**?"). Nothing is marked, and the globe stays where the player left it.
+2. The player **clicks or taps** the country of that capital. Everything else works as in "Länder finden": small countries count within 11 pixels, the ocean is no answer, a wrong click names the clicked country and turns to the right one, "Weiß ich nicht" counts as wrong, and the same pause and ways to move on.
+3. The result names the country and its capital ("Australien: Canberra"); after a wrong click or "Weiß ich nicht" it says where the capital is ("Das ist Frankreich. Canberra liegt hier: Australien").
+4. Where two places have a capital of the same name, apart from spaces and hyphens, a click on **either** is right, because the question cannot tell them apart: Kingston (Jamaica, Norfolk Island), Basseterre and Basse-Terre (St. Kitts und Nevis, Guadeloupe), Georgetown and George Town (Guyana, Cayman Islands). The asked place gets the point; the clicked one is marked and lights up, and the result names the other one too ("Jamaika: Kingston. Auch richtig: Norfolkinsel"). Kingstown (Saint Vincent) is a different city and does not count for Kingston.
+
+It asks the same countries as "Hauptstädte lernen", without the places that have no capital.
 
 ### Choosing the next country
 
@@ -110,7 +120,7 @@ Colors must be clearly visible in both light and dark mode. A small **legend** s
 
 ## Storage (localStorage)
 
-Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder finden", `countryquiz.capitals.v1` for "Hauptstädte lernen", all in the format below.
+Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder finden", `countryquiz.capitals.v1` for "Hauptstädte lernen", `countryquiz.capitals-find.v1` for "Hauptstädte finden", all in the format below.
 
 ```json
 {
@@ -132,7 +142,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 
 ### Export / Import
 
-- **Export**: downloads the mode's progress as `countryquiz-progress-YYYY-MM-DD.json` ("Länder finden": `countryquiz-find-progress-YYYY-MM-DD.json`, "Hauptstädte lernen": `countryquiz-capitals-progress-YYYY-MM-DD.json`).
+- **Export**: downloads the mode's progress as `countryquiz-progress-YYYY-MM-DD.json` ("Länder finden": `countryquiz-find-progress-YYYY-MM-DD.json`, "Hauptstädte lernen": `countryquiz-capitals-progress-YYYY-MM-DD.json`, "Hauptstädte finden": `countryquiz-capitals-find-progress-YYYY-MM-DD.json`).
 - **Import**: select a file, validate its contents, show a confirmation dialog ("Replace current progress?"), then apply.
 - **Reset**: deletes all progress after confirmation.
 
@@ -165,7 +175,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 - **Settings dialog** behind a ⚙ button in the top bar: the progress actions (export, import, reset). They are rarely needed, so they take no space next to the globe.
 - **Game screen like a HUD**: the globe takes the whole height below the top bar, and everything else floats over it:
   - the question in a light green comic caption box at the top, in dark blue letters ("Welches Land ist markiert?", or "Wo liegt **Frankreich**?" with the name big); clicks go through it to the globe;
-  - the controls in a small rounded dock at the bottom center: the input with "Prüfen"/"Weiter" and "Weiß ich nicht", or in "Länder finden" just "Weiß ich nicht" and "Weiter";
+  - the controls in a small rounded dock at the bottom center: the input with "Prüfen"/"Weiter" and "Weiß ich nicht", or in "Länder finden" and "Hauptstädte finden" just "Weiß ich nicht" and "Weiter";
   - the result just above the dock: a comic burst with the verdict ("Richtig!", "Falsch!", "Schade!"), the country and the new score as a badge in its color. Hints, e.g. a click on the ocean, show without burst or score;
   - the legend upright at the right edge, scores 0 to 10 with 10 at the top. Never-asked countries have no swatch: they are plain land.
 - **Small screens** (narrow, or phones held sideways): one layout for all devices, only CSS adapts it. The top bar shrinks to one row (menu link, stats as colored dots, ⚙, a thin progress line), the dock spans the width, "Weiß ich nicht" in "Länder benennen" becomes "?", and the legend lies flat above the dock. Even the longest country name fits the caption box.
@@ -210,6 +220,7 @@ Local testing: because of ES modules, serve via a local web server: `npm start`,
 - [ ] Colors match the table above; "never asked" and "score 0" are distinguishable.
 - [ ] Progress persists after reloading and after closing the browser.
 - [ ] "Hauptstädte lernen" asks the capital of the highlighted country, accepts every official capital, other spellings and small typos, always shows country and capital afterwards, and never asks places without a capital.
+- [ ] "Hauptstädte finden" names a capital without marking a country; clicking its country is correct, and where two places share the capital's name either one counts. It never asks places without a capital.
 - [ ] The filter sidebar opens and closes in every mode; region and difficulty ticks combine, only matching countries are asked, and the choice survives a reload.
 - [ ] Export produces a JSON file, import restores the same state, invalid files are rejected.
 - [ ] Small countries are plain shapes without rings, and the globe turns to the asked country.

@@ -70,6 +70,20 @@ export const isCorrectAnswer = (input, code) => matches(namesByCode, input, code
 // Whether `input` names the capital of `code`, or one of its official capitals.
 export const isCorrectCapital = (input, code) => matches(capitalsByCode, input, code);
 
+const officialCapitalsByCode = new Map(
+  Object.entries(CAPITALS).map(([code, { name, also = [] }]) => [code, uniqueNormalized([name, ...also])]),
+);
+
+// Whether two codes have an official capital of the same name, apart from spaces and
+// hyphens (Kingston: Jamaica and Norfolk Island; Basseterre and Basse-Terre). Asked
+// for that capital, either place is a right answer.
+export function sharesCapital(code, otherCode) {
+  if (code === otherCode) return true;
+  const names = officialCapitalsByCode.get(code);
+  const otherNames = officialCapitalsByCode.get(otherCode);
+  return Boolean(names && otherNames && names.some((name) => otherNames.includes(name)));
+}
+
 // The first answer sets a starting score; later answers move it by one.
 export function nextScore(entry, correct) {
   if (!entry) return correct ? FIRST_CORRECT_SCORE : FIRST_WRONG_SCORE;

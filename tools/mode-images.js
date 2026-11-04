@@ -54,3 +54,4 @@ function globe({ center, highlight, pin }) {
 writeFileSync(new URL('../images/modes/name-countries.svg', import.meta.url), globe({ center: [15, 42], highlight: 'DE' }));
 writeFileSync(new URL('../images/modes/find-countries.svg', import.meta.url), globe({ center: [-55, -12], pin: [-47.9, -15.8] }));
 writeFileSync(new URL('../images/modes/capitals.svg', import.meta.url), globe({ center: [8, 44], highlight: 'FR', pin: [2.35, 48.86] }));
+writeFileSync(new URL('../images/modes/find-capitals.svg', import.meta.url), globe({ center: [134, -26], highlight: 'AU', pin: [149.13, -35.28] }));
