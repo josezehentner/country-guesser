@@ -92,14 +92,14 @@ async function keepOnly(page, group, codes) {
   }
 }
 
-async function clickCountry(page, code) {
-  const { x, y } = await page.evaluate(async (c) => {
+// Turns the country into view, zoomed in, and returns a point inside it.
+function pointIn(page, code) {
+  return page.evaluate(async (c) => {
     const api = document.querySelector('#map').mapTestApi;
     api.zoomTo(c);
     await new Promise(requestAnimationFrame);
     return api.pointOf(c);
   }, code);
-  await page.mouse.click(x, y);
 }
 
 test('loads without console errors or external requests', async ({ page, baseURL }) => {
@@ -448,33 +448,25 @@ test('export and import round-trip, invalid files rejected, reset clears', async
   expect((await stored(page)).countries).toEqual(before);
 });
 
-test('tooltip hides never-asked countries and the current question', async ({ page }) => {
+test('hovering or clicking an asked country never shows its name', async ({ page }) => {
   await open(page);
   await seed(page, { DE: entry(7) }, { regions: ['AF'] });
-  const tooltip = page.locator('#tooltip');
-  await clickCountry(page, 'DE');
-  await expect(tooltip).toHaveText('Deutschland: 7/10');
-  await clickCountry(page, 'PT');
-  await expect(tooltip).toBeHidden();
-
-  await seedAll(page, 5);
-  const code = await targetCode(page);
-  await clickCountry(page, code);
-  await expect(tooltip).toBeHidden();
-  await page.click('#dont-know-btn');
-  await clickCountry(page, code);
-  await expect(tooltip).toContainText(await page.evaluate(async (c) => (await import('/data/countries.js')).COUNTRY_BY_CODE.get(c).name, code));
+  const { x, y } = await pointIn(page, 'DE');
+  await page.mouse.move(x, y);
+  await page.mouse.move(x + 1, y);
+  await page.mouse.click(x, y);
+  await page.waitForTimeout(200);
+  await expect(page.locator('#map-wrap')).not.toContainText('Deutschland');
+  await expect(page.getByText(/7\/10/)).toHaveCount(0);
 });
 
 // Their centroids lie outside their own shapes.
-test('countries with a curved shape can be clicked', async ({ page }) => {
+test('countries with a curved shape are found where they are drawn', async ({ page }) => {
   const codes = ['IL', 'SO', 'VN', 'BM', 'CC', 'IO'];
   await open(page);
-  await seed(page, Object.fromEntries(codes.map((code) => [code, entry(7)])), { regions: ['SA'] });
   for (const code of codes) {
-    await clickCountry(page, code);
-    const name = await page.evaluate(async (c) => (await import('/data/countries.js')).COUNTRY_BY_CODE.get(c).name, code);
-    await expect(page.locator('#tooltip')).toHaveText(`${name}: 7/10`);
+    const { x, y } = await pointIn(page, code);
+    expect(await page.evaluate(([px, py]) => document.querySelector('#map').mapTestApi.codeAt(px, py), [x, y])).toBe(code);
   }
 });
 

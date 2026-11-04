@@ -1,6 +1,6 @@
 // What every mode shares: progress, stats, legend, filters, settings and the globe.
 // A mode only decides how a question is asked and answered.
-import { COUNTRIES, COUNTRY_BY_CODE, CONTINENTS, LEVELS } from '../data/countries.js';
+import { COUNTRIES, CONTINENTS, LEVELS } from '../data/countries.js';
 import { scoreColor } from './colors.js';
 import { createMap } from './map.js';
 import { filterCountries, nextScore, pickNextCountry } from './quiz.js';
@@ -31,8 +31,7 @@ const FILTER_GROUPS = [
 //   setup(game)               wires up its own controls once the map is ready
 //   ask(game)                 shows the new question in game.current
 //   answered(game, correct)   updates its controls after an answer
-//   canShowName(game, code)   whether the tooltip may name a country
-//   onSelect(game, event)     optional: a click on the globe, true if used
+//   onSelect(game, event)     optional: a click on the globe
 //   focus()                   puts the keyboard focus where the player continues
 export function startGame(mode) {
   const feedback = byId('feedback');
@@ -130,7 +129,6 @@ export function startGame(mode) {
     previousCode = game.current.code;
     game.isAnswered = false;
     setFeedback('');
-    game.map.hideTooltip();
     mode.ask(game);
   }
 
@@ -159,12 +157,6 @@ export function startGame(mode) {
     game.map.flash(game.current.code, correct);
     mode.answered(game, correct);
     if (correct) nextTimer = setTimeout(nextQuestion, mode.nextDelayMs);
-  }
-
-  function tooltipText(code) {
-    if (!mode.canShowName(game, code)) return null;
-    const entry = progress.countries[code];
-    return entry ? `${COUNTRY_BY_CODE.get(code).name}: ${entry.score}/${MAX_SCORE}` : null;
   }
 
   function setupSettings() {
@@ -315,8 +307,8 @@ export function startGame(mode) {
       const response = await fetch('data/world.json');
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const world = await response.json();
-      const onSelect = (event) => Boolean(mode.onSelect?.(game, event));
-      game.map = createMap(byId('map'), byId('map-target'), byId('tooltip'), world, tooltipText, onSelect);
+      const onSelect = (event) => mode.onSelect?.(game, event);
+      game.map = createMap(byId('map'), byId('map-target'), world, onSelect);
     } catch (error) {
       console.error(error);
       byId('loading').textContent = 'Die Karte konnte nicht geladen werden.';

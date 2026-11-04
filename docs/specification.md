@@ -56,7 +56,7 @@ Additionally, a **"Weiß ich nicht"** ("I don't know") button that counts as wro
 6. After a correct answer the next country follows on its own after a short pause (about a second); "Weiter", Enter or a click on the globe skips the pause. After a wrong answer the game waits for "Weiter", Enter or a click (or tap) anywhere on the globe, so the player can see where the country is. Turning or zooming the globe in the meantime does not move on.
 7. "Weiß ich nicht" counts as wrong and shows the country.
 
-While a question is open the tooltip names no country at all, because it would give the answer away. Country choice, scoring, colors, the green or red flash of the asked country, stats, legend and settings work as in "Länder benennen".
+Country choice, scoring, colors, the green or red flash of the asked country, stats, legend and settings work as in "Länder benennen".
 
 ### Choosing the next country
 
@@ -145,7 +145,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 ## Additional UI
 
 - **Stats bar**: number of mastered countries (score 10), started countries (1–9), never-asked countries; overall progress bar.
-- **Tooltip**: on hover/tap of a country that has already been asked, show its name and score. For never-asked countries, do not reveal the name.
+- **No country names on the globe**: hovering, clicking or tapping a country never shows its name or score, in any mode, because that would give answers away.
 - **Filter sidebar** on the left of the globe in both modes, opened and closed with a tab ("‹ Filter" / "› Filter") in the middle of its outer edge; closed, the tab waits at the left edge of the screen. Ticks choose which countries are asked; both groups combine, and each mode keeps its own choice in `settings`:
   - **Regions:** Europa, Naher Osten, Asien, Afrika, Nordamerika, Südamerika, Ozeanien, Antarktis. The Middle East is the Arabian Peninsula, the Levant, Iraq, Iran, Egypt and Turkey; Cyprus stays in Europe and the Caucasus in Asia.
   - **Difficulty:** every country has exactly one level. *Einfach*: about 60 very well-known countries. *Schwer*: everything that is not a UN member (territories, dependencies, disputed areas) and UN island states smaller than about 1000 km². *Mittel*: all other UN members. The lists live in `data/countries.js`.
@@ -193,8 +193,9 @@ Local testing: because of ES modules, serve via a local web server: `npm start`,
 - [ ] The start page shows a card per mode with picture, name and short description; cards open their mode, and each mode links back to the menu.
 - [ ] A country is highlighted, input is checked correctly (including umlauts, alternative names, small typos).
 - [ ] After an answer the asked country lights up green once (correct) or pulses red twice (wrong), in both modes.
-- [ ] "Länder finden" names a country without marking it; clicking it is correct, clicking another country is wrong and shows the right one, the ocean is ignored, and names stay hidden until the answer. After the answer a click on the globe moves on, dragging it does not.
+- [ ] "Länder finden" names a country without marking it; clicking it is correct, clicking another country is wrong and shows the right one, and the ocean is ignored. After the answer a click on the globe moves on, dragging it does not.
 - [ ] First answer starts at 5 (correct) or 3 (wrong/"I don't know"); later correct = +1, wrong/"I don't know" = −1; bounds 0 and 10 are respected.
+- [ ] Hovering, clicking or tapping a country never shows its name or score, in any mode.
 - [ ] Colors match the table above; "never asked" and "score 0" are distinguishable.
 - [ ] Progress persists after reloading and after closing the browser.
 - [ ] The filter sidebar opens and closes in both modes; region and difficulty ticks combine, only matching countries are asked, and the choice survives a reload.

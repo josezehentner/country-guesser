@@ -231,21 +231,20 @@ test('clicking the ocean is not an answer', async ({ page }) => {
   await expect(page.locator('#next-btn')).toBeDisabled();
 });
 
-test('the tooltip names no country until the answer is given', async ({ page }) => {
+test('hovering an asked country never names it, not even after the answer', async ({ page }) => {
   await open(page);
   await seed(page, { DE: entry(7), FR: entry(7) });
   const other = await otherCode(page);
-  const tooltip = page.locator('#tooltip');
-  const { x, y } = await pointIn(page, other);
-  await page.mouse.move(x, y);
-  await page.mouse.move(x + 1, y);
-  await expect(tooltip).toBeHidden();
-  await page.click('#dont-know-btn');
-  // Answering turned the globe to the asked country.
-  const after = await pointIn(page, other);
-  await page.mouse.move(after.x, after.y);
-  await page.mouse.move(after.x + 1, after.y);
-  await expect(tooltip).toHaveText(`${await nameOf(page, other)}: 7/10`);
+  const name = await nameOf(page, other);
+  for (const answered of [false, true]) {
+    if (answered) await page.click('#dont-know-btn');
+    const { x, y } = await pointIn(page, other);
+    await page.mouse.move(x, y);
+    await page.mouse.move(x + 1, y);
+    await page.waitForTimeout(200);
+    await expect(page.getByText(`${name}: 7/10`)).toHaveCount(0);
+    await expect(page.locator('#map-wrap')).not.toContainText(`${name}:`);
+  }
 });
 
 test('a click right next to a small country counts as a hit', async ({ page }) => {
