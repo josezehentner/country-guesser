@@ -12,7 +12,7 @@ export const CAPITALS = {
   AL: { name: 'Tirana', aliases: ['Tiranë'] },
   AT: { name: 'Wien', aliases: ['Vienna'] },
   BA: { name: 'Sarajevo' },
-  BE: { name: 'Brüssel', aliases: ['Bruxelles', 'Brussel', 'Brussels'] },
+  BE: { name: 'Brüssel', aliases: ['Bruxelles', 'Brussels'] },
   BG: { name: 'Sofia', aliases: ['Sofija'] },
   BY: { name: 'Minsk' },
   CH: { name: 'Bern' },
@@ -78,7 +78,7 @@ export const CAPITALS = {
   SA: { name: 'Riad', aliases: ['Riyadh', 'Er-Riad'] },
   SY: { name: 'Damaskus', aliases: ['Damascus'] },
   TR: { name: 'Ankara' },
-  YE: { name: 'Sanaa', aliases: ["Sana'a"] },
+  YE: { name: 'Sanaa' },
 
   // Asia
   AF: { name: 'Kabul' },
@@ -100,8 +100,8 @@ export const CAPITALS = {
   KZ: { name: 'Astana', aliases: ['Nur-Sultan'] },
   LA: { name: 'Vientiane', aliases: ['Viangchan'] },
   LK: { name: 'Sri Jayawardenepura Kotte', also: ['Colombo'], aliases: ['Kotte'] },
-  MM: { name: 'Naypyidaw', aliases: ['Naypyitaw', 'Nay Pyi Taw'] },
-  MN: { name: 'Ulaanbaatar', aliases: ['Ulan Bator', 'Ulan-Bator'] },
+  MM: { name: 'Naypyidaw', aliases: ['Naypyitaw'] },
+  MN: { name: 'Ulaanbaatar', aliases: ['Ulan Bator'] },
   MV: { name: 'Malé' },
   MY: { name: 'Kuala Lumpur', also: ['Putrajaya'] },
   NP: { name: 'Kathmandu', aliases: ['Katmandu'] },
@@ -117,7 +117,7 @@ export const CAPITALS = {
   VN: { name: 'Hanoi' },
   CC: { name: 'West Island' },
   CX: { name: 'Flying Fish Cove' },
-  HK: { name: 'Hongkong', aliases: ['Hong Kong', 'Victoria'] },
+  HK: { name: 'Hongkong' },
   IO: { name: 'Diego Garcia' },
   MO: { name: 'Macau', aliases: ['Macao'] },
 
