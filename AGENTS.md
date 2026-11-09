@@ -60,8 +60,9 @@ tools/d3-bundle.js      d3 functions in vendor/d3.bundle.js, rebuilt with `npm r
 tools/mode-images.js    draws the card pictures from the map data
 tools/menu-background.js draws the comic world map behind the menu
 tools/globe-background.js draws the comic sunburst behind the globe
+tools/lakes.js          builds data/lakes.json from Natural Earth, with `npm run build:lakes`
 src/                    one module per responsibility
-data/                   map data, country list, aliases
+data/                   map data, lakes, country list, aliases
 vendor/                 third-party code, never edited by hand
 tests/unit/             Node tests for logic and data
 tests/e2e/              Playwright tests for the game in a browser

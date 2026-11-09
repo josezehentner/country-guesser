@@ -72,7 +72,7 @@ That also means another device or browser starts from zero, and private windows 
 
 ## Credits and license
 
-- Map: [Natural Earth](https://www.naturalearthdata.com), public domain. Very small countries are enlarged so they can be seen.
+- Map and lakes: [Natural Earth](https://www.naturalearthdata.com), public domain. Very small countries are enlarged so they can be seen.
 - Globe: [d3](https://d3js.org), ISC license.
 - Font: [Bangers](https://github.com/googlefonts/bangers), SIL Open Font License.
 - German country names: from the browser itself (`Intl.DisplayNames`), adjusted where needed.

@@ -526,6 +526,18 @@ for (const colorScheme of ['light', 'dark']) {
       expect(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--country-stroke').trim())).toBe('#000000');
     });
 
+    test('large lakes are water on the globe', async ({ page }) => {
+      await open(page);
+      // Lake Victoria, Lake Michigan and Lake Superior, then land next to them. Lake
+      // Nicaragua is only a few pixels wide at this zoom.
+      for (const lake of [[33, -1], [-87, 43.5], [-87.5, 47.7]]) {
+        await expect.poll(() => pixelAt(page, lake), { message: String(lake) }).toBe('rgb(173, 216, 230)');
+      }
+      for (const land of [[32.6, 0.6], [-88.5, 42.5]]) {
+        await expect.poll(() => pixelAt(page, land), { message: String(land) }).not.toBe('rgb(173, 216, 230)');
+      }
+    });
+
     test('the globe sits on the comic sunburst', async ({ page }) => {
       const file = colorScheme === 'dark' ? 'globe-background-dark.svg' : 'globe-background.svg';
       const loaded = page.waitForResponse((response) => response.url().endsWith(`/images/${file}`) && response.ok());
