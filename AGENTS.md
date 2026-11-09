@@ -4,13 +4,14 @@ Country Guesser is a static browser game built with plain HTML, CSS and JavaScri
 `docs/specification.md` is the product specification. Read it before changing game behavior, and keep it in sync with intentional changes.
 `README.md` describes the game for players. Update it when a change is visible to them, e.g. a new mode or control.
 
+The owner's general rules for every project (git workflow, Conventional Commits, pull requests, testing) are in their personal `~/.claude/CLAUDE.md`. This file only adds what is specific to this project.
+
 ## Non-negotiable constraints
 
 - No build step, backend, login or database. The site must run directly from the repo on GitHub Pages.
 - No external requests at runtime. Libraries and data live in the repo.
 - Keep the Content Security Policy in every HTML page restrictive.
 - Display user input with `textContent` only. Never pass imported data or user input to `innerHTML` or `eval`.
-- Never commit secrets, API keys or tokens.
 - UI text is German. Code, comments, file names and commit messages are English.
 - Use relative paths, because GitHub Pages may serve the site from a subfolder.
 - Do not add frameworks, TypeScript, bundlers or CSS frameworks unless the owner asks for them.
@@ -27,8 +28,6 @@ Then open http://localhost:8000. This server (`tools/serve.py`) disables browser
 
 ## Testing
 
-New code must not break existing functionality. Run the full suite before every commit, and only hand over a change when it passes:
-
 ```sh
 npm install        # once
 npx playwright install firefox  # once, and after Playwright updates
@@ -41,12 +40,9 @@ GitHub Actions runs `npm test` on every pull request and every push to `main`. A
 
 Browser tests use Playwright's own Firefox build, not the installed Firefox. Dev tools are for testing only: the site itself must keep working without `npm install`.
 
-The browser tests start their own server on a port derived from the folder, so test runs in different worktrees never meet. If that port is taken, the run fails instead of testing someone else's code; set `TEST_PORT` to use another one. Tests that depend on timing must stay reliable on a busy machine, e.g. while another worktree runs its tests.
+The browser tests start their own server on a port derived from the folder, so test runs in different worktrees never meet. If that port is taken, the run fails instead of testing someone else's code; set `TEST_PORT` to use another one.
 
-- Every new feature comes with tests for its behavior.
-- Every bug fix comes with a test that fails without the fix.
-- Logic goes in `tests/unit/`, behavior that needs the page or map goes in `tests/e2e/`.
-- Do not weaken, skip or delete an existing test to get a passing run. If a test fails, assume the new code is wrong. Change the test only if the intended behavior changed or the test itself is wrong, and tell the owner.
+Logic goes in `tests/unit/`, behavior that needs the page or map goes in `tests/e2e/`.
 
 ## Project structure
 
@@ -106,57 +102,14 @@ Not done yet. Work through these in order when asked:
 
 Later, if types become useful, add JSDoc comments checked by TypeScript, which needs no build step.
 
-## Git workflow
+## Git in this project
 
-### Branches
-
-- `main` always stays working and deployable. Do not commit features or fixes directly to it.
-- Create one short-lived branch per change, from an up-to-date `main`. Right before creating it, fetch `main` from GitHub: another session may have merged minutes ago, and the local `main` does not know yet.
-- Name branches `<type>/<short-kebab-case-description>`, using the commit types below. Examples: `feat/hint-button`, `fix/tooltip-position`, `docs/deployment-guide`.
-- Before creating a branch, tell the owner the proposed name and what it will contain.
-- When a feature on a feature branch is implemented and passes all tests, commit it without waiting to be asked.
-- Only push, merge or deploy when the owner asks.
-- After a branch is merged and works, delete it on GitHub and locally. Its commits are in `main`, and the pull request keeps the history.
-
-### Parallel work
-
-The owner may run several agent sessions at once. Each one works in its own git worktree, e.g. started with `claude -w <name>`.
-
-- One session, one worktree, one branch, one pull request. Never switch or change another worktree's branch.
+- Common commit scopes: `quiz`, `map`, `storage`, `ui`, `data`, `vendor`.
 - Run `npm install` once in a new worktree.
-- Stay within the files the task needs. Shared files such as `style.css`, `src/game.js`, `src/map.js`, `docs/specification.md`, `README.md` and `tests/e2e/game.spec.js` cause most conflicts: change them only where the task requires it, and keep those changes small.
-- Pull requests merge one after another. Before a merge, bring the branch up to date with `main`, resolve conflicts in this worktree, run the full suite again, and only then ask to merge.
-
-### Commits
-
-Use [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-<type>(<optional scope>): <imperative summary>
-
-<optional body explaining why>
-```
-
-| Type | Use for |
-|---|---|
-| `feat` | a new feature |
-| `fix` | a bug fix |
-| `docs` | documentation only |
-| `style` | formatting with no change in behavior |
-| `refactor` | code changes that neither fix a bug nor add a feature |
-| `perf` | a performance improvement |
-| `test` | adding or changing tests |
-| `build` | vendored libraries, generated bundles, dev dependencies |
-| `ci` | automated workflows |
-| `chore` | maintenance that fits nothing else |
-
-- Common scopes: `quiz`, `map`, `storage`, `ui`, `data`, `vendor`.
-- Keep the summary lowercase, imperative, without a trailing period, and under about 72 characters.
-- Make each commit one focused, working change. Stage files by name, not with `git add .`.
+- The shared files that cause most conflicts here are `style.css`, `src/game.js`, `src/map.js`, `docs/specification.md`, `README.md` and `tests/e2e/game.spec.js`.
 
 ## Before finishing a change
 
 - Run `npm test`, plus linting once it exists.
 - Play the affected part of the game in a browser.
 - Check the affected items in the specification's acceptance criteria.
-- Report anything that was not tested.
