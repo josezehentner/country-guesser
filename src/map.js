@@ -94,8 +94,9 @@ function clickablePoint(projection, polygon, centroid) {
 
 const ease = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
 
-// `onSelect(event)` is called for a click or tap on the globe.
-export function createMap(canvas, targetCanvas, world, onSelect = () => false) {
+// `onSelect(event)` is called for a click or tap on the globe. `lakes` are drawn as
+// water over the countries.
+export function createMap(canvas, targetCanvas, world, onSelect = () => false, lakes = { features: [] }) {
   const projection = geoOrthographic().clipAngle(90).precision(0);
   const context = canvas.getContext('2d', { alpha: true });
   const targetContext = targetCanvas.getContext('2d');
@@ -114,6 +115,10 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false) {
     return { code: feature.properties.id, feature, polygons, caps: polygons.map(boundingCap), levels: [], color: 'var(--never)' };
   });
   const shapeByCode = new Map(shapes.filter((shape) => COUNTRY_BY_CODE.has(shape.code)).map((shape) => [shape.code, shape]));
+  const lakeShapes = lakes.features.map((feature) => {
+    const polygons = polygonsOf(feature.geometry);
+    return { name: feature.properties.name, polygons, caps: polygons.map(boundingCap), levels: [] };
+  });
 
   let center = START_CENTER;
   let k = 1;
@@ -225,12 +230,28 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false) {
       context.fill();
       context.stroke();
     }
+    // Natural Earth cuts some lakes into pieces, e.g. along borders. A shore twice as
+    // wide, then the water over its inner half, leaves no line where pieces meet.
+    context.beginPath();
+    if (traceLakes(context, path)) {
+      context.lineWidth = 2 * BORDER_WIDTH_PX;
+      context.stroke();
+      context.fillStyle = resolveColor('var(--ocean)');
+      context.fill();
+    }
     context.beginPath();
     path({ type: 'Sphere' });
     context.lineWidth = GLOBE_OUTLINE_PX;
     context.strokeStyle = resolveColor('var(--ink)');
     context.stroke();
     lastDrawMs = performance.now() - started;
+  }
+
+  // Adds the visible lakes to the current path. Returns false when none is.
+  function traceLakes(ctx, clippedPath) {
+    let any = false;
+    for (const lake of lakeShapes) any = traceShape(ctx, clippedPath, lake) || any;
+    return any;
   }
 
   function drawTarget() {
@@ -261,6 +282,12 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false) {
     if (!traceShape(flashContext, flashPath, flashing.shape)) return;
     flashContext.fill();
     if (isSmall(flashing.shape)) flashContext.stroke();
+    // Lakes stay water while the country around them lights up.
+    flashContext.save();
+    flashContext.globalCompositeOperation = 'destination-out';
+    flashContext.beginPath();
+    if (traceLakes(flashContext, flashPath)) flashContext.fill();
+    flashContext.restore();
   }
 
   function draw() {
@@ -463,12 +490,19 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false) {
     scheduleDraw();
   }
 
+  function inShape({ caps, polygons }, location) {
+    return caps.some((cap, j) => geoDistance(location, cap.center) <= cap.radius
+      && geoContains({ type: 'Polygon', coordinates: polygons[j] }, location));
+  }
+
   function codeAt(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
     const point = [clientX - rect.left, clientY - rect.top];
     if (Math.hypot(point[0] - cssWidth / 2, point[1] - cssHeight / 2) > radius * k) return null;
     const location = projection.invert(point);
     if (!location || !Number.isFinite(location[0])) return null;
+    // A lake is water, like the ocean, even though the country data covers it.
+    if (lakeShapes.some((lake) => inShape(lake, location))) return null;
     for (let i = shapes.length - 1; i >= 0; i--) {
       const { code, caps, polygons } = shapes[i];
       if (!shapeByCode.has(code)) continue;
