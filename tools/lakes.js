@@ -8,9 +8,9 @@ import { join } from 'node:path';
 import { geoArea } from 'd3-geo';
 import { simplifyPolygon } from '../src/simplify.js';
 
-// Lakes at least this large are drawn. It keeps every lake a player would look for,
-// e.g. Lake Nicaragua at about 8,000 km², and leaves out thousands of small ones.
-export const MIN_AREA_KM2 = 1000;
+// Lakes at least this large are drawn: the big lakes a player would look for,
+// e.g. Lake Nicaragua at about 8,000 km², without crowding the map.
+export const MIN_AREA_KM2 = 5000;
 const EARTH_RADIUS_KM = 6371;
 // Natural Earth draws shores about six times finer than the country borders in
 // data/world.json. Simplifying them to within about 1.3 km keeps them finer than
@@ -97,17 +97,37 @@ function toPolygons(rings) {
 
 const round = (value) => Number(value.toFixed(DECIMALS));
 
+const pointsOf = (geometry) => geometry.coordinates.flat(2).map(([x, y]) => `${x},${y}`);
+
+// Natural Earth cuts some lakes into pieces, e.g. Lake Huron into the lake itself,
+// Georgian Bay, the North Channel and Saginaw Bay. A piece below the limit is kept
+// when it shares a shore point with a kept lake, or it would show as land.
+function withAdjoiningPieces(lakes) {
+  const kept = lakes.filter((lake) => lake.areaKm2 >= MIN_AREA_KM2);
+  const rest = lakes.filter((lake) => lake.areaKm2 < MIN_AREA_KM2);
+  const shore = new Set(kept.flatMap((lake) => pointsOf(lake.geometry)));
+  for (let added = true; added;) {
+    added = false;
+    for (const lake of rest.filter((piece) => !kept.includes(piece))) {
+      const points = pointsOf(lake.geometry);
+      if (!points.some((point) => shore.has(point))) continue;
+      kept.push(lake);
+      for (const point of points) shore.add(point);
+      added = true;
+    }
+  }
+  return kept;
+}
+
 export function buildLakes(folder) {
   const records = readDbf(readFileSync(join(folder, 'ne_10m_lakes.dbf')));
   const shapes = readShp(readFileSync(join(folder, 'ne_10m_lakes.shp')));
-  return shapes
-    .map((rings, i) => {
-      const geometry = { type: 'MultiPolygon', coordinates: toPolygons(rings) };
-      const areaKm2 = geoArea(geometry) * EARTH_RADIUS_KM ** 2;
-      return { name: records[i].name_de || records[i].name || '', areaKm2, geometry };
-    })
-    .filter((lake) => lake.areaKm2 >= MIN_AREA_KM2)
-    .sort((a, b) => b.areaKm2 - a.areaKm2);
+  const lakes = shapes.map((rings, i) => {
+    const geometry = { type: 'MultiPolygon', coordinates: toPolygons(rings) };
+    const areaKm2 = geoArea(geometry) * EARTH_RADIUS_KM ** 2;
+    return { name: records[i].name_de || records[i].name || '', areaKm2, geometry };
+  });
+  return withAdjoiningPieces(lakes).sort((a, b) => b.areaKm2 - a.areaKm2);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -129,5 +149,5 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     }));
     writeFileSync(new URL('../data/lakes.json', import.meta.url), JSON.stringify({ type: 'FeatureCollection', features }));
   }
-  console.error(`${lakes.length} lakes of at least ${MIN_AREA_KM2} km²`);
+  console.error(`${lakes.length} lakes of at least ${MIN_AREA_KM2} km², with the pieces that adjoin them`);
 }

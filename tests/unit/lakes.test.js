@@ -15,15 +15,33 @@ test('the lakes players look for are on the map', () => {
   }
 });
 
+// The corners of a lake's bounding box, slightly widened, in degrees.
+function box(lake) {
+  const points = lake.geometry.coordinates.flat(2);
+  const xs = points.map(([x]) => x);
+  const ys = points.map(([, y]) => y);
+  return [Math.min(...xs) - 0.05, Math.min(...ys) - 0.05, Math.max(...xs) + 0.05, Math.max(...ys) + 0.05];
+}
+const touch = (a, b) => a[0] <= b[2] && b[0] <= a[2] && a[1] <= b[3] && b[1] <= a[3];
+
 test('only large lakes are drawn, and each one is a small part of the globe', () => {
-  assert.ok(lakes.length > 100 && lakes.length < 300, `${lakes.length} lakes`);
+  assert.ok(lakes.length > 25 && lakes.length < 60, `${lakes.length} lakes`);
   for (const lake of lakes) {
-    const area = areaKm2(lake);
-    // A little below the limit: simplifying the shore may shrink a lake slightly.
-    assert.ok(area >= MIN_AREA_KM2 * 0.95, `${lake.properties.name}: ${area} km²`);
     // A ring wound the wrong way would cover the whole globe instead of the lake.
-    assert.ok(area < 100_000, `${lake.properties.name}: ${area} km²`);
+    assert.ok(areaKm2(lake) < 100_000, `${lake.properties.name}: ${areaKm2(lake)} km²`);
   }
+  const names = lakes.map((lake) => lake.properties.name);
+  for (const small of ['Vättern', 'Tonle Sap', 'Peipussee', 'Tanasee']) assert.ok(!names.includes(small), small);
+});
+
+// Natural Earth cuts some lakes into pieces, e.g. Lake Huron and the North Channel.
+test('a lake below the limit is only there as a piece of a large one', () => {
+  // A little below the limit: simplifying the shore may shrink a lake slightly.
+  const large = lakes.filter((lake) => areaKm2(lake) >= MIN_AREA_KM2 * 0.95);
+  for (const piece of lakes.filter((lake) => !large.includes(lake))) {
+    assert.ok(large.some((lake) => touch(box(lake), box(piece))), piece.properties.name);
+  }
+  assert.ok(lakes.some((lake) => lake.properties.name === 'North Channel'));
 });
 
 test('lake data stays small', () => {
