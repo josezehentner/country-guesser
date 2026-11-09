@@ -14,6 +14,10 @@
   entries under 100 km², which keep full detail and are drawn on top. Entries
   under 40 km² are enlarged to 40 km² around their own centers, so these shapes
   are deliberately not to scale.
+- `data/lakes.json`: derived from Natural Earth 1:10m Lakes, version 5.0.0
+  (public domain). https://www.naturalearthdata.com. Built by `tools/lakes.js`:
+  only lakes of at least 1,000 km², German names from `name_de`, shores
+  simplified to within about 1.3 km and coordinates rounded to 4 decimals.
 - `images/modes/*.svg` and `images/menu-background.svg`: drawn from
   `data/world.json` by `tools/mode-images.js` and `tools/menu-background.js`,
   so the same Natural Earth source applies.

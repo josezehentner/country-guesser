@@ -221,6 +221,17 @@ test('"Weiß ich nicht" counts as wrong and shows the country', async ({ page })
   await expect(page.locator('#feedback')).toHaveText('');
 });
 
+test('clicking a large lake is no answer either, even inside a country', async ({ page }) => {
+  await open(page);
+  // Lake Victoria: the country data of Uganda, Kenya and Tanzania covers it.
+  const lake = [33, -1];
+  await mapApi(page, 'lookAt', lake, 6);
+  const { x, y } = await mapApi(page, 'pointAt', lake);
+  await page.mouse.click(x, y);
+  await expect(page.locator('#feedback')).toHaveText('Dort ist kein Land aus dem Quiz.');
+  expect(await stored(page)).toMatchObject({ countries: {} });
+});
+
 test('clicking the ocean is not an answer', async ({ page }) => {
   await open(page);
   await mapApi(page, 'lookAt', [-30, 0], 1);

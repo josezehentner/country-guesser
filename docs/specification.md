@@ -155,6 +155,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 - Map data: **Natural Earth, 1:10m scale** (public domain) as GeoJSON or TopoJSON under `data/`. Each country needs a unique **ISO 3166-1 alpha-2 code**.
   - Note: In Natural Earth, the `ISO_A2` field is `-99` for some countries (including France, Norway, Kosovo). Fall back to `ISO_A2_EH` or a manual mapping in those cases.
   - Simplify the file beforehand (e.g. with mapshaper), but keep enough detail that borders stay sharp when zoomed in; target: map data under 3 MB (about 0.8 MB compressed), and limit the maximum zoom to what the data can show sharply.
+- **Lakes**: every lake of at least 1,000 km² in Natural Earth's 1:10m lakes (about 200, e.g. the Great Lakes, Lake Victoria, Lake Nicaragua) is drawn as water over the countries, with a shore line like the coasts. Where Natural Earth splits a lake into pieces, no line shows between them. A click or tap into a lake counts as water, like the ocean, even though the country data covers it, and the green or red flash after an answer leaves lakes blue. The Caspian Sea is water in the country data already. `data/lakes.json` is built by `npm run build:lakes` (see `tools/lakes.js`), which simplifies the shores to within about 1.3 km, still finer than the country borders.
 - **Country scope**: all 249 ISO 3166-1 entries plus Kosovo, including dependent territories such as Greenland and French Guiana. Anything else in the map data is drawn but **not asked** and colored neutrally. The list of quizzed countries lives in one central file (`data/countries.js`) so it is easy to adjust.
 - **Turn and zoom** the globe: drag to turn it, mouse wheel or pinch to zoom. Turning stops at the poles. After a quick drag the globe keeps turning and slows down within about a second, unless the player prefers reduced motion.
 - When a country is asked, the globe **turns it to the front and center** and zooms in moderately, so neighboring land stays in view.
@@ -223,6 +224,7 @@ Local testing: because of ES modules, serve via a local web server: `npm start`,
 - [ ] "Hauptstädte finden" names a capital without marking a country; clicking its country is correct, and where two places share the capital's name either one counts. It never asks places without a capital.
 - [ ] The filter sidebar opens and closes in every mode; region and difficulty ticks combine, only matching countries are asked, and the choice survives a reload.
 - [ ] Export produces a JSON file, import restores the same state, invalid files are rejected.
+- [ ] Large lakes such as Lake Victoria, Lake Michigan and Lake Nicaragua are water on the globe, and a click into one is no answer.
 - [ ] Small countries are plain shapes without rings, and the globe turns to the asked country.
 - [ ] The globe turns and zooms smoothly, and borders stay sharp at every zoom level.
 - [ ] Usable on mobile (touch zoom, input, no horizontal scrollbar), with most of the screen left for the globe even while the keyboard is open.

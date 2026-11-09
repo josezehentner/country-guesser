@@ -306,11 +306,13 @@ export function startGame(mode) {
 
   async function start() {
     try {
-      const response = await fetch('data/world.json');
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const world = await response.json();
+      const [world, lakes] = await Promise.all(['data/world.json', 'data/lakes.json'].map(async (url) => {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`);
+        return response.json();
+      }));
       const onSelect = (event) => mode.onSelect?.(game, event);
-      game.map = createMap(byId('map'), byId('map-target'), world, onSelect);
+      game.map = createMap(byId('map'), byId('map-target'), world, onSelect, lakes);
     } catch (error) {
       console.error(error);
       byId('loading').textContent = 'Die Karte konnte nicht geladen werden.';
