@@ -256,6 +256,35 @@ test('region filter only asks countries from that region', async ({ page }) => {
   expect((await stored(page)).settings.regions).toEqual(['SA']);
 });
 
+test('the slider beside the legend stops asking countries above a score', async ({ page }) => {
+  await open(page);
+  // South America: everything well known except Brazil (3) and Peru (never asked)
+  const southAmerica = ['AR', 'BO', 'BR', 'CL', 'CO', 'EC', 'GY', 'PE', 'PY', 'SR', 'UY', 'VE', 'FK', 'GF'];
+  const scores = Object.fromEntries(southAmerica.filter((code) => code !== 'PE').map((code) => [code, entry(code === 'BR' ? 3 : 8)]));
+  await seed(page, scores, { regions: ['SA'] });
+  const slider = page.locator('#score-limit');
+  await expect(slider).toHaveValue('10');
+  await expect(page.locator('#legend li.excluded')).toHaveCount(0);
+
+  await slider.fill('7');
+  await expect(page.locator('#legend li.excluded')).toHaveText(['8', '9', '10']);
+  await expect(page.locator('#filter-summary')).toHaveText('2 Länder werden abgefragt.');
+  await expect.poll(async () => (await stored(page)).settings.maxScore).toBe(7);
+  for (let i = 0; i < 10; i++) {
+    expect(['BR', 'PE']).toContain(await targetCode(page));
+    await page.click('#dont-know-btn');
+    await page.keyboard.press('Enter');
+  }
+
+  await page.reload();
+  await expect.poll(() => targetCode(page)).toBeTruthy();
+  await expect(slider).toHaveValue('7');
+  expect(['BR', 'PE']).toContain(await targetCode(page));
+  await slider.fill('10');
+  await expect(page.locator('#filter-summary')).toHaveText('14 Länder werden abgefragt.');
+  await expect.poll(async () => (await stored(page)).settings.maxScore).toBeUndefined();
+});
+
 test('regions and difficulty combine, and the choice survives a reload', async ({ page }) => {
   await open(page);
   await expect(page.locator('#filters')).toBeVisible();

@@ -36,6 +36,8 @@ function sanitizeSettings(settings) {
   if (regions) result.regions = regions;
   if (levels) result.levels = levels;
   if (typeof settings.filtersOpen === 'boolean') result.filtersOpen = settings.filtersOpen;
+  // 10, the highest score, is the same as no limit.
+  if (Number.isInteger(settings.maxScore) && settings.maxScore >= 0 && settings.maxScore < 10) result.maxScore = settings.maxScore;
   return result;
 }
 
