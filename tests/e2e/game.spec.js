@@ -76,6 +76,16 @@ function pixelAt(page, location) {
 
 const view = (page) => page.evaluate(() => document.querySelector('#map').mapTestApi.view());
 
+// The target on the icon-only "Zum Land" button: in its middle, in ink as thick as the outlines.
+async function expectTargetCentered(page) {
+  const button = await page.locator('#recenter-btn').boundingBox();
+  const icon = await page.locator('#recenter-btn .recenter-icon').boundingBox();
+  expect(Math.abs(icon.x + icon.width / 2 - (button.x + button.width / 2))).toBeLessThanOrEqual(1);
+  expect(Math.abs(icon.y + icon.height / 2 - (button.y + button.height / 2))).toBeLessThanOrEqual(1);
+  const stroke = await page.locator('#recenter-btn .recenter-icon').evaluate((svg) => parseFloat(getComputedStyle(svg).strokeWidth));
+  expect(stroke).toBeGreaterThanOrEqual(2.5);
+}
+
 // The progress actions live in the settings dialog.
 async function openSettings(page) {
   await page.click('#settings-btn');
@@ -663,6 +673,13 @@ for (const width of [800, 1280]) {
   });
 }
 
+test('the target on the icon-only "Zum Land" button sits in its middle and is drawn in thick lines', async ({ page }) => {
+  await page.setViewportSize({ width: 800, height: 800 });
+  await open(page);
+  await expect(page.locator('.recenter-label')).toBeHidden();
+  await expectTargetCentered(page);
+});
+
 test('the globe zooms and rotates', async ({ page }) => {
   await open(page);
   await page.evaluate(() => document.querySelector('#map').mapTestApi.lookAt([0, 0], 1));
@@ -850,6 +867,7 @@ test.describe('on a phone', () => {
     expect(box.width).toBeGreaterThanOrEqual(44);
     expect(box.height).toBeGreaterThanOrEqual(44);
     await expect(page.locator('.recenter-label')).toBeHidden();
+    await expectTargetCentered(page);
     for (const selector of ['#prompt', '#legend', '.panel']) {
       const other = await page.locator(selector).boundingBox();
       const apart = box.x + box.width <= other.x || other.x + other.width <= box.x

@@ -323,7 +323,19 @@ h1 { margin: 0; font-size: 1.1rem; }
   border-radius: 999px;
 }
 .recenter[hidden] { display: none; }
-.recenter-icon { font-family: system-ui, sans-serif; font-size: 1.3em; line-height: 1; }
+/* A drawn target with the same thick ink lines as the outlines: a font glyph
+   would sit off center and come out thin. */
+.recenter-icon {
+  flex: none;
+  display: block;
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.recenter-dot { fill: currentColor; stroke: none; }
 
 /* The caption in the middle keeps clear of the button on both sides. Beside
    pinned filters on a narrow window the button is only its icon. */
