@@ -11,13 +11,15 @@
     "test:e2e": "playwright test",
     "build:vendor": "esbuild tools/d3-bundle.js --bundle --format=esm --minify --legal-comments=none --outfile=vendor/d3.bundle.js",
     "build:images": "node tools/mode-images.js && node tools/menu-background.js && node tools/globe-background.js",
-    "build:lakes": "node tools/lakes.js"
+    "build:lakes": "node tools/lakes.js",
+    "build:flags": "node tools/flags.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
     "d3-geo": "3.1.1",
     "d3-selection": "3.0.0",
     "d3-zoom": "3.0.0",
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "flag-icons": "7.6.0"
   }
 }

@@ -71,12 +71,22 @@ test('the "Hauptstädte finden" card opens its mode', async ({ page }) => {
   await expect(page.locator('h1')).toHaveText('Hauptstädte finden');
 });
 
+test('the "Flaggen erkennen" card opens its mode', async ({ page }) => {
+  await page.goto('/');
+  const card = page.locator('a.mode-card', { hasText: 'Flaggen erkennen' });
+  await expect(card.locator('p')).toHaveText('Land zur gezeigten Flagge nennen.');
+  expect(await card.locator('img').evaluate((image) => image.complete && image.naturalWidth > 0)).toBe(true);
+  await card.click();
+  await expect(page).toHaveURL(/flags\.html$/);
+  await expect(page.locator('h1')).toHaveText('Flaggen erkennen');
+});
+
 // Every mode is ready, so no card is left as "Demnächst".
 test('every card is a link to a mode', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('.mode-card')).toHaveCount(4);
+  await expect(page.locator('.mode-card')).toHaveCount(5);
   await expect(page.locator('.mode-card.soon')).toHaveCount(0);
-  await expect(page.locator('a.mode-card')).toHaveCount(4);
+  await expect(page.locator('a.mode-card')).toHaveCount(5);
 });
 
 test.describe('on a phone', () => {

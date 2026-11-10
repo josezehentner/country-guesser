@@ -22,6 +22,10 @@
 - `images/modes/*.svg` and `images/menu-background.svg`: drawn from
   `data/world.json` by `tools/mode-images.js` and `tools/menu-background.js`,
   so the same Natural Earth source applies.
+- `vendor/flags/*.svg`: flag-icons 7.6.0 by Panayiotis Lipiridis and contributors,
+  MIT License (`vendor/flags/LICENSE`). https://github.com/lipis/flag-icons. The
+  4:3 versions of the 235 entries listed in `data/flags.js`, unchanged. Copied
+  from the npm package by `npm run build:flags`.
 - `fonts/bangers/Bangers-Regular.ttf`: Bangers by The Bangers Project Authors,
   SIL Open Font License 1.1 (`fonts/bangers/OFL.txt`), unchanged.
   https://github.com/googlefonts/bangers

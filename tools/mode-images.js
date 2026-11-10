@@ -16,8 +16,9 @@ function round(path) {
   return path.replace(/\d+\.\d+/g, (n) => Number(n).toFixed(1));
 }
 
-// `highlight` outlines a country, `pin` puts a map pin on a point.
-function globe({ center, highlight, pin }) {
+// `highlight` outlines a country, `pin` puts a map pin on a point, `flag` adds a
+// picture of a flag in the top left corner.
+function globe({ center, highlight, pin, flag }) {
   const projection = geoOrthographic()
     .clipAngle(90)
     .precision(0)
@@ -46,6 +47,7 @@ function globe({ center, highlight, pin }) {
     // A drop-shaped pin whose tip touches the point.
     pin && `<path d="M${pinX} ${pinY}c-4-9-12-15-12-23a12 12 0 0 1 24 0c0 8-8 14-12 23z" fill="${COLORS.target}" stroke="${COLORS.border}" stroke-width="1.2" stroke-linejoin="round"/>`,
     pin && `<circle cx="${pinX}" cy="${pinY - 23}" r="4.5" fill="#ffffff" stroke="${COLORS.border}" stroke-width="1"/>`,
+    flag,
     '</svg>',
     '',
   ].filter((line) => line !== undefined).join('\n');
@@ -55,3 +57,10 @@ writeFileSync(new URL('../images/modes/name-countries.svg', import.meta.url), gl
 writeFileSync(new URL('../images/modes/find-countries.svg', import.meta.url), globe({ center: [-55, -12], pin: [-47.9, -15.8] }));
 writeFileSync(new URL('../images/modes/capitals.svg', import.meta.url), globe({ center: [8, 44], highlight: 'FR', pin: [2.35, 48.86] }));
 writeFileSync(new URL('../images/modes/find-capitals.svg', import.meta.url), globe({ center: [134, -26], highlight: 'AU', pin: [149.13, -35.28] }));
+
+// The flag of Japan, framed like the flag in the game.
+const JAPAN_FLAG = [
+  '<rect x="16" y="14" width="88" height="66" fill="#ffffff" stroke="#1d2b36" stroke-width="2.5"/>',
+  '<circle cx="60" cy="47" r="20" fill="#bc002d"/>',
+].join('\n');
+writeFileSync(new URL('../images/modes/flags.svg', import.meta.url), globe({ center: [138, 30], highlight: 'JP', flag: JAPAN_FLAG }));

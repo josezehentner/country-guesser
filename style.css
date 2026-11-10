@@ -374,6 +374,17 @@ h1 { margin: 0; font-size: 1.1rem; }
 }
 /* Only holds the focus between answers, it is not a control. */
 .caption:focus { outline: none; }
+/* The flag to recognize, below the question. Flags are not drawn in ink, so the
+   frame stays dark in both color schemes. */
+.flag {
+  display: block;
+  width: clamp(96px, 30vw, 168px);
+  height: auto;
+  margin: 6px auto 3px;
+  border: 2px solid #1d2b36;
+  box-shadow: 3px 3px 0 #1d2b36;
+}
+.flag[hidden] { display: none; }
 
 /* The controls float in a small dock at the bottom of the globe, which takes the
    whole height of the page. */
@@ -575,6 +586,7 @@ button.primary { background: var(--accent); color: var(--accent-text); }
 
   .caption { top: 10px; padding: 4px 14px 5px; font-size: 1.1rem; }
   .caption strong { font-size: 1.35em; letter-spacing: 0.02em; }
+  .flag { width: clamp(88px, 28vw, 132px); }
 
   .feedback { bottom: calc(100% + 14px); gap: 10px; font-size: 0.95rem; }
   .verdict { margin: -22px 0 -22px -24px; padding: 18px 16px; font-size: 1.35rem; }

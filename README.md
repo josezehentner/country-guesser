@@ -26,7 +26,11 @@ A country is marked on the globe, and you type its capital. It plays like "Länd
 
 The game names a capital, such as Canberra, and you click the country it belongs to. It plays like "Länder finden". A few capitals have the same name in two places, such as Kingston in Jamaica and on Norfolk Island; then either one is right.
 
-Every mode keeps separate progress: recognizing a country, finding it, knowing its capital and placing a capital are different skills.
+### Recognize the flags ("Flaggen erkennen")
+
+A flag is shown above the globe, and you type the country it belongs to. It plays like "Länder benennen", with the same tolerance for typos. After your answer the globe turns to the country, so you also learn where it lies. Places that fly another country's flag, such as Réunion with the French flag, are left out, and so is Antarctica. Monaco and Indonesia, and Romania and Chad, have flags that look the same: there either name is right.
+
+Every mode keeps separate progress: recognizing a country, finding it, knowing its capital, placing a capital and knowing its flag are different skills.
 
 ## How your progress works
 
@@ -74,6 +78,7 @@ That also means another device or browser starts from zero, and private windows 
 
 - Map and lakes: [Natural Earth](https://www.naturalearthdata.com), public domain. Very small countries are enlarged so they can be seen.
 - Globe: [d3](https://d3js.org), ISC license.
+- Flags: [flag-icons](https://github.com/lipis/flag-icons), MIT license.
 - Font: [Bangers](https://github.com/googlefonts/bangers), SIL Open Font License.
 - German country names: from the browser itself (`Intl.DisplayNames`), adjusted where needed.
 

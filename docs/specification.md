@@ -27,8 +27,9 @@ The start page is titled **Country Guesser** and is a menu with one **card** per
 | Länder finden | `find-countries.html` | Genanntes Land auf dem Globus finden. |
 | Hauptstädte lernen | `capitals.html` | Hauptstadt des markierten Landes nennen. |
 | Hauptstädte finden | `find-capitals.html` | Land zur genannten Hauptstadt finden. |
+| Flaggen erkennen | `flags.html` | Land zur gezeigten Flagge nennen. |
 
-Each mode keeps its own progress: recognizing a country, finding it, knowing its capital and placing a capital are different skills.
+Each mode keeps its own progress: recognizing a country, finding it, knowing its capital, placing a capital and knowing its flag are different skills.
 
 Card pictures are drawn from the real map data by `tools/mode-images.js`.
 
@@ -38,7 +39,7 @@ Behind the menu is a comic-style world map: light blue water with halftone dots 
 
 ## Gameplay
 
-This section describes the "Länder benennen" mode. "Länder finden" works the other way round, see [below](#mode-länder-finden); "Hauptstädte lernen" asks for the capital instead of the name, see [below](#mode-hauptstädte-lernen), and "Hauptstädte finden" names a capital whose country is to be clicked, see [below](#mode-hauptstädte-finden).
+This section describes the "Länder benennen" mode. "Länder finden" works the other way round, see [below](#mode-länder-finden); "Hauptstädte lernen" asks for the capital instead of the name, see [below](#mode-hauptstädte-lernen), "Hauptstädte finden" names a capital whose country is to be clicked, see [below](#mode-hauptstädte-finden), and "Flaggen erkennen" shows a flag instead of marking the country, see [below](#mode-flaggen-erkennen).
 
 1. One country on the world map is **highlighted** (clearly marked, e.g. thick outline + pulsing effect).
 2. The player **types the country's name** into an input field and confirms with Enter.
@@ -78,6 +79,17 @@ Places without any settlement have no capital and are **not asked** in this mode
 4. Where two places have a capital of the same name, apart from spaces and hyphens, a click on **either** is right, because the question cannot tell them apart: Kingston (Jamaica, Norfolk Island), Basseterre and Basse-Terre (St. Kitts und Nevis, Guadeloupe), Georgetown and George Town (Guyana, Cayman Islands). The asked place gets the point; the clicked one is marked and lights up, and the result names the other one too ("Jamaika: Kingston. Auch richtig: Norfolkinsel"). Kingstown (Saint Vincent) is a different city and does not count for Kingston.
 
 It asks the same countries as "Hauptstädte lernen", without the places that have no capital.
+
+### Mode "Flaggen erkennen"
+
+1. The question box above the globe asks "Welches Land hat diese Flagge?" and shows a **flag** below it, in a 4:3 frame (about 168 px wide on a desktop, about a third of the width on a phone). Nothing is marked, and the globe stays where the player left it, so it gives nothing away.
+2. The player **types the country** and confirms with Enter. Answer checking works as in "Länder benennen", with the same names, aliases and tolerance.
+3. After the answer the globe **turns to the country** and marks it, so the player learns where it lies. The result names the country ("Richtig! Japan", "Falsch! Das ist Japan"). The pause after a right answer is 1 second; typing the next answer skips it. Everything else works as in "Länder benennen": the flash, Enter or typing to move on after a wrong one, and "Weiß ich nicht".
+4. Two pairs of countries have flags that look the same at this size: Indonesia and Monaco, Romania and Chad. For these **either name** is right, and the result names both ("Monaco (gleiche Flagge wie Indonesien)").
+
+Only entries with a **flag of their own** are asked (235 of 250), as listed in `data/flags.js`. Left out are Antarctica (AQ), which has no official flag, and territories that fly the flag of another entry: Bouvet Island and Svalbard (Norway), Heard and McDonald Islands (Australia), the U.S. Minor Outlying Islands (United States), the Caribbean Netherlands (Netherlands), Saint Helena, Ascension and Tristan da Cunha (United Kingdom) and the French Saint-Barthélemy, French Guiana, Guadeloupe, Saint-Martin, Saint-Pierre and Miquelon, Réunion, Wallis and Futuna and Mayotte. They are left out of its stats and filter counts too.
+
+The flags are SVG files in `vendor/flags/`, from flag-icons (see `vendor/NOTICE.md`), copied by `npm run build:flags`. They are loaded from the site itself, so the Content Security Policy stays `img-src 'self' data:`.
 
 ### Choosing the next country
 
@@ -120,7 +132,7 @@ Colors must be clearly visible in both light and dark mode. A small **legend** s
 
 ## Storage (localStorage)
 
-Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder finden", `countryquiz.capitals.v1` for "Hauptstädte lernen", `countryquiz.capitals-find.v1` for "Hauptstädte finden", all in the format below.
+Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder finden", `countryquiz.capitals.v1` for "Hauptstädte lernen", `countryquiz.capitals-find.v1` for "Hauptstädte finden", `countryquiz.flags.v1` for "Flaggen erkennen", all in the format below.
 
 ```json
 {
@@ -142,7 +154,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 
 ### Export / Import
 
-- **Export**: downloads the mode's progress as `countryquiz-progress-YYYY-MM-DD.json` ("Länder finden": `countryquiz-find-progress-YYYY-MM-DD.json`, "Hauptstädte lernen": `countryquiz-capitals-progress-YYYY-MM-DD.json`, "Hauptstädte finden": `countryquiz-capitals-find-progress-YYYY-MM-DD.json`).
+- **Export**: downloads the mode's progress as `countryquiz-progress-YYYY-MM-DD.json` ("Länder finden": `countryquiz-find-progress-YYYY-MM-DD.json`, "Hauptstädte lernen": `countryquiz-capitals-progress-YYYY-MM-DD.json`, "Hauptstädte finden": `countryquiz-capitals-find-progress-YYYY-MM-DD.json`, "Flaggen erkennen": `countryquiz-flags-progress-YYYY-MM-DD.json`).
 - **Import**: select a file, validate its contents, show a confirmation dialog ("Replace current progress?"), then apply.
 - **Reset**: deletes all progress after confirmation.
 
@@ -222,6 +234,7 @@ Local testing: because of ES modules, serve via a local web server: `npm start`,
 - [ ] Progress persists after reloading and after closing the browser.
 - [ ] "Hauptstädte lernen" asks the capital of the highlighted country, accepts every official capital, other spellings and small typos, always shows country and capital afterwards, and never asks places without a capital.
 - [ ] "Hauptstädte finden" names a capital without marking a country; clicking its country is correct, and where two places share the capital's name either one counts. It never asks places without a capital.
+- [ ] "Flaggen erkennen" shows a flag above the globe without marking a country, accepts the country's names with the usual tolerance (and either country for look-alike flags), then turns the globe to the country. It never asks Antarctica or territories that fly another entry's flag.
 - [ ] The filter sidebar opens and closes in every mode; region and difficulty ticks combine, only matching countries are asked, and the choice survives a reload.
 - [ ] Export produces a JSON file, import restores the same state, invalid files are rejected.
 - [ ] Large lakes such as Lake Victoria, Lake Michigan and Lake Nicaragua are water on the globe, and a click into one is no answer.
