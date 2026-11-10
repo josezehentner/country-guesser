@@ -64,6 +64,7 @@ You can combine both, for example only the easy countries of Africa. In total th
 | Zoom | mouse wheel | pinch |
 | Back to the marked country | "Zum Land" at the top right | ⌖ at the right edge |
 | Answer (name, capital) | type and press Enter | type and tap "Go" |
+| Move between the answer field and its buttons | ← and → | tap |
 | Answer (find a country or capital) | click the country | tap the country |
 | Move on after a wrong answer | Enter, "Weiter" or a click on the globe | "Weiter" or a tap on the globe |
 
