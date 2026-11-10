@@ -65,6 +65,13 @@ test('filters keep only known, distinct codes', () => {
   assert.deepEqual(loadProgress().settings, { regions: ['EU'], levels: ['hard'] });
 });
 
+test('the score limit keeps whole scores below 10 only', () => {
+  for (const [maxScore, expected] of [[7, { maxScore: 7 }], [0, { maxScore: 0 }], [10, {}], [11, {}], [-1, {}], [6.5, {}], ['7', {}]]) {
+    stubLocalStorage(memoryStorage({ [KEY]: JSON.stringify({ version: 1, countries: {}, settings: { maxScore } }) }));
+    assert.deepEqual(loadProgress().settings, expected, String(maxScore));
+  }
+});
+
 test('an emptied filter stays empty, one with only unknown codes means no filter', () => {
   const settings = { regions: [], levels: ['impossible'] };
   stubLocalStorage(memoryStorage({ [KEY]: JSON.stringify({ version: 1, countries: {}, settings }) }));

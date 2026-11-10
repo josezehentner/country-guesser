@@ -273,6 +273,22 @@ test('the region filter keeps whole rounds in the region, and says so when it ha
   expect((await routeApi(page, 'round')).between).toBeGreaterThanOrEqual(3);
 });
 
+test('resetting the progress clears the round statistics and starts a new round', async ({ page }) => {
+  const problems = [];
+  page.on('pageerror', (error) => problems.push(error.message));
+  page.on('dialog', (dialog) => dialog.accept());
+  await open(page);
+  await play(page, 'PT', 'PL');
+  for (const name of ['Spanien', 'Frankreich', 'Deutschland']) await guess(page, name);
+  await expect(page.locator('#stat-solved')).toHaveText('1');
+  await page.click('#settings-btn');
+  await page.click('#reset-btn');
+  await expect(page.locator('#stat-solved')).toHaveText('0');
+  await expect(page.locator('#submit-btn')).toHaveText('Prüfen');
+  expect((await stored(page)).rounds).toBeUndefined();
+  expect(problems).toEqual([]);
+});
+
 test('the round statistics survive a reload', async ({ page }) => {
   await open(page);
   await play(page, 'PT', 'PL');

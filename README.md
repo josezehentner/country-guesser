@@ -62,6 +62,8 @@ The filters left of the globe choose which countries are asked. Move the mouse t
 
 You can combine both, for example only the easy countries of Africa. In total there are 250 countries and territories. "Grenzgänger" only has the regions: a round then stays in them.
 
+The slider beside the color legend on the right leaves out countries you already know well: set it to 7, and countries at 8, 9 or 10 points are no longer asked. Countries you have never been asked always stay in.
+
 ## Controls
 
 | | Computer | Phone |

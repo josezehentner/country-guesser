@@ -103,7 +103,7 @@ The flags are SVG files in `vendor/flags/`, from flag-icons (see `vendor/NOTICE.
 
 **Borders** live in `data/borders.js`, built by `npm run build:borders` (see `tools/borders.js`) from the map data: countries that share points of their border there are neighbors. Only land borders count; bridges and tunnels do not (Denmark–Sweden, United Kingdom–France, Malaysia–Singapore). Exclaves and overseas parts count as the map draws them: Kaliningrad makes Russia a neighbor of Poland and Lithuania, Ceuta and Melilla make Spain one of Morocco, and French Guiana is its own entry next to Brazil and Suriname. Countries are what the graph connects, so Malaysia links Borneo to Thailand. Six borders of the small, enlarged entries are added by hand (San Marino, Vatican City, Monaco, Gibraltar, Macau, Saint-Martin–Sint Maarten), and Namibia–Zimbabwe, which only meet in one point of the data, is removed. Disputed areas the game does not ask (e.g. Kashmir, Bir Tawil) are no part of a route.
 
-Only countries with a land border take part (164 of 250); islands like Iceland or Japan can still be typed, as a detour. The **region filter** keeps a round inside the ticked regions: start, end and at least one shortest route lie in them. A choice without such a route says so, and then rounds come from everywhere. There is no difficulty filter and no country colors by score; the top bar shows solved rounds, rounds solved on a shortest route and the current streak, and the bar the share of solved rounds.
+Only countries with a land border take part (164 of 250); islands like Iceland or Japan can still be typed, as a detour. The **region filter** keeps a round inside the ticked regions: start, end and at least one shortest route lie in them. A choice without such a route says so, and then rounds come from everywhere. There is no difficulty filter, no score limit and no country colors by score; the top bar shows solved rounds, rounds solved on a shortest route and the current streak, and the bar the share of solved rounds.
 
 ### Choosing the next country
 
@@ -111,6 +111,7 @@ Not purely random, but weighted so weaker countries come up more often:
 - Countries with a low score and countries never asked before have a higher probability.
 - Countries with score 10 appear rarely, but still occasionally (for review).
 - Never the same country twice in a row.
+- **Score limit**: a slider beside the legend sets the highest score that is still asked (default 10, i.e. all). Countries scored above it leave the rotation, e.g. at 7 the countries at 8, 9 and 10; never-asked countries always stay. It combines with the filters, counts in the filter summary, takes effect as a country passes the limit, and is saved per mode as `settings.maxScore` (missing means no limit). Swatches above the limit are dimmed, and the slider takes the color of the highest score still asked. If nothing is left to ask, every country comes up, as with the filters.
 
 ### Answer checking
 
@@ -155,13 +156,13 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
     "AT": { "score": 7, "seen": 12, "correct": 9, "lastSeen": "2026-10-30T21:00:00Z" },
     "FR": { "score": 10, "seen": 15, "correct": 13, "lastSeen": "2026-10-29T18:00:00Z" }
   },
-  "settings": { "regions": ["EU", "ME"], "levels": ["easy", "medium"], "filtersOpen": true }
+  "settings": { "regions": ["EU", "ME"], "levels": ["easy", "medium"], "filtersOpen": true, "maxScore": 7 }
 }
 ```
 
 "Grenzgänger" keeps no `countries` entries but round statistics: `"rounds": { "played": 9, "solved": 6, "perfect": 2, "streak": 1, "bestStreak": 4 }`, all whole numbers with perfect ≤ solved ≤ played and streak ≤ best streak ≤ solved. A round counts once it is solved, lost or given up.
 
-`settings` is optional throughout: a missing `regions` or `levels` means all of them, an empty list means none. `filtersOpen` remembers whether the filter sidebar is open on a wide screen. An older `"continent": "AF"` is read as `"regions": ["AF"]`.
+`settings` is optional throughout: a missing `regions` or `levels` means all of them, an empty list means none. `filtersOpen` remembers whether the filter sidebar is open on a wide screen. `maxScore` (0 to 9) is the score limit; missing means all scores are asked. An older `"continent": "AF"` is read as `"regions": ["AF"]`.
 
 - Save immediately after **every** answer.
 - Wrap all localStorage access in `try/catch`. If localStorage is unavailable (e.g. blocked in private mode), the game still runs and shows a subtle notice that progress is not being saved.
@@ -207,7 +208,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
   - the question in a light green comic caption box at the top, in dark blue letters ("Welches Land ist markiert?", or "Wo liegt **Frankreich**?" with the name big); clicks go through it to the globe;
   - the controls in a small rounded dock at the bottom center: the input with "Prüfen"/"Weiter" and "Weiß ich nicht", or in "Länder finden" and "Hauptstädte finden" just "Weiß ich nicht" and "Weiter";
   - the result just above the dock: a comic burst with the verdict ("Richtig!", "Falsch!", "Schade!"), the country and the new score as a badge in its color. Hints, e.g. a click on the ocean, show without burst or score;
-  - the legend upright at the right edge, scores 0 to 10 with 10 at the top. Never-asked countries have no swatch: they are plain land.
+  - the legend upright at the right edge, scores 0 to 10 with 10 at the top, with the score limit slider upright to its right. Never-asked countries have no swatch: they are plain land. On small screens the legend lies flat above the dock, with the slider flat beneath it.
 - **Small screens** (narrow, or phones held sideways): one layout for all devices, only CSS adapts it. The top bar shrinks to one row (menu link, stats as colored dots, ⚙, a thin progress line), the dock spans the width, "Weiß ich nicht" in "Länder benennen" becomes "?", and the legend lies flat above the dock. Even the longest country name fits the caption box.
 - **On-screen keyboard**: the page is sized to the area above the keyboard, so the answer row stays visible and the globe takes the rest.
 - Keyboard control: the input field automatically gets focus for each new country and stays editable, so a phone keyboard stays open. Enter submits; after a correct answer the next country follows by itself, after a wrong one Enter or typing moves on. In the modes with an answer field ("Länder benennen", "Hauptstädte lernen", "Flaggen erkennen") the left and right arrow keys move between the field, "Prüfen" ("Weiter") and "Weiß ich nicht", skipping a disabled button and stopping at either end. In the field they only leave it when the cursor is at the end (right) or the start (left) of the text and nothing is selected, so they still move the cursor while typing; Shift with an arrow still selects text. Back in the field the cursor is at the end of the text.
@@ -252,6 +253,7 @@ Local testing: because of ES modules, serve via a local web server: `npm start`,
 - [ ] "Hauptstädte lernen" asks the capital of the highlighted country, accepts every official capital, other spellings and small typos, always shows country and capital afterwards, and never asks places without a capital.
 - [ ] "Hauptstädte finden" names a capital without marking a country; clicking its country is correct, and where two places share the capital's name either one counts. It never asks places without a capital.
 - [ ] "Flaggen erkennen" shows a flag above the globe without marking a country, accepts the country's names with the usual tolerance (and either country for look-alike flags), then turns the globe to the country. It never asks Antarctica or territories that fly another entry's flag.
+- [ ] The slider beside the legend leaves countries above the chosen score out of the rotation, and the choice survives a reload.
 - [ ] The filter sidebar opens and closes in every mode; region and difficulty ticks combine, only matching countries are asked, and the choice survives a reload.
 - [ ] Export produces a JSON file, import restores the same state, invalid files are rejected.
 - [ ] Large lakes such as Lake Victoria, Lake Michigan and Lake Nicaragua are water on the globe, and a click into one is no answer.
