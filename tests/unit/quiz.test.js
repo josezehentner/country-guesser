@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { COUNTRIES } from '../../data/countries.js';
-import { filterCountries, isCorrectAnswer, nextScore, normalize, pickNextCountry, selectionWeight } from '../../src/quiz.js';
+import { filterCountries, isCorrectAnswer, nextScore, normalize, pickNextCountry, selectionWeight, withinScoreLimit } from '../../src/quiz.js';
 
 test('normalize ignores case, whitespace, diacritics and punctuation', () => {
   assert.equal(normalize('  ÖSTERREICH '), 'osterreich');
@@ -91,6 +91,17 @@ test('pickNextCountry never repeats the previous country', () => {
 test('pickNextCountry asks the only country left again', () => {
   const [only] = COUNTRIES;
   assert.equal(pickNextCountry([only], {}, only.code), only);
+});
+
+test('withinScoreLimit leaves out countries above the limit, never the new ones', () => {
+  const entry = (score) => ({ score, seen: 3, correct: 2, lastSeen: '2026-11-01T10:00:00Z' });
+  const progress = { DE: entry(10), FR: entry(8), ES: entry(7), PT: entry(0) };
+  const codes = (maxScore) => withinScoreLimit(COUNTRIES, progress, maxScore).map((country) => country.code);
+  assert.equal(codes(undefined).length, COUNTRIES.length);
+  const upToSeven = codes(7);
+  for (const code of ['ES', 'PT', 'IT']) assert.ok(upToSeven.includes(code), code);
+  for (const code of ['DE', 'FR']) assert.ok(!upToSeven.includes(code), code);
+  assert.ok(!codes(0).includes('ES') && codes(0).includes('PT') && codes(0).includes('IT'));
 });
 
 test('filterCountries combines regions and levels', () => {

@@ -102,6 +102,13 @@ export function selectionWeight(entry) {
   return 10 - entry.score;
 }
 
+// Leaves out countries scored above `maxScore`, e.g. to stop asking well-known ones.
+// Never-asked countries always stay. Without a limit every country stays.
+export function withinScoreLimit(countries, progress, maxScore) {
+  if (maxScore === undefined) return countries;
+  return countries.filter((country) => !progress[country.code] || progress[country.code].score <= maxScore);
+}
+
 // The countries the filters let through. A missing group means all of it.
 export function filterCountries(countries, { regions, levels } = {}) {
   return countries.filter(

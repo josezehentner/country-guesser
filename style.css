@@ -328,19 +328,17 @@ h1 { margin: 0; font-size: 1.1rem; }
   .recenter-label { display: none; }
 }
 
-/* The color scale stands upright at the right edge, 10 at the top. */
+/* The color scale stands upright at the right edge, 10 at the top, with the score
+   limit slider to its right. */
 .legend {
   position: absolute;
   right: 12px;
   top: 50%;
   z-index: 1;
   display: flex;
-  flex-direction: column-reverse;
-  align-items: flex-start;
-  gap: 3px;
+  gap: 4px;
   margin: 0;
-  padding: 7px 8px;
-  list-style: none;
+  padding: 7px 6px 7px 8px;
   background: var(--surface);
   border: 2px solid var(--line);
   border-radius: 12px;
@@ -351,7 +349,30 @@ h1 { margin: 0; font-size: 1.1rem; }
   transform: translateY(-50%);
 }
 
+.legend-scale {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
 .legend li { display: flex; align-items: center; gap: 5px; }
+/* Scores above the limit are no longer asked. */
+.legend li.excluded .swatch { opacity: 0.3; }
+
+/* Upright, 10 at the top; its ends line up with the middles of 0 and 10. */
+.score-limit {
+  width: 16px;
+  margin: 0;
+  padding: 0;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  accent-color: var(--comic-shadow);
+  cursor: pointer;
+}
+.score-limit:focus-visible { outline: 3px solid var(--target); outline-offset: 2px; }
 
 .swatch {
   display: inline-grid;
@@ -626,9 +647,7 @@ button.primary { background: var(--accent); color: var(--accent-text); }
     right: auto;
     left: 50%;
     bottom: 76px;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
     gap: 2px;
     width: max-content;
     max-width: calc(100% - 16px);
@@ -636,6 +655,9 @@ button.primary { background: var(--accent); color: var(--accent-text); }
     font-size: 0.65rem;
     transform: translateX(-50%);
   }
+  .legend-scale { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 2px; }
+  /* Lying flat beneath the scale, 0 on the left. */
+  .score-limit { width: auto; height: 16px; writing-mode: horizontal-tb; direction: ltr; }
   .swatch { width: 16px; height: 14px; font-size: 0.7rem; }
 }
 

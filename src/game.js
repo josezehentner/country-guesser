@@ -3,7 +3,7 @@
 import { COUNTRIES, CONTINENTS, LEVELS } from '../data/countries.js';
 import { scoreColor } from './colors.js';
 import { createMap } from './map.js';
-import { filterCountries, nextScore, pickNextCountry } from './quiz.js';
+import { filterCountries, nextScore, pickNextCountry, withinScoreLimit } from './quiz.js';
 import { emptyProgress, exportProgress, loadProgress, parseImport, saveProgress } from './storage.js';
 
 export const MAX_SCORE = 10;
@@ -117,11 +117,43 @@ export function startGame(mode) {
     }
   }
 
-  const filteredCountries = () => filterCountries(countries, progress.settings);
+  // The slider beside the legend: countries scored above it are no longer asked.
+  // Moving it updates at once; letting go saves it and, if the asked country is now
+  // left out, moves on.
+  function setupScoreLimit() {
+    const slider = byId('score-limit');
+    slider.addEventListener('input', () => {
+      const limit = Number(slider.value);
+      if (limit >= MAX_SCORE) delete progress.settings.maxScore;
+      else progress.settings.maxScore = limit;
+      renderScoreLimit();
+      renderFilters();
+    });
+    slider.addEventListener('change', () => {
+      persist();
+      const askable = askableCountries();
+      if (!game.isAnswered && askable.length && !askable.includes(game.current)) nextQuestion();
+    });
+    renderScoreLimit();
+  }
 
-  // With nothing left to ask, every country comes up until the filters change.
+  function renderScoreLimit() {
+    const limit = progress.settings.maxScore ?? MAX_SCORE;
+    const slider = byId('score-limit');
+    slider.value = String(limit);
+    slider.setAttribute('aria-valuetext', limit >= MAX_SCORE ? 'Alle Stufen' : `Bis Stufe ${limit}`);
+    // The slider takes the color of the highest score still asked.
+    slider.style.accentColor = scoreColor(limit);
+    byId('legend').querySelectorAll('li').forEach((item, score) => item.classList.toggle('excluded', score > limit));
+  }
+
+  // The countries the filters and the score limit let through.
+  const askableCountries = () =>
+    withinScoreLimit(filterCountries(countries, progress.settings), progress.countries, progress.settings.maxScore);
+
+  // With nothing left to ask, every country comes up until the choice changes.
   function currentPool() {
-    const pool = filteredCountries();
+    const pool = askableCountries();
     return pool.length ? pool : countries;
   }
 
@@ -146,6 +178,8 @@ export function startGame(mode) {
     persist();
     renderCountry(code);
     renderStats();
+    // A country may have just passed the score limit.
+    renderFilters();
     return entry.score;
   }
 
@@ -229,7 +263,7 @@ export function startGame(mode) {
         else progress.settings[key] = inputs.filter((input) => input.checked).map((input) => input.value);
         persist();
         renderFilters();
-        if (game.map && filteredCountries().length) nextQuestion();
+        if (game.map && askableCountries().length) nextQuestion();
       });
     }
 
@@ -305,7 +339,7 @@ export function startGame(mode) {
       const selected = progress.settings[key];
       for (const input of byId(boxId).querySelectorAll('input')) input.checked = !selected || selected.includes(input.value);
     }
-    const count = filteredCountries().length;
+    const count = askableCountries().length;
     const summary = byId('filter-summary');
     summary.textContent = count
       ? `${count} ${count === 1 ? 'Land wird' : 'Länder werden'} abgefragt.`
@@ -316,6 +350,7 @@ export function startGame(mode) {
   function replaceProgress(next) {
     progress = next;
     renderFilters();
+    renderScoreLimit();
     persist();
     renderAll();
     nextQuestion();
@@ -338,6 +373,7 @@ export function startGame(mode) {
     byId('loading').hidden = true;
     persist();
     renderLegend();
+    setupScoreLimit();
     renderAll();
     setupSettings();
     setupRecenter();
