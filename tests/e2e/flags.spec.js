@@ -88,6 +88,17 @@ test('the flag is a loaded picture above the globe, and the globe marks nothing 
   expect(box.y).toBeGreaterThanOrEqual(map.y);
   expect(box.width / box.height).toBeCloseTo(4 / 3, 1);
   expect(await targetCode(page)).toBeFalsy();
+  await expect(page.locator('#recenter-btn')).toBeHidden();
+});
+
+// Before the answer the button would give the country away.
+test('"Zum Land" only shows after the answer', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('#recenter-btn')).toBeHidden();
+  await page.click('#dont-know-btn');
+  await expect(page.locator('#recenter-btn')).toBeVisible();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#recenter-btn')).toBeHidden();
 });
 
 test('only entries with a flag of their own are asked and counted', async ({ page }) => {
