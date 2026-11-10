@@ -377,3 +377,21 @@ test.describe('on a phone', () => {
     expect(await askedCode(page)).not.toBe(code);
   });
 });
+
+test('"Zum Land" only shows once the asked country is marked, and then turns the globe back to it', async ({ page }) => {
+  await open(page);
+  const button = page.locator('#recenter-btn');
+  await expect(button).toBeHidden();
+  const code = await askedCode(page);
+  await page.click('#dont-know-btn');
+  await expect(button).toBeVisible();
+  await mapApi(page, 'lookAt', [-150, -60], 7);
+  await button.click();
+  const center = await mapApi(page, 'centerOf', code);
+  const { center: back } = await mapApi(page, 'view');
+  expect(back[0]).toBeCloseTo(center[0], 5);
+  expect(back[1]).toBeCloseTo(center[1], 5);
+  await expect(page.locator('#next-btn')).toBeFocused();
+  await page.click('#next-btn');
+  await expect(button).toBeHidden();
+});

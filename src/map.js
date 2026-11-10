@@ -455,13 +455,26 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
 
   const isSmall = (shape) => geoArea(shape.feature) * EARTH_RADIUS_KM ** 2 < SMALL_AREA_KM2;
 
+  // Tells the page that a country got marked or lost its mark, e.g. to show the
+  // button that turns the globe back to it.
+  const announceTarget = () => canvas.dispatchEvent(new Event('targetchange'));
+
   // Marks a country and, unless `focus` is false, turns it to the front and center.
   function highlight(code, { focus = true } = {}) {
     const shape = shapeByCode.get(code);
     target = { code, shape };
     if (focus) focusOn(shape, MAX_AUTO_ZOOM, true);
     scheduleDraw();
+    announceTarget();
   }
+
+  // Turns the marked country back to the front and center, as when it was asked,
+  // after the player turned or zoomed away from it.
+  function refocus() {
+    if (target) focusOn(target.shape, MAX_AUTO_ZOOM, true);
+  }
+
+  const hasTarget = () => Boolean(target);
 
   // Lights the country up in green, or pulses it twice in red, after an answer. It
   // runs on while the next question already turns the globe. With reduced motion
@@ -488,6 +501,7 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
   function clearHighlight() {
     target = null;
     scheduleDraw();
+    announceTarget();
   }
 
   function inShape({ caps, polygons }, location) {
@@ -575,5 +589,5 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     isFacing: (location) => geoDistance(center, location) < Math.PI / 2,
   };
 
-  return { setColor, highlight, flash, clearHighlight, codeAt, hits };
+  return { setColor, highlight, refocus, hasTarget, flash, clearHighlight, codeAt, hits };
 }
