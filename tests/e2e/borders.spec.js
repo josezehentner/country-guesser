@@ -33,6 +33,7 @@ const stored = (page) => page.evaluate((key) => JSON.parse(localStorage.getItem(
 const chips = (page) => page.locator('#route-guesses li');
 
 // Whether any pixel along a line of the globe is drawn dark, like a border line.
+// Land and water add up to over 600; a thin line, smoothed, to between 200 and 400.
 function darkPixelAlong(page, from, to) {
   return page.evaluate(async ([a, b]) => {
     const canvas = document.querySelector('#map');
@@ -47,7 +48,7 @@ function darkPixelAlong(page, from, to) {
       const t = i / 200;
       const { x, y } = api.pointAt([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]);
       const [r, g, bl] = context.getImageData((x - rect.left) * scale, (y - rect.top) * scale, 1, 1).data;
-      if (r + g + bl < 200) return true;
+      if (r + g + bl < 450) return true;
     }
     return false;
   }, [from, to]);
@@ -80,6 +81,46 @@ test('the globe hides the borders between countries until one is named', async (
   expect(await darkPixelAlong(page, ...frDe)).toBe(false);
   await guess(page, 'Deutschland');
   expect(await darkPixelAlong(page, ...frDe)).toBe(true);
+});
+
+test('coasts keep their line, and the small entries show no outline inside their neighbors', async ({ page }) => {
+  await open(page);
+  await play(page, 'PT', 'PL');
+  // From the Atlantic onto France, and from the sea onto Monaco and Gibraltar.
+  expect(await darkPixelAlong(page, [-2.6, 46.6], [-1.2, 46.6])).toBe(true);
+  expect(await darkPixelAlong(page, [7.42, 43.70], [7.42, 43.76])).toBe(true);
+  expect(await darkPixelAlong(page, [-5.40, 36.12], [-5.33, 36.12])).toBe(true);
+  // Across San Marino, Vatican City and Liechtenstein, and across Lesotho.
+  expect(await darkPixelAlong(page, [12.30, 43.94], [12.60, 43.94])).toBe(false);
+  expect(await darkPixelAlong(page, [12.40, 41.90], [12.50, 41.90])).toBe(false);
+  expect(await darkPixelAlong(page, [9.40, 47.15], [9.70, 47.15])).toBe(false);
+  expect(await darkPixelAlong(page, [26.8, -29.5], [29.6, -29.5])).toBe(false);
+});
+
+// The borderless land once drew a thick ink line along every border, half hidden by
+// the fill again, which made each frame three times slower than in the other modes.
+test('the borderless globe draws no line thicker than the other modes do', async ({ page }) => {
+  const widthsOn = async (url) => {
+    await page.goto(url);
+    await page.waitForFunction(() => document.querySelector('#map').mapTestApi && document.querySelector('#loading').hidden);
+    return page.evaluate(async () => {
+      const canvas = document.querySelector('#map');
+      const context = canvas.getContext('2d');
+      const widths = new Set();
+      const stroke = context.stroke;
+      context.stroke = function (...args) {
+        widths.add(this.lineWidth);
+        return stroke.apply(this, args);
+      };
+      canvas.mapTestApi.lookAt([10, 50], 1);
+      await new Promise(requestAnimationFrame);
+      await new Promise(requestAnimationFrame);
+      context.stroke = stroke;
+      return Math.max(...widths);
+    });
+  };
+  const elsewhere = await widthsOn('/name-countries.html');
+  expect(await widthsOn('/borders.html')).toBeLessThanOrEqual(elsewhere);
 });
 
 test('naming the countries in between in any order solves the round on the shortest way', async ({ page }) => {
