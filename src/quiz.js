@@ -1,6 +1,7 @@
 import { COUNTRIES } from '../data/countries.js';
 import { ALIASES } from '../data/aliases.js';
 import { CAPITALS, capitalNames } from '../data/capitals.js';
+import { lookalikesOf } from '../data/flags.js';
 
 const MAX_SCORE = 10;
 const FIRST_CORRECT_SCORE = 5;
@@ -69,6 +70,10 @@ export const isCorrectAnswer = (input, code) => matches(namesByCode, input, code
 
 // Whether `input` names the capital of `code`, or one of its official capitals.
 export const isCorrectCapital = (input, code) => matches(capitalsByCode, input, code);
+
+// Whether `input` names the country of the flag of `code`, or a country whose flag
+// looks the same.
+export const isCorrectFlag = (input, code) => [code, ...lookalikesOf(code)].some((other) => isCorrectAnswer(input, other));
 
 const officialCapitalsByCode = new Map(
   Object.entries(CAPITALS).map(([code, { name, also = [] }]) => [code, uniqueNormalized([name, ...also])]),

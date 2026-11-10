@@ -20,6 +20,7 @@ test('the menu and every mode are pages of their own', () => {
   assert.ok(pages.includes('find-countries.html'));
   assert.ok(pages.includes('capitals.html'));
   assert.ok(pages.includes('find-capitals.html'));
+  assert.ok(pages.includes('flags.html'));
 });
 
 test('content security policy only allows the site itself', () => {
