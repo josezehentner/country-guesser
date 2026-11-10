@@ -2,6 +2,7 @@
 // country. The globe shows where the country lies once the question is answered.
 import { COUNTRY_BY_CODE } from '../data/countries.js';
 import { FLAG_COUNTRIES, flagUrl, lookalikesOf } from '../data/flags.js';
+import { enableArrowKeys } from './answer-keys.js';
 import { byId, startGame } from './game.js';
 import { isCorrectFlag } from './quiz.js';
 
@@ -34,6 +35,7 @@ startGame({
   nextDelayMs: 1000,
 
   setup(game) {
+    enableArrowKeys(form);
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       if (game.isAnswered) game.nextQuestion();
