@@ -268,15 +268,29 @@ test('the slider beside the legend stops asking countries above a score', async 
 
   await slider.fill('7');
   await expect(page.locator('#legend li.excluded')).toHaveText(['8', '9', '10']);
-  // The slider takes the color of the highest score still asked.
-  const sliderRgb = () => page.evaluate(() => {
-    const context = document.createElement('canvas').getContext('2d');
-    context.fillStyle = getComputedStyle(document.querySelector('#score-limit')).accentColor;
-    context.fillRect(0, 0, 1, 1);
-    const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
-    return `rgb(${r}, ${g}, ${b})`;
-  });
-  expect(await sliderRgb()).toBe(await tokenRgb(page, '--score-7'));
+  // The slider always takes the color of the highest score still asked.
+  // Pixels from a screenshot of the slider at rest, at a value between 0 and 10 along its rail.
+  const KNOB_PX = 13;
+  const sliderRgbAt = async (value) => {
+    const box = await slider.boundingBox();
+    const png = (await slider.screenshot()).toString('base64');
+    const fromBottom = KNOB_PX / 2 + (box.height - KNOB_PX) * (value / 10);
+    return page.evaluate(async ({ png, x, y }) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${png}`;
+      await image.decode();
+      const context = document.createElement('canvas').getContext('2d');
+      context.canvas.width = image.width;
+      context.canvas.height = image.height;
+      context.drawImage(image, 0, 0);
+      const [r, g, b] = context.getImageData(x, y, 1, 1).data;
+      return `rgb(${r}, ${g}, ${b})`;
+    }, { png, x: Math.floor(box.width / 2), y: Math.round(box.height - fromBottom) });
+  };
+  const color7 = await tokenRgb(page, '--score-7');
+  expect(await sliderRgbAt(3)).toBe(color7);
+  expect(await sliderRgbAt(7)).toBe(color7);
+  expect(await sliderRgbAt(9)).toBe(await tokenRgb(page, '--surface'));
   await expect(page.locator('#filter-summary')).toHaveText('2 Länder werden abgefragt.');
   await expect.poll(async () => (await stored(page)).settings.maxScore).toBe(7);
   for (let i = 0; i < 10; i++) {

@@ -157,8 +157,9 @@ export function startGame(mode) {
     const slider = byId('score-limit');
     slider.value = String(limit);
     slider.setAttribute('aria-valuetext', limit >= MAX_SCORE ? 'Alle Stufen' : `Bis Stufe ${limit}`);
-    // The slider takes the color of the highest score still asked.
-    slider.style.accentColor = scoreColor(limit);
+    // The knob and the rail up to it take the color of the highest score still asked.
+    slider.style.setProperty('--limit-color', scoreColor(limit));
+    slider.style.setProperty('--limit-fill', String(limit / MAX_SCORE));
     byId('legend').querySelectorAll('li').forEach((item, score) => item.classList.toggle('excluded', score > limit));
   }
 
