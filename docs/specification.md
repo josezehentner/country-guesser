@@ -28,8 +28,9 @@ The start page is titled **Country Guesser** and is a menu with one **card** per
 | Hauptstädte lernen | `capitals.html` | Hauptstadt des markierten Landes nennen. |
 | Hauptstädte finden | `find-capitals.html` | Land zur genannten Hauptstadt finden. |
 | Flaggen erkennen | `flags.html` | Land zur gezeigten Flagge nennen. |
+| Grenzgänger | `borders.html` | Über Landgrenzen von Land zu Land. |
 
-Each mode keeps its own progress: recognizing a country, finding it, knowing its capital, placing a capital and knowing its flag are different skills.
+Each mode keeps its own progress: recognizing a country, finding it, knowing its capital, placing a capital, knowing its flag and knowing its neighbors are different skills.
 
 Card pictures are drawn from the real map data by `tools/mode-images.js`.
 
@@ -39,7 +40,7 @@ Behind the menu is a comic-style world map: light blue water with halftone dots 
 
 ## Gameplay
 
-This section describes the "Länder benennen" mode. "Länder finden" works the other way round, see [below](#mode-länder-finden); "Hauptstädte lernen" asks for the capital instead of the name, see [below](#mode-hauptstädte-lernen), "Hauptstädte finden" names a capital whose country is to be clicked, see [below](#mode-hauptstädte-finden), and "Flaggen erkennen" shows a flag instead of marking the country, see [below](#mode-flaggen-erkennen).
+This section describes the "Länder benennen" mode. "Länder finden" works the other way round, see [below](#mode-länder-finden); "Hauptstädte lernen" asks for the capital instead of the name, see [below](#mode-hauptstädte-lernen), "Hauptstädte finden" names a capital whose country is to be clicked, see [below](#mode-hauptstädte-finden), "Flaggen erkennen" shows a flag instead of marking the country, see [below](#mode-flaggen-erkennen), and "Grenzgänger" asks for a route over land borders instead of single countries, see [below](#mode-grenzgänger).
 
 1. One country on the world map is **highlighted** (clearly marked, e.g. thick outline + pulsing effect).
 2. The player **types the country's name** into an input field and confirms with Enter.
@@ -91,6 +92,19 @@ Only entries with a **flag of their own** are asked (235 of 250), as listed in `
 
 The flags are SVG files in `vendor/flags/`, from flag-icons (see `vendor/NOTICE.md`), copied by `npm run build:flags`. They are loaded from the site itself, so the Content Security Policy stays `img-src 'self' data:`.
 
+### Mode "Grenzgänger"
+
+1. The game picks a **start** and an **end** country at random. On the shortest route over land borders at least **three countries** lie between them; there is **no maximum**, so Portugal to China is a round too. The question box says "Von **Portugal** nach **China**" with the start on green and the end on red, and below it how many guesses are left and how many countries lie between at least.
+2. The globe shows the land **without borders**: one surface with coasts and large lakes only, so it gives no route away. Start and end are filled and outlined in their colors.
+3. If start and end fit on the front of the globe together (within 60° of its center), the globe shows both. Otherwise it shows the **start first**, and after a moment **flies to the end**, zooming out to the whole globe on the way and in again at the end. Touching the globe stops the flight. With reduced motion it jumps instead. A "Start & Ziel" button (⌖, like "Zum Land" in the other modes) shows them again.
+4. The player **types countries** in any order, with the names, aliases and tolerance of "Länder benennen". Each new country shows with its borders: in **yellow** if it lies on a shortest route, in **gray** as a detour. Both count as a guess, and the globe turns a named country into view if it is not. The named countries are listed as chips in their colors below the question box.
+5. Names that are no country, that fit several ("Kongo": "Meinst du Demokratische Republik Kongo oder Republik Kongo?"), that were named before, or that are start or end only get a hint and cost no guess.
+6. The round is **solved** as soon as the named countries connect start and end over land, whichever way: "Geschafft! Kürzester Weg!" with exactly the fewest countries, else "Geschafft! Mit 6 Ländern, 3 hätten gereicht." The player has the fewest countries plus **4 guesses**. When they run out ("Vorbei!") or after "Weiß ich nicht" ("Schade!"), the countries still missing for a route through the named ones are colored **orange** and listed ("Gefehlt haben: Frankreich, Deutschland"). Enter or "Weiter" starts the next round.
+
+**Borders** live in `data/borders.js`, built by `npm run build:borders` (see `tools/borders.js`) from the map data: countries that share points of their border there are neighbors. Only land borders count; bridges and tunnels do not (Denmark–Sweden, United Kingdom–France, Malaysia–Singapore). Exclaves and overseas parts count as the map draws them: Kaliningrad makes Russia a neighbor of Poland and Lithuania, Ceuta and Melilla make Spain one of Morocco, and French Guiana is its own entry next to Brazil and Suriname. Countries are what the graph connects, so Malaysia links Borneo to Thailand. Six borders of the small, enlarged entries are added by hand (San Marino, Vatican City, Monaco, Gibraltar, Macau, Saint-Martin–Sint Maarten), and Namibia–Zimbabwe, which only meet in one point of the data, is removed. Disputed areas the game does not ask (e.g. Kashmir, Bir Tawil) are no part of a route.
+
+Only countries with a land border take part (164 of 250); islands like Iceland or Japan can still be typed, as a detour. The **region filter** keeps a round inside the ticked regions: start, end and at least one shortest route lie in them. A choice without such a route says so, and then rounds come from everywhere. There is no difficulty filter, no score limit and no country colors by score; the top bar shows solved rounds, rounds solved on a shortest route and the current streak, and the bar the share of solved rounds.
+
 ### Choosing the next country
 
 Not purely random, but weighted so weaker countries come up more often:
@@ -133,7 +147,7 @@ Colors must be clearly visible in both light and dark mode. A small **legend** s
 
 ## Storage (localStorage)
 
-Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder finden", `countryquiz.capitals.v1` for "Hauptstädte lernen", `countryquiz.capitals-find.v1` for "Hauptstädte finden", `countryquiz.flags.v1` for "Flaggen erkennen", all in the format below.
+Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder finden", `countryquiz.capitals.v1` for "Hauptstädte lernen", `countryquiz.capitals-find.v1` for "Hauptstädte finden", `countryquiz.flags.v1` for "Flaggen erkennen", `countryquiz.borders.v1` for "Grenzgänger", all in the format below.
 
 ```json
 {
@@ -146,6 +160,8 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 }
 ```
 
+"Grenzgänger" keeps no `countries` entries but round statistics: `"rounds": { "played": 9, "solved": 6, "perfect": 2, "streak": 1, "bestStreak": 4 }`, all whole numbers with perfect ≤ solved ≤ played and streak ≤ best streak ≤ solved. A round counts once it is solved, lost or given up.
+
 `settings` is optional throughout: a missing `regions` or `levels` means all of them, an empty list means none. `filtersOpen` remembers whether the filter sidebar is open on a wide screen. `maxScore` (0 to 9) is the score limit; missing means all scores are asked. An older `"continent": "AF"` is read as `"regions": ["AF"]`.
 
 - Save immediately after **every** answer.
@@ -155,7 +171,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 
 ### Export / Import
 
-- **Export**: downloads the mode's progress as `countryquiz-progress-YYYY-MM-DD.json` ("Länder finden": `countryquiz-find-progress-YYYY-MM-DD.json`, "Hauptstädte lernen": `countryquiz-capitals-progress-YYYY-MM-DD.json`, "Hauptstädte finden": `countryquiz-capitals-find-progress-YYYY-MM-DD.json`, "Flaggen erkennen": `countryquiz-flags-progress-YYYY-MM-DD.json`).
+- **Export**: downloads the mode's progress as `countryquiz-progress-YYYY-MM-DD.json` ("Länder finden": `countryquiz-find-progress-YYYY-MM-DD.json`, "Hauptstädte lernen": `countryquiz-capitals-progress-YYYY-MM-DD.json`, "Hauptstädte finden": `countryquiz-capitals-find-progress-YYYY-MM-DD.json`, "Flaggen erkennen": `countryquiz-flags-progress-YYYY-MM-DD.json`, "Grenzgänger": `countryquiz-borders-progress-YYYY-MM-DD.json`).
 - **Import**: select a file, validate its contents, show a confirmation dialog ("Replace current progress?"), then apply.
 - **Reset**: deletes all progress after confirmation.
 
@@ -243,6 +259,7 @@ Local testing: because of ES modules, serve via a local web server: `npm start`,
 - [ ] Large lakes such as Lake Victoria, Lake Michigan and Lake Nicaragua are water on the globe, and a click into one is no answer.
 - [ ] Small countries are plain shapes without rings, and the globe turns to the asked country.
 - [ ] "Zum Land" turns the globe back to the marked country in every mode, and in the find modes and "Flaggen erkennen" it only shows after the answer.
+- [ ] "Grenzgänger" picks start and end with at least three countries between and no maximum, shows the globe without borders, shows start and end together or one after the other with a smooth flight, accepts countries in any order, tells steps from detours, ends after the fewest countries plus four guesses, and shows what was missing.
 - [ ] The globe turns and zooms smoothly, and borders stay sharp at every zoom level.
 - [ ] In the modes with an answer field the arrow keys move between field and buttons, and inside the text they still move the cursor.
 - [ ] Usable on mobile (touch zoom, input, no horizontal scrollbar), with most of the screen left for the globe even while the keyboard is open.

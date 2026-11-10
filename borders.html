@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+  <meta name="color-scheme" content="light dark">
+  <title>Grenzgänger – Country Guesser</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="src/borders.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="back" href="./" aria-label="Zurück zum Menü">← Menü</a>
+    <h1>Grenzgänger</h1>
+    <dl class="stats">
+      <div><dt><span class="stat-dot solved" aria-hidden="true"></span><span class="label-long">Gelöst</span></dt><dd id="stat-solved">0</dd></div>
+      <div><dt><span class="stat-dot perfect" aria-hidden="true"></span><span class="label-long">Kürzester Weg</span></dt><dd id="stat-perfect">0</dd></div>
+      <div><dt><span class="stat-dot streak" aria-hidden="true"></span><span class="label-long">Serie</span></dt><dd id="stat-streak">0</dd></div>
+    </dl>
+    <div class="progress" id="progress" role="progressbar" aria-label="Anteil gelöster Runden" aria-valuemin="0" aria-valuemax="100">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <button type="button" id="settings-btn" class="icon-button" aria-label="Einstellungen" aria-haspopup="dialog" title="Einstellungen">⚙&#xFE0E;</button>
+  </header>
+
+  <div class="play-area">
+  <aside id="filters" class="filters" aria-labelledby="filters-title">
+    <h2 id="filters-title">Filter</h2>
+    <fieldset>
+      <legend>Regionen</legend>
+      <div id="region-filters" class="filter-options"></div>
+    </fieldset>
+    <p id="filter-summary" class="filter-summary" aria-live="polite"></p>
+  </aside>
+  <button type="button" id="filters-btn" class="filters-tab" aria-label="Filter" aria-controls="filters" aria-expanded="false" title="Filter"><span class="tab-arrow" aria-hidden="true"></span><span class="tab-label" aria-hidden="true">Filter</span></button>
+  <main class="map-wrap" id="map-wrap">
+    <canvas id="map" role="img" aria-label="Globus ohne Grenzen"></canvas>
+    <canvas id="map-target" aria-hidden="true"></canvas>
+    <button type="button" id="recenter-btn" class="recenter" aria-label="Start und Ziel zeigen" title="Start und Ziel zeigen" hidden><span class="recenter-icon" aria-hidden="true">⌖</span><span class="recenter-label">Start &amp; Ziel</span></button>
+    <div class="caption route-caption" id="prompt">
+      <p class="route-ends">Von <strong id="route-start" class="route-end-name start"></strong> nach <strong id="route-end" class="route-end-name end"></strong></p>
+      <p class="route-status" id="route-status"></p>
+    </div>
+    <ol class="route-guesses" id="route-guesses" aria-label="Genannte Länder"></ol>
+    <p class="loading" id="loading">Karte wird geladen …</p>
+  </main>
+  </div>
+
+  <section class="panel">
+    <form id="answer-form" class="answer" autocomplete="off">
+      <label for="answer-input" class="visually-hidden">Land auf dem Weg</label>
+      <input id="answer-input" type="text" placeholder="Land auf dem Weg …"
+             autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" disabled>
+      <button type="submit" id="submit-btn" class="primary" disabled>Prüfen</button>
+      <button type="button" id="dont-know-btn" aria-label="Weiß ich nicht" title="Weiß ich nicht" disabled><span class="label-long">Wei<span class="eszett">ß</span> ich nicht</span><span class="label-short" aria-hidden="true">?</span></button>
+    </form>
+    <p id="feedback" class="feedback" aria-live="polite"></p>
+    <p id="storage-notice" class="notice" hidden>Hinweis: Der Fortschritt kann in diesem Browser nicht gespeichert werden.</p>
+  </section>
+
+  <dialog id="settings" class="settings" aria-labelledby="settings-title">
+    <h2 id="settings-title">Einstellungen</h2>
+    <p class="setting-group">Fortschritt</p>
+    <div class="setting-actions">
+      <button type="button" id="export-btn">Exportieren</button>
+      <button type="button" id="import-btn">Importieren</button>
+      <button type="button" id="reset-btn">Zurücksetzen</button>
+    </div>
+    <input type="file" id="import-file" accept="application/json,.json" hidden>
+    <button type="button" id="settings-close" class="primary">Fertig</button>
+  </dialog>
+</body>
+</html>

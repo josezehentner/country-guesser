@@ -27,6 +27,19 @@ const MAX_ZOOM = 100;
 const MAX_AUTO_ZOOM = 3;
 const TARGET_VIEW_SHARE = 0.2;
 const ZOOM_DURATION_MS = 750;
+// In "Grenzgänger" start and end are shown together when they fit on the front of
+// the globe, within ROUTE_FIT_ANGLE of its center. Otherwise the globe shows the
+// start for ROUTE_HOLD_MS, then flies to the end, zooming out on the way.
+const ROUTE_FIT_ANGLE = 60 * (Math.PI / 180);
+const ROUTE_VIEW_SHARE = 0.9;
+const MAX_ROUTE_ZOOM = 6;
+const ROUTE_HOLD_MS = 1200;
+const ROUTE_FLIGHT_MS = 2000;
+// Without borders only the coasts get a line. The land is stroked thicker in ink
+// first; its fill then covers the inner half, and a thin stroke in the land color
+// closes slivers between neighbors that were simplified on their own.
+const COAST_INK_PX = 3.4;
+const COAST_GAP_FILL_PX = 1;
 // After an answer the asked country lights up once (right) or pulses twice (wrong).
 const FLASH_OPACITY = 0.85;
 const FLASHES = {
@@ -92,11 +105,14 @@ function clickablePoint(projection, polygon, centroid) {
   return best;
 }
 
+const NEVER = 'var(--never)';
+
 const ease = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
 
 // `onSelect(event)` is called for a click or tap on the globe. `lakes` are drawn as
-// water over the countries.
-export function createMap(canvas, targetCanvas, world, onSelect = () => false, lakes = { features: [] }) {
+// water over the countries. With `hideBorders` the land is one surface with coasts
+// only, and a country shows its borders once it gets a color of its own.
+export function createMap(canvas, targetCanvas, world, onSelect = () => false, lakes = { features: [] }, { hideBorders = false } = {}) {
   const projection = geoOrthographic().clipAngle(90).precision(0);
   const context = canvas.getContext('2d', { alpha: true });
   const targetContext = targetCanvas.getContext('2d');
@@ -112,7 +128,7 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
 
   const shapes = world.features.map((feature) => {
     const polygons = polygonsOf(feature.geometry);
-    return { code: feature.properties.id, feature, polygons, caps: polygons.map(boundingCap), levels: [], color: 'var(--never)' };
+    return { code: feature.properties.id, feature, polygons, caps: polygons.map(boundingCap), levels: [], color: NEVER };
   });
   const shapeByCode = new Map(shapes.filter((shape) => COUNTRY_BY_CODE.has(shape.code)).map((shape) => [shape.code, shape]));
   const lakeShapes = lakes.features.map((feature) => {
@@ -124,7 +140,10 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
   let k = 1;
   let radius = 1;
   let lodScale = 0;
-  let target = null;
+  // Outlined countries, each { code, shape, color }: the asked one, or start and end.
+  let targets = [];
+  let route = null;
+  let tourTimer = null;
   let flashing = null;
   let animation = null;
   let drawScheduled = false;
@@ -219,10 +238,12 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     path({ type: 'Sphere' });
     context.fillStyle = resolveColor('var(--ocean)');
     context.fill();
+    drawnShapes = 0;
+    if (hideBorders) drawHiddenLand();
     context.lineWidth = BORDER_WIDTH_PX;
     context.strokeStyle = resolveColor('var(--country-stroke)');
-    drawnShapes = 0;
     for (const shape of shapes) {
+      if (hideBorders && !hasOwnColor(shape)) continue;
       context.beginPath();
       if (!traceShape(context, path, shape)) continue;
       drawnShapes += 1;
@@ -247,6 +268,26 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     lastDrawMs = performance.now() - started;
   }
 
+  const hasOwnColor = (shape) => shape.color !== NEVER;
+
+  // All countries without a color of their own as one path: a single surface whose
+  // only lines are the coasts.
+  function drawHiddenLand() {
+    context.beginPath();
+    for (const shape of shapes) {
+      if (!hasOwnColor(shape) && traceShape(context, path, shape)) drawnShapes += 1;
+    }
+    context.lineJoin = 'round';
+    context.lineWidth = COAST_INK_PX;
+    context.strokeStyle = resolveColor('var(--ink)');
+    context.stroke();
+    context.fillStyle = context.strokeStyle = resolveColor(NEVER);
+    context.fill();
+    context.lineWidth = COAST_GAP_FILL_PX;
+    context.stroke();
+    context.lineJoin = 'miter';
+  }
+
   // Adds the visible lakes to the current path. Returns false when none is.
   function traceLakes(ctx, clippedPath) {
     let any = false;
@@ -257,16 +298,17 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
   function drawTarget() {
     targetContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     targetContext.clearRect(0, 0, cssWidth, cssHeight);
-    if (!target) return;
     targetContext.lineJoin = 'round';
-    targetContext.beginPath();
-    if (!traceShape(targetContext, targetPath, target.shape)) return;
-    targetContext.strokeStyle = resolveColor('var(--ink)');
-    targetContext.lineWidth = TARGET_WIDTH_PX + 2 * TARGET_EDGE_PX;
-    targetContext.stroke();
-    targetContext.strokeStyle = resolveColor('var(--target)');
-    targetContext.lineWidth = TARGET_WIDTH_PX;
-    targetContext.stroke();
+    for (const { shape, color } of targets) {
+      targetContext.beginPath();
+      if (!traceShape(targetContext, targetPath, shape)) continue;
+      targetContext.strokeStyle = resolveColor('var(--ink)');
+      targetContext.lineWidth = TARGET_WIDTH_PX + 2 * TARGET_EDGE_PX;
+      targetContext.stroke();
+      targetContext.strokeStyle = resolveColor(color);
+      targetContext.lineWidth = TARGET_WIDTH_PX;
+      targetContext.stroke();
+    }
   }
 
   // Small countries also get a thick outline in the flash color, or a fill of a
@@ -387,11 +429,17 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
   function stopAnimation() {
     if (animation) cancelAnimationFrame(animation);
     animation = null;
+    clearTimeout(tourTimer);
+    tourTimer = null;
   }
 
-  function viewTo(nextCenter, nextK, animate) {
+  const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // With `dip`, the zoom falls by that factor (in log scale) in the middle of the
+  // way, so a long flight zooms out to show where it goes.
+  function viewTo(nextCenter, nextK, animate, { durationMs = ZOOM_DURATION_MS, dip = 0 } = {}) {
     stopAnimation();
-    if (!animate || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (!animate || reducedMotion()) {
       setView(nextCenter, nextK);
       return;
     }
@@ -399,24 +447,57 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     const between = geoInterpolate(center, nextCenter);
     const started = performance.now();
     const step = (now) => {
-      const t = Math.min(1, (now - started) / ZOOM_DURATION_MS);
-      const point = between(ease(t));
-      setView(Number.isFinite(point[0]) ? point : nextCenter, startK * (nextK / startK) ** ease(t));
+      const t = Math.min(1, (now - started) / durationMs);
+      const e = ease(t);
+      const point = between(e);
+      const zoomLevel = startK * (nextK / startK) ** e * Math.exp(-dip * 4 * e * (1 - e));
+      setView(Number.isFinite(point[0]) ? point : nextCenter, Math.max(1, zoomLevel));
       animation = t < 1 ? requestAnimationFrame(step) : null;
     };
     animation = requestAnimationFrame(step);
   }
 
-  // Zoom at which the polygon fills TARGET_VIEW_SHARE of the smaller canvas side.
-  function fitZoom(cap, maxZoom) {
+  // Zoom at which a cap fills `share` of the smaller canvas side.
+  function fitZoom(cap, maxZoom, share = TARGET_VIEW_SHARE) {
     const size = 2 * Math.sin(Math.min(cap.radius, Math.PI / 2)) * radius;
-    const fit = (TARGET_VIEW_SHARE * Math.min(cssWidth, cssHeight)) / Math.max(size, 1e-9);
+    const fit = (share * Math.min(cssWidth, cssHeight)) / Math.max(size, 1e-9);
     return Math.max(1, Math.min(maxZoom, fit));
   }
 
+  const mainCap = (shape) => shape.caps[largestPolygon(shape)];
+
   function focusOn(shape, maxZoom, animate) {
-    const cap = shape.caps[largestPolygon(shape)];
+    const cap = mainCap(shape);
     viewTo(cap.center, fitZoom(cap, maxZoom), animate);
+  }
+
+  // Smallest view that holds both caps, as a cap around their midpoint.
+  function capAround(a, b) {
+    const middle = geoInterpolate(a.center, b.center)(0.5);
+    const reach = (cap) => geoDistance(middle, cap.center) + cap.radius;
+    return { center: middle, radius: Math.max(reach(a), reach(b)) };
+  }
+
+  // Shows start and end of a route: together if they fit on the front of the globe,
+  // or else the start first and then a flight to the end.
+  function showRoute(animate = true) {
+    if (!route) return;
+    const [start, end] = [route.start, route.end].map((code) => mainCap(shapeByCode.get(code)));
+    const both = capAround(start, end);
+    if (both.radius <= ROUTE_FIT_ANGLE) {
+      viewTo(both.center, fitZoom(both, MAX_ROUTE_ZOOM, ROUTE_VIEW_SHARE), animate);
+      return;
+    }
+    viewTo(start.center, fitZoom(start, MAX_AUTO_ZOOM), animate);
+    // Only this view's animation is stopped by a new one; the timer runs on.
+    const hold = () => {
+      const endK = fitZoom(end, MAX_AUTO_ZOOM);
+      // Halfway there the whole globe is in view.
+      const dip = Math.max(0, (Math.log(k) + Math.log(endK)) / 2);
+      viewTo(end.center, endK, true, { durationMs: ROUTE_FLIGHT_MS, dip });
+    };
+    clearTimeout(tourTimer);
+    tourTimer = setTimeout(hold, animate && !reducedMotion() ? ZOOM_DURATION_MS + ROUTE_HOLD_MS : ROUTE_HOLD_MS);
   }
 
   function resize() {
@@ -462,19 +543,43 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
   // Marks a country and, unless `focus` is false, turns it to the front and center.
   function highlight(code, { focus = true } = {}) {
     const shape = shapeByCode.get(code);
-    target = { code, shape };
+    route = null;
+    targets = [{ code, shape, color: 'var(--target)' }];
     if (focus) focusOn(shape, MAX_AUTO_ZOOM, true);
     scheduleDraw();
     announceTarget();
   }
 
-  // Turns the marked country back to the front and center, as when it was asked,
-  // after the player turned or zoomed away from it.
-  function refocus() {
-    if (target) focusOn(target.shape, MAX_AUTO_ZOOM, true);
+  // Outlines the start and the end of a route in their colors and shows both.
+  function setRoute(start, end) {
+    route = { start, end };
+    targets = [
+      { code: start, shape: shapeByCode.get(start), color: 'var(--route-start)' },
+      { code: end, shape: shapeByCode.get(end), color: 'var(--route-end)' },
+    ];
+    showRoute();
+    scheduleDraw();
+    announceTarget();
   }
 
-  const hasTarget = () => Boolean(target);
+  // Turns a country to the front, keeping the zoom unless it needs less to fit,
+  // if it is not in view already.
+  function reveal(code) {
+    const shape = shapeByCode.get(code);
+    const cap = mainCap(shape);
+    if (geoDistance(center, cap.center) + Math.min(cap.radius, 0.2) < viewAngle() * 0.8) return;
+    viewTo(cap.center, Math.min(k, Math.max(1, fitZoom(cap, MAX_AUTO_ZOOM))), true);
+  }
+
+  // Turns the marked country back to the front and center, as when it was asked,
+  // after the player turned or zoomed away from it. For a route it shows start and
+  // end again.
+  function refocus() {
+    if (route) showRoute();
+    else if (targets.length) focusOn(targets[0].shape, MAX_AUTO_ZOOM, true);
+  }
+
+  const hasTarget = () => targets.length > 0;
 
   // Lights the country up in green, or pulses it twice in red, after an answer. It
   // runs on while the next question already turns the globe. With reduced motion
@@ -499,7 +604,8 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
   }
 
   function clearHighlight() {
-    target = null;
+    targets = [];
+    route = null;
     scheduleDraw();
     announceTarget();
   }
@@ -564,7 +670,13 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
 
   // A canvas has no elements to inspect, so the browser tests go through this.
   canvas.mapTestApi = {
-    targetCode: () => target?.code,
+    targetCode: () => targets[0]?.code,
+    targetCodes: () => targets.map(({ code }) => code),
+    hidesBorders: () => hideBorders,
+    // True while the globe still shows the start and is about to fly to the end.
+    touring: () => Boolean(tourTimer),
+    // The point the globe turns to the center to show a route that fits at once.
+    routeCenter: (start, end) => capAround(mainCap(shapeByCode.get(start)), mainCap(shapeByCode.get(end))),
     codeAt,
     // The point the globe turns to the center for a country.
     centerOf: (code) => { const shape = shapeByCode.get(code); return shape.caps[largestPolygon(shape)].center; },
@@ -589,5 +701,5 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     isFacing: (location) => geoDistance(center, location) < Math.PI / 2,
   };
 
-  return { setColor, highlight, refocus, hasTarget, flash, clearHighlight, codeAt, hits };
+  return { setColor, highlight, setRoute, reveal, refocus, hasTarget, flash, clearHighlight, codeAt, hits };
 }

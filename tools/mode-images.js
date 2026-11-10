@@ -17,8 +17,9 @@ function round(path) {
 }
 
 // `highlight` outlines a country, `pin` puts a map pin on a point, `flag` adds a
-// picture of a flag in the top left corner.
-function globe({ center, highlight, pin, flag }) {
+// picture of a flag in the top left corner. `route` maps codes to fill colors and
+// hides the borders of all other countries, as in "Grenzgänger".
+function globe({ center, highlight, pin, flag, route }) {
   const projection = geoOrthographic()
     .clipAngle(90)
     .precision(0)
@@ -42,7 +43,15 @@ function globe({ center, highlight, pin, flag }) {
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${WIDTH} ${HEIGHT}">`,
     `<rect width="${WIDTH}" height="${HEIGHT}" fill="${COLORS.space}"/>`,
     `<path d="${round(path({ type: 'Sphere' }))}" fill="${COLORS.ocean}" stroke="${COLORS.border}" stroke-width="0.6"/>`,
-    `<path d="${countries.join('')}" fill="${COLORS.land}" stroke="${COLORS.border}" stroke-width="0.4" stroke-linejoin="round"/>`,
+    route
+      // Land as one surface: an ink outline, the fill over its inner half, and a thin
+      // stroke in the land color that closes slivers between neighbors.
+      ? [
+        `<path d="${countries.join('')}" fill="${COLORS.land}" stroke="${COLORS.border}" stroke-width="1.2" stroke-linejoin="round"/>`,
+        `<path d="${countries.join('')}" fill="${COLORS.land}" stroke="${COLORS.land}" stroke-width="0.6" stroke-linejoin="round"/>`,
+        ...Object.entries(route).map(([code, color]) => `<path d="${round(path(simplified(world.features.find((feature) => feature.properties.id === code))))}" fill="${color}" stroke="${COLORS.border}" stroke-width="0.6" stroke-linejoin="round"/>`),
+      ].join('\n')
+      : `<path d="${countries.join('')}" fill="${COLORS.land}" stroke="${COLORS.border}" stroke-width="0.4" stroke-linejoin="round"/>`,
     target && `<path d="${target}" fill="none" stroke="${COLORS.target}" stroke-width="2.5" stroke-linejoin="round"/>`,
     // A drop-shaped pin whose tip touches the point.
     pin && `<path d="M${pinX} ${pinY}c-4-9-12-15-12-23a12 12 0 0 1 24 0c0 8-8 14-12 23z" fill="${COLORS.target}" stroke="${COLORS.border}" stroke-width="1.2" stroke-linejoin="round"/>`,
@@ -64,3 +73,7 @@ const JAPAN_FLAG = [
   '<circle cx="60" cy="47" r="20" fill="#bc002d"/>',
 ].join('\n');
 writeFileSync(new URL('../images/modes/flags.svg', import.meta.url), globe({ center: [138, 30], highlight: 'JP', flag: JAPAN_FLAG }));
+
+// Portugal to Poland: start in green, end in red, the way between in yellow.
+const ROUTE = { PT: '#3fb05b', ES: '#f6cf45', FR: '#f6cf45', DE: '#f6cf45', PL: '#e8505b' };
+writeFileSync(new URL('../images/modes/borders.svg', import.meta.url), globe({ center: [5, 40], route: ROUTE }));

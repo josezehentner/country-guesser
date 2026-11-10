@@ -124,3 +124,34 @@ const invalidFiles = {
 for (const [label, file] of Object.entries(invalidFiles)) {
   test(`parseImport rejects ${label}`, () => assert.equal(parseImport(file), null));
 }
+
+const rounds = { played: 9, solved: 6, perfect: 2, streak: 1, bestStreak: 4 };
+
+test('round statistics of "Grenzgänger" survive a save and load and an import', () => {
+  const progress = { version: 1, countries: {}, settings: { regions: ['EU'] }, rounds };
+  saveProgress(progress, 'countryquiz.borders.v1');
+  assert.deepEqual(loadProgress('countryquiz.borders.v1'), progress);
+  assert.deepEqual(parseImport(JSON.stringify(progress)), progress);
+  // The other modes have none.
+  assert.equal('rounds' in parseImport(JSON.stringify({ version: 1, countries: {} })), false);
+});
+
+test('invalid round statistics are dropped when loading and rejected when importing', () => {
+  const invalid = [
+    { ...rounds, solved: 10 },
+    { ...rounds, perfect: 7 },
+    { ...rounds, streak: 5 },
+    { ...rounds, bestStreak: 7, solved: 6 },
+    { ...rounds, played: -1 },
+    { ...rounds, played: 9.5 },
+    { ...rounds, played: '9' },
+    { played: 1, solved: 1 },
+    null,
+  ];
+  for (const bad of invalid) {
+    const file = { version: 1, countries: {}, settings: {}, rounds: bad };
+    stubLocalStorage(memoryStorage({ [KEY]: JSON.stringify(file) }));
+    assert.deepEqual(loadProgress(), emptyProgress(), JSON.stringify(bad));
+    assert.equal(parseImport(JSON.stringify(file)), null, JSON.stringify(bad));
+  }
+});

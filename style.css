@@ -37,6 +37,13 @@
   /* The asked country lights up in these after an answer. */
   --flash-good: #22c55e;
   --flash-bad: #ef4444;
+  /* "Grenzgänger": start and end, countries on a shortest route, detours, and the
+     ones the player missed */
+  --route-start: #3fb05b;
+  --route-end: #e8505b;
+  --route-step: #f6cf45;
+  --route-detour: #aeb2b8;
+  --route-missing: #f4a259;
   /* Main action, e.g. "Prüfen" and "Weiter": the same light green */
   --accent: #b5e48c;
   --accent-text: #1d2b36;
@@ -323,7 +330,7 @@ h1 { margin: 0; font-size: 1.1rem; }
 .map-wrap { container-type: inline-size; }
 .caption { max-width: calc(100% - 300px); }
 @container (max-width: 900px) {
-  .caption { max-width: calc(100% - 136px); }
+  .caption, .route-guesses { max-width: calc(100% - 136px); }
   .recenter { width: 44px; height: 44px; justify-content: center; padding: 0; }
   .recenter-label { display: none; }
 }
@@ -431,6 +438,51 @@ h1 { margin: 0; font-size: 1.1rem; }
   box-shadow: 3px 3px 0 #1d2b36;
 }
 .flag[hidden] { display: none; }
+
+/* "Grenzgänger": start and end in their colors, and below the caption the named
+   countries as chips in the colors they have on the globe. */
+.route-caption p { margin: 0; }
+.route-end-name {
+  display: inline-block;
+  padding: 0 6px;
+  border: 2px solid #1d2b36;
+  border-radius: 4px;
+}
+.caption .route-end-name { font-size: 1.25em; }
+.route-end-name.start { background: var(--route-start); }
+.route-end-name.end { background: var(--route-end); }
+.route-status { margin-top: 2px; font-family: system-ui, sans-serif; font-size: 0.6em; letter-spacing: 0; }
+.route-guesses {
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  width: max-content;
+  max-width: calc(100% - 300px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+.route-guess {
+  padding: 1px 8px;
+  border: 2px solid #1d2b36;
+  border-radius: 999px;
+  background: var(--route-step);
+  color: #1d2b36;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.route-guess.detour { background: var(--route-detour); }
+.route-guess.missing { background: var(--route-missing); border-style: dashed; }
+.stat-dot.solved { background: var(--route-start); }
+.stat-dot.perfect { background: var(--route-step); }
+.stat-dot.streak { background: var(--route-end); }
 
 /* The controls float in a small dock at the bottom of the globe, which takes the
    whole height of the page. */
@@ -631,6 +683,8 @@ button.primary { background: var(--accent); color: var(--accent-text); }
   .answer:not(.buttons-only) .label-short { display: inline; }
 
   .caption { top: 10px; max-width: calc(100% - 32px); padding: 4px 14px 5px; font-size: 1.1rem; }
+  .route-guesses { top: 78px; max-width: calc(100% - 16px); }
+  .route-guess { font-size: 0.72rem; }
 
   /* Only the icon, at the middle of the right edge: the caption fills the top,
      and the legend lies at the bottom here. */

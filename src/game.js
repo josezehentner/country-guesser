@@ -34,8 +34,17 @@ const FILTER_GROUPS = [
 //   answered(game, correct)   updates its controls after an answer
 //   onSelect(game, event)     optional: a click on the globe
 //   focus()                   puts the keyboard focus where the player continues
+// A mode without per-country scores ("Grenzgänger") also provides:
+//   scores: false             no legend and no country colors by score
+//   filters                   the filter groups it uses, e.g. ['regions']
+//   mapOptions                passed on to createMap, e.g. { hideBorders: true }
+//   next(game, pool)          returns the new game.current from the filtered pool
+//   renderStats(game)         fills the stats in the top bar
+//   poolSummary(pool)         optional: the filter summary, or null for the default
 export function startGame(mode) {
   const countries = mode.countries ?? COUNTRIES;
+  const scores = mode.scores !== false;
+  const filterGroups = FILTER_GROUPS.filter(({ key }) => !mode.filters || mode.filters.includes(key));
   const feedback = byId('feedback');
   const importFile = byId('import-file');
 
@@ -50,6 +59,8 @@ export function startGame(mode) {
     setFeedback,
     nextQuestion,
     finish,
+    persist,
+    get progress() { return progress; },
   };
 
   // Shows the result over the globe: a comic burst with the verdict ("Richtig!"),
@@ -82,6 +93,10 @@ export function startGame(mode) {
   }
 
   function renderStats() {
+    if (mode.renderStats) {
+      mode.renderStats(game);
+      return;
+    }
     const entries = countries.map(({ code }) => progress.countries[code]).filter(Boolean);
     const mastered = entries.filter((entry) => entry.score >= MAX_SCORE).length;
     const started = entries.filter((entry) => entry.score >= 1 && entry.score < MAX_SCORE).length;
@@ -99,7 +114,7 @@ export function startGame(mode) {
   }
 
   function renderAll() {
-    for (const { code } of countries) renderCountry(code);
+    if (scores) for (const { code } of countries) renderCountry(code);
     renderStats();
   }
 
@@ -159,7 +174,7 @@ export function startGame(mode) {
 
   function nextQuestion() {
     clearTimeout(nextTimer);
-    game.current = pickNextCountry(currentPool(), progress.countries, previousCode);
+    game.current = mode.next ? mode.next(game, askableCountries()) : pickNextCountry(currentPool(), progress.countries, previousCode);
     previousCode = game.current.code;
     game.isAnswered = false;
     setFeedback('');
@@ -241,7 +256,7 @@ export function startGame(mode) {
   }
 
   function setupFilters() {
-    for (const { key, boxId, options, field } of FILTER_GROUPS) {
+    for (const { key, boxId, options, field } of filterGroups) {
       const box = byId(boxId);
       for (const [code, label] of Object.entries(options)) {
         const option = document.createElement('label');
@@ -335,22 +350,24 @@ export function startGame(mode) {
   }
 
   function renderFilters() {
-    for (const { key, boxId } of FILTER_GROUPS) {
+    for (const { key, boxId } of filterGroups) {
       const selected = progress.settings[key];
       for (const input of byId(boxId).querySelectorAll('input')) input.checked = !selected || selected.includes(input.value);
     }
-    const count = askableCountries().length;
+    const pool = askableCountries();
+    const count = pool.length;
     const summary = byId('filter-summary');
-    summary.textContent = count
+    const custom = mode.poolSummary?.(pool);
+    summary.textContent = custom?.text ?? (count
       ? `${count} ${count === 1 ? 'Land wird' : 'Länder werden'} abgefragt.`
-      : 'Keine Länder für diese Auswahl. Bis du etwas auswählst, kommen alle dran.';
-    summary.classList.toggle('empty', !count);
+      : 'Keine Länder für diese Auswahl. Bis du etwas auswählst, kommen alle dran.');
+    summary.classList.toggle('empty', custom ? custom.empty : !count);
   }
 
   function replaceProgress(next) {
     progress = next;
     renderFilters();
-    renderScoreLimit();
+    if (scores) renderScoreLimit();
     persist();
     renderAll();
     nextQuestion();
@@ -364,7 +381,7 @@ export function startGame(mode) {
         return response.json();
       }));
       const onSelect = (event) => mode.onSelect?.(game, event);
-      game.map = createMap(byId('map'), byId('map-target'), world, onSelect, lakes);
+      game.map = createMap(byId('map'), byId('map-target'), world, onSelect, lakes, mode.mapOptions);
     } catch (error) {
       console.error(error);
       byId('loading').textContent = 'Die Karte konnte nicht geladen werden.';
@@ -372,8 +389,11 @@ export function startGame(mode) {
     }
     byId('loading').hidden = true;
     persist();
-    renderLegend();
-    setupScoreLimit();
+    // Without scores there is no legend and no score limit beside it.
+    if (scores) {
+      renderLegend();
+      setupScoreLimit();
+    }
     renderAll();
     setupSettings();
     setupRecenter();

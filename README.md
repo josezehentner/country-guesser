@@ -30,7 +30,13 @@ The game names a capital, such as Canberra, and you click the country it belongs
 
 A flag is shown above the globe, and you type the country it belongs to. It plays like "Länder benennen", with the same tolerance for typos. After your answer the globe turns to the country, so you also learn where it lies. Places that fly another country's flag, such as Réunion with the French flag, are left out, and so is Antarctica. Monaco and Indonesia, and Romania and Chad, have flags that look the same: there either name is right.
 
-Every mode keeps separate progress: recognizing a country, finding it, knowing its capital, placing a capital and knowing its flag are different skills.
+### Cross borders ("Grenzgänger")
+
+You get a start and an end country, such as Portugal and Poland, on a globe without borders. Name the countries in between, in any order, until their land borders connect the two: here Spain, France and Germany. At least three countries lie between, and there is no limit: Portugal to China is a round too. Countries on a shortest route turn yellow, detours gray. You have as many guesses as the shortest route needs, plus four. Only land borders count: no bridges or tunnels, so Denmark and Sweden are not neighbors. If start and end don't fit on one side of the globe, it shows the start first and then flies to the end.
+
+Instead of scores per country, this mode counts your solved rounds, the ones solved on a shortest route, and your streak.
+
+Every mode keeps separate progress: recognizing a country, finding it, knowing its capital, placing a capital, knowing its flag and knowing its neighbors are different skills.
 
 ## How your progress works
 
@@ -54,7 +60,7 @@ The filters left of the globe choose which countries are asked. Move the mouse t
   - *Hard* ("Schwer") is every territory that is not a UN member, such as Greenland, Kosovo or French Polynesia, plus tiny island states like Nauru or Tuvalu.
   - *Medium* ("Mittel") is all other countries.
 
-You can combine both, for example only the easy countries of Africa. In total there are 250 countries and territories.
+You can combine both, for example only the easy countries of Africa. In total there are 250 countries and territories. "Grenzgänger" only has the regions: a round then stays in them.
 
 The slider beside the color legend on the right leaves out countries you already know well: set it to 7, and countries at 8, 9 or 10 points are no longer asked. Countries you have never been asked always stay in.
 
@@ -65,6 +71,7 @@ The slider beside the color legend on the right leaves out countries you already
 | Turn the globe | drag | swipe |
 | Zoom | mouse wheel | pinch |
 | Back to the marked country | "Zum Land" at the top right | ⌖ at the right edge |
+| Show start and end again ("Grenzgänger") | "Start & Ziel" at the top right | ⌖ at the right edge |
 | Answer (name, capital) | type and press Enter | type and tap "Go" |
 | Move between the answer field and its buttons | ← and → | tap |
 | Answer (find a country or capital) | click the country | tap the country |

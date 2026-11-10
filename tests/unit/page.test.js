@@ -21,6 +21,7 @@ test('the menu and every mode are pages of their own', () => {
   assert.ok(pages.includes('capitals.html'));
   assert.ok(pages.includes('find-capitals.html'));
   assert.ok(pages.includes('flags.html'));
+  assert.ok(pages.includes('borders.html'));
 });
 
 test('content security policy only allows the site itself', () => {
@@ -51,7 +52,9 @@ test('every mode has the button that turns the globe back to the marked country,
     const button = html.match(/<button[^>]*id="recenter-btn"[^>]*>/)?.[0];
     assert.ok(button, page);
     assert.match(button, /type="button"/, page);
-    assert.match(button, /aria-label="Zum markierten Land"/, page);
+    // In "Grenzgänger" it shows start and end of the route again.
+    const label = page === 'borders.html' ? 'Start und Ziel zeigen' : 'Zum markierten Land';
+    assert.match(button, new RegExp(`aria-label="${label}"`), page);
     assert.match(button, /\shidden[\s>]/, page);
   }
 });
