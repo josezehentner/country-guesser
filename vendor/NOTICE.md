@@ -19,6 +19,11 @@
   only lakes of at least 5,000 km² and the pieces of them that Natural Earth
   keeps separately, German names from `name_de`, shores
   simplified to within about 1.3 km and coordinates rounded to 4 decimals.
+- `data/borders.js`: land borders between the quizzed entries, derived from
+  `data/world.json` by `tools/borders.js`, so the same Natural Earth source applies.
+  Changes: borders of the enlarged entries San Marino, Vatican City, Monaco,
+  Gibraltar, Macau and Saint-Martin–Sint Maarten added by hand; Namibia–Zimbabwe,
+  which only meet in one point of the data, removed.
 - `images/modes/*.svg` and `images/menu-background.svg`: drawn from
   `data/world.json` by `tools/mode-images.js` and `tools/menu-background.js`,
   so the same Natural Earth source applies.

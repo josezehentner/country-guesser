@@ -12,7 +12,8 @@
     "build:vendor": "esbuild tools/d3-bundle.js --bundle --format=esm --minify --legal-comments=none --outfile=vendor/d3.bundle.js",
     "build:images": "node tools/mode-images.js && node tools/menu-background.js && node tools/globe-background.js",
     "build:lakes": "node tools/lakes.js",
-    "build:flags": "node tools/flags.js"
+    "build:flags": "node tools/flags.js",
+    "build:borders": "node tools/borders.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",

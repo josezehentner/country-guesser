@@ -43,6 +43,18 @@ function copyEntry({ score, seen, correct, lastSeen }) {
   return { score, seen, correct, lastSeen };
 }
 
+// Round statistics of "Grenzgänger", which has no per-country scores.
+const ROUND_FIELDS = ['played', 'solved', 'perfect', 'streak', 'bestStreak'];
+
+function isValidRounds(rounds) {
+  if (rounds === null || typeof rounds !== 'object') return false;
+  if (!ROUND_FIELDS.every((field) => Number.isInteger(rounds[field]) && rounds[field] >= 0)) return false;
+  const { played, solved, perfect, streak, bestStreak } = rounds;
+  return solved <= played && perfect <= solved && streak <= bestStreak && bestStreak <= solved;
+}
+
+const copyRounds = (rounds) => Object.fromEntries(ROUND_FIELDS.map((field) => [field, rounds[field]]));
+
 // Lenient: used for localStorage, drops whatever it does not recognize.
 function sanitize(raw) {
   const progress = emptyProgress();
@@ -53,6 +65,7 @@ function sanitize(raw) {
     }
   }
   progress.settings = sanitizeSettings(raw.settings);
+  if (isValidRounds(raw.rounds)) progress.rounds = copyRounds(raw.rounds);
   return progress;
 }
 
@@ -69,6 +82,7 @@ export function parseImport(text) {
   const allValid = Object.entries(raw.countries).every(
     ([code, entry]) => COUNTRY_BY_CODE.has(code) && isValidEntry(entry),
   );
+  if (raw.rounds !== undefined && !isValidRounds(raw.rounds)) return null;
   return allValid ? sanitize(raw) : null;
 }
 

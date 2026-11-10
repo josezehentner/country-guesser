@@ -53,6 +53,7 @@ find-countries.html     the "Länder finden" mode
 capitals.html           the "Hauptstädte lernen" mode
 find-capitals.html      the "Hauptstädte finden" mode
 flags.html              the "Flaggen erkennen" mode
+borders.html            the "Grenzgänger" mode
 style.css               styles for all pages
 images/                 menu background and card pictures, generated with `npm run build:images`
 fonts/                  web fonts with their licenses
@@ -62,6 +63,7 @@ tools/mode-images.js    draws the card pictures from the map data
 tools/menu-background.js draws the comic world map behind the menu
 tools/globe-background.js draws the comic sunburst behind the globe
 tools/lakes.js          builds data/lakes.json from Natural Earth, with `npm run build:lakes`
+tools/borders.js        builds data/borders.js, the land borders, with `npm run build:borders`
 tools/flags.js          copies the flags from flag-icons to vendor/flags/, with `npm run build:flags`
 src/                    one module per responsibility
 data/                   map data, lakes, country list, aliases
