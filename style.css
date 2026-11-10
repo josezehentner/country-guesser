@@ -376,8 +376,39 @@ h1 { margin: 0; font-size: 1.1rem; }
   padding: 0;
   writing-mode: vertical-lr;
   direction: rtl;
-  accent-color: var(--comic-shadow);
+  /* Drawn by hand: native sliders on macOS only show their accent color while held. */
+  -webkit-appearance: none;
+  appearance: none;
+  /* Colored from the low end up to the middle of the knob. */
+  --knob: 13px;
+  background: linear-gradient(to top,
+    var(--limit-color, var(--comic-shadow)) calc(var(--knob) / 2 + (100% - var(--knob)) * var(--limit-fill, 1)),
+    var(--surface) 0);
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  box-sizing: border-box;
   cursor: pointer;
+}
+.score-limit::-webkit-slider-runnable-track { background: transparent; border: 0; }
+.score-limit::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--knob);
+  height: var(--knob);
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--limit-color, var(--comic-shadow));
+  box-sizing: border-box;
+}
+.score-limit::-moz-range-track { background: transparent; border: 0; }
+.score-limit::-moz-range-progress { background: transparent; }
+.score-limit::-moz-range-thumb {
+  width: var(--knob);
+  height: var(--knob);
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--limit-color, var(--comic-shadow));
+  box-sizing: border-box;
 }
 .score-limit:focus-visible { outline: 3px solid var(--target); outline-offset: 2px; }
 
@@ -711,7 +742,15 @@ button.primary { background: var(--accent); color: var(--accent-text); }
   }
   .legend-scale { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 2px; }
   /* Lying flat beneath the scale, 0 on the left. */
-  .score-limit { width: auto; height: 16px; writing-mode: horizontal-tb; direction: ltr; }
+  .score-limit {
+    width: auto;
+    height: 16px;
+    writing-mode: horizontal-tb;
+    direction: ltr;
+    background: linear-gradient(to right,
+      var(--limit-color, var(--comic-shadow)) calc(var(--knob) / 2 + (100% - var(--knob)) * var(--limit-fill, 1)),
+      var(--surface) 0);
+  }
   .swatch { width: 16px; height: 14px; font-size: 0.7rem; }
 }
 
