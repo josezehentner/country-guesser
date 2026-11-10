@@ -268,6 +268,15 @@ test('the slider beside the legend stops asking countries above a score', async 
 
   await slider.fill('7');
   await expect(page.locator('#legend li.excluded')).toHaveText(['8', '9', '10']);
+  // The slider takes the color of the highest score still asked.
+  const sliderRgb = () => page.evaluate(() => {
+    const context = document.createElement('canvas').getContext('2d');
+    context.fillStyle = getComputedStyle(document.querySelector('#score-limit')).accentColor;
+    context.fillRect(0, 0, 1, 1);
+    const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
+    return `rgb(${r}, ${g}, ${b})`;
+  });
+  expect(await sliderRgb()).toBe(await tokenRgb(page, '--score-7'));
   await expect(page.locator('#filter-summary')).toHaveText('2 Länder werden abgefragt.');
   await expect.poll(async () => (await stored(page)).settings.maxScore).toBe(7);
   for (let i = 0; i < 10; i++) {

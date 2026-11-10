@@ -97,7 +97,7 @@ Not purely random, but weighted so weaker countries come up more often:
 - Countries with a low score and countries never asked before have a higher probability.
 - Countries with score 10 appear rarely, but still occasionally (for review).
 - Never the same country twice in a row.
-- **Score limit**: a slider beside the legend sets the highest score that is still asked (default 10, i.e. all). Countries scored above it leave the rotation, e.g. at 7 the countries at 8, 9 and 10; never-asked countries always stay. It combines with the filters, counts in the filter summary, takes effect as a country passes the limit, and is saved per mode as `settings.maxScore` (missing means no limit). Swatches above the limit are dimmed. If nothing is left to ask, every country comes up, as with the filters.
+- **Score limit**: a slider beside the legend sets the highest score that is still asked (default 10, i.e. all). Countries scored above it leave the rotation, e.g. at 7 the countries at 8, 9 and 10; never-asked countries always stay. It combines with the filters, counts in the filter summary, takes effect as a country passes the limit, and is saved per mode as `settings.maxScore` (missing means no limit). Swatches above the limit are dimmed, and the slider takes the color of the highest score still asked. If nothing is left to ask, every country comes up, as with the filters.
 
 ### Answer checking
 
