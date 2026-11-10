@@ -28,8 +28,9 @@ export function simplifyRing(ring, tolerance) {
 
 const isInverted = (ring) => geoArea({ type: 'Polygon', coordinates: [ring] }) > 2 * Math.PI;
 
-function douglasPeucker(ring, tolerance) {
-  if (ring.length <= 4 || tolerance <= 0) return ring;
+// Keeps the first and last point and at least `minPoints` points.
+function douglasPeucker(ring, tolerance, minPoints = 4) {
+  if (ring.length <= minPoints || tolerance <= 0) return ring;
   const vectors = ring.map(toVector);
   const keep = new Uint8Array(ring.length);
   keep[0] = keep[ring.length - 1] = 1;
@@ -51,8 +52,12 @@ function douglasPeucker(ring, tolerance) {
     }
   }
   const simplified = ring.filter((_, i) => keep[i]);
-  return simplified.length >= 4 ? simplified : ring;
+  return simplified.length >= minPoints ? simplified : ring;
 }
+
+// An open line, such as a stretch of coast. Its ends stay where they are, so it
+// still meets the borders it runs between.
+export const simplifyLine = (line, tolerance) => douglasPeucker(line, tolerance, 2);
 
 export function simplifyPolygon(polygon, tolerance) {
   return polygon.map((ring) => simplifyRing(ring, tolerance));

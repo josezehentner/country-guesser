@@ -1,6 +1,7 @@
 import { geoArea, geoContains, geoDistance, geoInterpolate, geoOrthographic, geoPath, select, zoom, zoomIdentity } from '../vendor/d3.bundle.js';
 import { COUNTRY_BY_CODE } from '../data/countries.js';
-import { boundingCap, simplifyPolygon } from './simplify.js';
+import { coastLines } from './coasts.js';
+import { boundingCap, simplifyLine, simplifyPolygon } from './simplify.js';
 
 const DEGREES = 180 / Math.PI;
 const RADIANS = Math.PI / 180;
@@ -35,11 +36,10 @@ const ROUTE_VIEW_SHARE = 0.9;
 const MAX_ROUTE_ZOOM = 6;
 const ROUTE_HOLD_MS = 1200;
 const ROUTE_FLIGHT_MS = 2000;
-// Without borders only the coasts get a line. The land is stroked thicker in ink
-// first; its fill then covers the inner half, and a thin stroke in the land color
-// closes slivers between neighbors that were simplified on their own.
-const COAST_INK_PX = 3.4;
-const COAST_GAP_FILL_PX = 1;
+// Without borders the land is one fill, and only the coastlines get a line, as thin
+// as the borders elsewhere. Thick lines along every border, half covered by the
+// fill again, cost three times the drawing time, and even a coast of 1.2 px twice.
+const COAST_WIDTH_PX = BORDER_WIDTH_PX;
 // After an answer the asked country lights up once (right) or pulses twice (wrong).
 const FLASH_OPACITY = 0.85;
 const FLASHES = {
@@ -126,9 +126,14 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
   const flashContext = flashCanvas.getContext('2d');
   const flashPath = geoPath(projection, flashContext);
 
-  const shapes = world.features.map((feature) => {
+  // Per country and polygon, the stretches of coast, only needed without borders.
+  const coasts = hideBorders ? coastLines(world.features) : [];
+  const shapes = world.features.map((feature, i) => {
     const polygons = polygonsOf(feature.geometry);
-    return { code: feature.properties.id, feature, polygons, caps: polygons.map(boundingCap), levels: [], color: NEVER };
+    return {
+      code: feature.properties.id, feature, polygons, caps: polygons.map(boundingCap), levels: [], color: NEVER,
+      coasts: coasts[i] ?? [], coastLevels: [],
+    };
   });
   const shapeByCode = new Map(shapes.filter((shape) => COUNTRY_BY_CODE.has(shape.code)).map((shape) => [shape.code, shape]));
   const lakeShapes = lakes.features.map((feature) => {
@@ -184,11 +189,21 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     return shape.levels[level];
   }
 
+  // The coasts at the same detail as the polygons they belong to.
+  function coastsAt(shape, level) {
+    if (k >= LOD_MAX_ZOOM) return shape.coasts;
+    if (!shape.coastLevels[level]) {
+      const tolerance = LOD_ERROR_PX / (lodScale * 2 ** ((level + 1) / LOD_STEPS_PER_DOUBLING));
+      shape.coastLevels[level] = shape.coasts.map((lines) => lines.map((line) => simplifyLine(line, tolerance)));
+    }
+    return shape.coastLevels[level];
+  }
+
   const detailLevel = () => Math.floor(Math.log2(k) * LOD_STEPS_PER_DOUBLING);
 
-  // Orthographic projection of a ring that lies fully on the front of the globe.
+  // Orthographic projection of points that lie fully on the front of the globe.
   // It needs no clipping, and skipping d3's stream makes it about three times faster.
-  function traceFrontRing(ctx, ring) {
+  function traceFrontPoints(ctx, ring) {
     const scale = radius * k;
     const [x0, y0] = [cssWidth / 2, cssHeight / 2];
     const lon0 = center[0] * RADIANS;
@@ -203,6 +218,10 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
       if (i) ctx.lineTo(x, y);
       else ctx.moveTo(x, y);
     }
+  }
+
+  function traceFrontRing(ctx, ring) {
+    traceFrontPoints(ctx, ring);
     ctx.closePath();
   }
 
@@ -221,6 +240,23 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     });
     if (edge.length) clippedPath({ type: 'MultiPolygon', coordinates: edge });
     return Boolean(polygons);
+  }
+
+  // Adds the shape's coasts that may be on screen to the current path, like
+  // traceShape, as open lines.
+  function traceCoasts(ctx, clippedPath, shape) {
+    const angle = viewAngle();
+    let lines = null;
+    const edge = [];
+    shape.caps.forEach((cap, i) => {
+      if (!shape.coasts[i]?.length) return;
+      const distance = geoDistance(center, cap.center);
+      if (distance - cap.radius >= angle) return;
+      lines ??= coastsAt(shape, detailLevel());
+      if (distance + cap.radius < Math.PI / 2) for (const line of lines[i]) traceFrontPoints(ctx, line);
+      else edge.push(...lines[i]);
+    });
+    if (edge.length) clippedPath({ type: 'MultiLineString', coordinates: edge });
   }
 
   function drawCountries() {
@@ -270,20 +306,20 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
 
   const hasOwnColor = (shape) => shape.color !== NEVER;
 
-  // All countries without a color of their own as one path: a single surface whose
-  // only lines are the coasts.
+  // All countries without a color of their own as one fill, so no seam shows
+  // between neighbors, and then only their coasts as lines.
   function drawHiddenLand() {
     context.beginPath();
     for (const shape of shapes) {
       if (!hasOwnColor(shape) && traceShape(context, path, shape)) drawnShapes += 1;
     }
-    context.lineJoin = 'round';
-    context.lineWidth = COAST_INK_PX;
-    context.strokeStyle = resolveColor('var(--ink)');
-    context.stroke();
-    context.fillStyle = context.strokeStyle = resolveColor(NEVER);
+    context.fillStyle = resolveColor(NEVER);
     context.fill();
-    context.lineWidth = COAST_GAP_FILL_PX;
+    context.beginPath();
+    for (const shape of shapes) if (!hasOwnColor(shape)) traceCoasts(context, path, shape);
+    context.lineJoin = 'round';
+    context.lineWidth = COAST_WIDTH_PX;
+    context.strokeStyle = resolveColor('var(--ink)');
     context.stroke();
     context.lineJoin = 'miter';
   }
@@ -511,7 +547,10 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     radius = GLOBE_SIZE * Math.min(cssWidth, cssHeight);
     if (radius !== lodScale) {
       lodScale = radius;
-      for (const shape of shapes) shape.levels = [];
+      for (const shape of shapes) {
+        shape.levels = [];
+        shape.coastLevels = [];
+      }
     }
     updateProjection();
     // Resizing clears the canvas: drawing at once keeps it from blinking empty,
