@@ -62,11 +62,12 @@ You can combine both, for example only the easy countries of Africa. In total th
 |---|---|---|
 | Turn the globe | drag | swipe |
 | Zoom | mouse wheel | pinch |
+| Back to the marked country | "Zum Land" at the top right | ⌖ at the right edge |
 | Answer (name, capital) | type and press Enter | type and tap "Go" |
 | Answer (find a country or capital) | click the country | tap the country |
 | Move on after a wrong answer | Enter, "Weiter" or a click on the globe | "Weiter" or a tap on the globe |
 
-A quick swipe gives the globe momentum, so it keeps turning for a moment.
+A quick swipe gives the globe momentum, so it keeps turning for a moment. If you lose the marked country while looking around, "Zum Land" turns the globe back to it. In the find modes the button only appears after your answer, so it never gives the country away.
 
 ## Your data
 

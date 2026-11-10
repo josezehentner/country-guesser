@@ -303,6 +303,31 @@ h1 { margin: 0; font-size: 1.1rem; }
 
 .loading[hidden] { display: none; }
 
+/* Turns the globe back to the marked country, in the top right corner. */
+.recenter {
+  position: absolute;
+  top: 14px;
+  right: 12px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px 4px 10px;
+  border-radius: 999px;
+}
+.recenter[hidden] { display: none; }
+.recenter-icon { font-family: system-ui, sans-serif; font-size: 1.3em; line-height: 1; }
+
+/* The caption in the middle keeps clear of the button on both sides. Beside
+   pinned filters on a narrow window the button is only its icon. */
+.map-wrap { container-type: inline-size; }
+.caption { max-width: calc(100% - 300px); }
+@container (max-width: 900px) {
+  .caption { max-width: calc(100% - 136px); }
+  .recenter { width: 44px; height: 44px; justify-content: center; padding: 0; }
+  .recenter-label { display: none; }
+}
+
 /* The color scale stands upright at the right edge, 10 at the top. */
 .legend {
   position: absolute;
@@ -584,7 +609,11 @@ button.primary { background: var(--accent); color: var(--accent-text); }
   .answer:not(.buttons-only) .label-long { display: none; }
   .answer:not(.buttons-only) .label-short { display: inline; }
 
-  .caption { top: 10px; padding: 4px 14px 5px; font-size: 1.1rem; }
+  .caption { top: 10px; max-width: calc(100% - 32px); padding: 4px 14px 5px; font-size: 1.1rem; }
+
+  /* Only the icon, at the middle of the right edge: the caption fills the top,
+     and the legend lies at the bottom here. */
+  .recenter { top: calc(50% - 22px); right: 8px; border-width: 2px; box-shadow: 2px 2px 0 var(--line); }
   .caption strong { font-size: 1.35em; letter-spacing: 0.02em; }
   .flag { width: clamp(88px, 28vw, 132px); }
 

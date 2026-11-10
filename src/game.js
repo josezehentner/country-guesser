@@ -189,6 +189,23 @@ export function startGame(mode) {
     });
   }
 
+  // Lost the marked country while turning the globe? This button turns it back.
+  // It shows only while a country is marked, so in the find modes it gives
+  // nothing away before the answer.
+  function setupRecenter() {
+    const button = byId('recenter-btn');
+    const canvas = byId('map');
+    const render = () => { button.hidden = !game.map.hasTarget(); };
+    canvas.addEventListener('targetchange', render);
+    // A mouse click must not take the focus from the answer field.
+    button.addEventListener('mousedown', (event) => event.preventDefault());
+    button.addEventListener('click', () => {
+      game.map.refocus();
+      mode.focus();
+    });
+    render();
+  }
+
   function setupFilters() {
     for (const { key, boxId, options, field } of FILTER_GROUPS) {
       const box = byId(boxId);
@@ -323,6 +340,7 @@ export function startGame(mode) {
     renderLegend();
     renderAll();
     setupSettings();
+    setupRecenter();
     mode.setup(game);
     nextQuestion();
   }

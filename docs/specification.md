@@ -171,6 +171,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 - **Country scope**: all 249 ISO 3166-1 entries plus Kosovo, including dependent territories such as Greenland and French Guiana. Anything else in the map data is drawn but **not asked** and colored neutrally. The list of quizzed countries lives in one central file (`data/countries.js`) so it is easy to adjust.
 - **Turn and zoom** the globe: drag to turn it, mouse wheel or pinch to zoom. Turning stops at the poles. After a quick drag the globe keeps turning and slows down within about a second, unless the player prefers reduced motion.
 - When a country is asked, the globe **turns it to the front and center** and zooms in moderately, so neighboring land stays in view.
+- **Back to the marked country**: while a country is marked, a "Zum Land" button (⌖) floats at the top right of the globe; on small screens it is only the icon, at the middle of the right edge. It turns and zooms the globe back to the country as when it was asked, so a player who got lost while turning or zooming finds it again. In the find modes nothing is marked before the answer, so the button only shows afterwards and never gives the country away. A click on it keeps the keyboard focus where the player continues, e.g. in the answer field with the letters typed so far.
 - **Very small countries** (e.g. Vatican City, Monaco, Malta, Pacific and Caribbean island states) are drawn only as their shapes, with no permanent markers. Entries under 40 km² are enlarged to 40 km² so they can be seen. While one is asked it gets the same outline as every asked country, which is enough to spot it; there is no extra ring.
 - Projection: orthographic, so the map looks like a globe seen from space.
 
@@ -239,6 +240,7 @@ Local testing: because of ES modules, serve via a local web server: `npm start`,
 - [ ] Export produces a JSON file, import restores the same state, invalid files are rejected.
 - [ ] Large lakes such as Lake Victoria, Lake Michigan and Lake Nicaragua are water on the globe, and a click into one is no answer.
 - [ ] Small countries are plain shapes without rings, and the globe turns to the asked country.
+- [ ] "Zum Land" turns the globe back to the marked country in every mode, and in the find modes it only shows after the answer.
 - [ ] The globe turns and zooms smoothly, and borders stay sharp at every zoom level.
 - [ ] Usable on mobile (touch zoom, input, no horizontal scrollbar), with most of the screen left for the globe even while the keyboard is open.
 - [ ] Game works even when localStorage is unavailable (with a notice).
