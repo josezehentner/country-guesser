@@ -43,3 +43,14 @@ test('content security policy blocks base and form targets', () => {
 test('github pages serves the repo without jekyll', () => {
   assert.ok(existsSync(new URL('.nojekyll', root)));
 });
+
+test('every mode has the button that turns the globe back to the marked country, hidden at first', () => {
+  for (const page of pages.filter((name) => name !== 'index.html')) {
+    const html = readFileSync(new URL(page, root), 'utf8');
+    const button = html.match(/<button[^>]*id="recenter-btn"[^>]*>/)?.[0];
+    assert.ok(button, page);
+    assert.match(button, /type="button"/, page);
+    assert.match(button, /aria-label="Zum markierten Land"/, page);
+    assert.match(button, /\shidden[\s>]/, page);
+  }
+});

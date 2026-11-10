@@ -578,6 +578,39 @@ test('the globe turns the asked country to the front and center', async ({ page 
   }
 });
 
+test('"Zum Land" turns the globe back to the marked country and keeps the focus in the field', async ({ page }) => {
+  await open(page);
+  const code = await targetCode(page);
+  const asked = await view(page);
+  const button = page.locator('#recenter-btn');
+  await expect(button).toBeVisible();
+  await expect(button).toHaveAccessibleName('Zum markierten Land');
+  await page.evaluate(() => document.querySelector('#map').mapTestApi.lookAt([-150, -60], 7));
+  await page.click('#answer-input');
+  await page.keyboard.type('ab');
+  await button.click();
+  const back = await view(page);
+  const center = await page.evaluate((c) => document.querySelector('#map').mapTestApi.centerOf(c), code);
+  expect(back.k).toBeCloseTo(asked.k, 5);
+  expect(back.center[0]).toBeCloseTo(center[0], 5);
+  expect(back.center[1]).toBeCloseTo(center[1], 5);
+  await expect(page.locator('#answer-input')).toBeFocused();
+  await expect(page.locator('#answer-input')).toHaveValue('ab');
+});
+
+for (const width of [800, 1280]) {
+  test(`"Zum Land" and the caption stay apart beside pinned filters at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await open(page);
+    await expect(page.locator('#filters')).toHaveClass(/pinned/);
+    const button = await page.locator('#recenter-btn').boundingBox();
+    const caption = await page.locator('#prompt').boundingBox();
+    expect(caption.x + caption.width).toBeLessThanOrEqual(button.x);
+    // Room for the full label only on a wide window.
+    await expect(page.locator('.recenter-label')).toBeVisible({ visible: width > 1100 });
+  });
+}
+
 test('the globe zooms and rotates', async ({ page }) => {
   await open(page);
   await page.evaluate(() => document.querySelector('#map').mapTestApi.lookAt([0, 0], 1));
@@ -755,6 +788,26 @@ test.describe('on a phone', () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
     await page.tap('#dont-know-btn');
     await expect(page.locator('#feedback')).toHaveClass(/bad/);
+  });
+
+  test('"Zum Land" is an icon at the right edge that covers neither caption nor legend', async ({ page }) => {
+    await open(page);
+    const box = await page.locator('#recenter-btn').boundingBox();
+    const viewport = page.viewportSize();
+    expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
+    expect(box.width).toBeGreaterThanOrEqual(44);
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    await expect(page.locator('.recenter-label')).toBeHidden();
+    for (const selector of ['#prompt', '#legend', '.panel']) {
+      const other = await page.locator(selector).boundingBox();
+      const apart = box.x + box.width <= other.x || other.x + other.width <= box.x
+        || box.y + box.height <= other.y || other.y + other.height <= box.y;
+      expect(apart, selector).toBe(true);
+    }
+    const asked = await view(page);
+    await page.evaluate(() => document.querySelector('#map').mapTestApi.lookAt([-150, -60], 7));
+    await page.tap('#recenter-btn');
+    expect((await view(page)).k).toBeCloseTo(asked.k, 5);
   });
 
   test('the filters start closed and slide over the globe', async ({ page }) => {
