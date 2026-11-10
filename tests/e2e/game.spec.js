@@ -680,6 +680,16 @@ test('the target on the icon-only "Zum Land" button sits in its middle and is dr
   await expectTargetCentered(page);
 });
 
+test('a wrong answer names the country with its article', async ({ page }) => {
+  await open(page);
+  const europe = await page.evaluate(async () => (await import('/data/countries.js')).COUNTRIES.filter((c) => c.continent === 'EU').map((c) => c.code));
+  // Above the score limit every other country leaves the rotation.
+  await seed(page, Object.fromEntries(europe.filter((code) => code !== 'NL').map((code) => [code, entry(10)])), { regions: ['EU'], maxScore: 9 });
+  expect(await targetCode(page)).toBe('NL');
+  await page.click('#dont-know-btn');
+  await expect(page.locator('#feedback')).toContainText('Das sind die Niederlande');
+});
+
 test('the globe zooms and rotates', async ({ page }) => {
   await open(page);
   await page.evaluate(() => document.querySelector('#map').mapTestApi.lookAt([0, 0], 1));

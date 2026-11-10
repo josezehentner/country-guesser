@@ -1,6 +1,7 @@
 // "Länder benennen": a country is marked on the globe and the player types its name.
 import { enableArrowKeys } from './answer-keys.js';
 import { byId, startGame } from './game.js';
+import { countryPhrase, verb } from './grammar.js';
 import { isCorrectAnswer } from './quiz.js';
 
 const form = byId('answer-form');
@@ -11,8 +12,8 @@ const dontKnowButton = byId('dont-know-btn');
 const focusInput = () => input.focus({ preventScroll: true });
 
 function answer(game, correct, wrongVerdict) {
-  const { name } = game.current;
-  game.finish(correct, correct ? 'Richtig!' : wrongVerdict, correct ? name : `Das ist ${name}`);
+  const { code, name } = game.current;
+  game.finish(correct, correct ? 'Richtig!' : wrongVerdict, correct ? name : `Das ${verb(code, 'ist', 'sind')} ${countryPhrase(code)}`);
 }
 
 startGame({

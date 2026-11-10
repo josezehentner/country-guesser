@@ -1,14 +1,19 @@
 // "Länder finden": a country is named and the player clicks it on the globe.
-import { COUNTRY_BY_CODE } from '../data/countries.js';
 import { byId, startGame } from './game.js';
+import { capitalize, countryParts, countryPhrase, verb } from './grammar.js';
 
 const prompt = byId('prompt');
 const promptName = byId('prompt-name');
+const promptVerb = byId('prompt-verb');
 const nextButton = byId('next-btn');
 const dontKnowButton = byId('dont-know-btn');
 
 // While a question is open the focus rests on the prompt, not on a button: an Enter
 // meant to skip the pause must not answer the next question with "Weiß ich nicht".
+// "Die Niederlande liegen hier"
+const liesHere = (code) => `${capitalize(countryPhrase(code))} ${verb(code, 'liegt', 'liegen')} hier`;
+const isThere = (code) => `Das ${verb(code, 'ist', 'sind')} ${countryPhrase(code)}`;
+
 const focusNext = () => (nextButton.disabled ? prompt : nextButton).focus({ preventScroll: true });
 
 startGame({
@@ -23,14 +28,18 @@ startGame({
     });
     dontKnowButton.addEventListener('click', () => {
       if (game.isAnswered) return;
-      game.finish(false, 'Schade!', `${game.current.name} liegt hier`);
+      game.finish(false, 'Schade!', liesHere(game.current.code));
       game.map.highlight(game.current.code);
     });
   },
 
   // The globe stays where the player left it: finding the country is the task.
   ask(game) {
-    promptName.textContent = game.current.name;
+    // "Wo liegen die **Niederlande**?": the name in bold, the article before it.
+    const { code } = game.current;
+    const { article, name } = countryParts(code);
+    promptVerb.textContent = [verb(code, 'liegt', 'liegen'), article].filter(Boolean).join(' ');
+    promptName.textContent = name;
     nextButton.disabled = true;
     dontKnowButton.disabled = false;
     game.map.clearHighlight();
@@ -61,7 +70,7 @@ startGame({
       game.setFeedback('Dort ist kein Land aus dem Quiz.', 'hint');
       return;
     }
-    game.finish(false, 'Falsch!', `Das ist ${COUNTRY_BY_CODE.get(clicked).name}. ${name} liegt hier`);
+    game.finish(false, 'Falsch!', `${isThere(clicked)}. ${liesHere(code)}`);
     game.map.highlight(code);
   },
 

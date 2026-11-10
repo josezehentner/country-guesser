@@ -4,6 +4,7 @@
 import { COUNTRY_BY_CODE } from '../data/countries.js';
 import { enableArrowKeys } from './answer-keys.js';
 import { byId, startGame } from './game.js';
+import { capitalize, countryParts, countryPhrase, verb } from './grammar.js';
 import { addGuess, bestRoute, createRound, guessesLeft, judgeGuess, pickRound, ROUTE_COUNTRIES } from './route.js';
 
 const form = byId('answer-form');
@@ -24,6 +25,8 @@ const NEVER = 'var(--never)';
 const EMPTY_ROUNDS = { played: 0, solved: 0, perfect: 0, streak: 0, bestStreak: 0 };
 
 const nameOf = (code) => COUNTRY_BY_CODE.get(code).name;
+// At the start of a sentence, with its article: "Die Schweiz", "Polen".
+const subject = (code) => capitalize(countryPhrase(code));
 const focusInput = () => input.focus({ preventScroll: true });
 const plural = (count, one, many) => `${count} ${count === 1 ? one : many}`;
 
@@ -94,9 +97,9 @@ function giveUp(game, verdict) {
 
 const HINTS = {
   unknown: () => 'Kein Land mit diesem Namen.',
-  ambiguous: ({ codes }) => `Meinst du ${codes.map(nameOf).join(' oder ')}?`,
-  endpoint: ({ code }, round) => `${nameOf(code)} ist ${code === round.start ? 'der Start' : 'das Ziel'}.`,
-  repeated: ({ code }) => `${nameOf(code)} hast du schon genannt.`,
+  ambiguous: ({ codes }) => `Meinst du ${codes.map((code) => countryPhrase(code, 'accusative')).join(' oder ')}?`,
+  endpoint: ({ code }, round) => `${subject(code)} ${verb(code, 'ist', 'sind')} ${code === round.start ? 'der Start' : 'das Ziel'}.`,
+  repeated: ({ code }) => `${capitalize(countryPhrase(code, 'accusative'))} hast du schon genannt.`,
 };
 
 function guess(game, text) {
@@ -122,7 +125,7 @@ function guess(game, text) {
     giveUp(game, 'Vorbei!');
     return;
   } else {
-    game.setFeedback(kind === 'step' ? `${nameOf(code)} liegt auf einem kürzesten Weg.` : `${nameOf(code)} ist ein Umweg.`, kind === 'step' ? 'good' : 'hint');
+    game.setFeedback(kind === 'step' ? `${subject(code)} ${verb(code, 'liegt', 'liegen')} auf einem kürzesten Weg.` : `${subject(code)} ${verb(code, 'ist', 'sind')} ein Umweg.`, kind === 'step' ? 'good' : 'hint');
   }
   renderGuesses(round);
   renderStatus(round);
@@ -137,8 +140,13 @@ function ask(game) {
   paint(game, round.start, 'start');
   paint(game, round.end, 'end');
   game.map.setRoute(round.start, round.end);
-  byId('route-start').textContent = nameOf(round.start);
-  byId('route-end').textContent = nameOf(round.end);
+  // "Von der **Schweiz** in die **Niederlande**", "Von **Polen** nach **Spanien**"
+  const from = countryParts(round.start, 'dative');
+  const to = countryParts(round.end, 'accusative');
+  byId('route-from').textContent = from.article ? `Von ${from.article}` : 'Von';
+  byId('route-start').textContent = from.name;
+  byId('route-to').textContent = to.article ? `in ${to.article}` : 'nach';
+  byId('route-end').textContent = to.name;
   renderGuesses(round);
   renderStatus(round);
   input.value = '';

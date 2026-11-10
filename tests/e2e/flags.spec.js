@@ -20,7 +20,9 @@ async function country(page) {
   const code = await flagCode(page);
   return page.evaluate(async (c) => {
     const { COUNTRY_BY_CODE } = await import('/data/countries.js');
-    return { code: c, name: COUNTRY_BY_CODE.get(c).name };
+    const { countryPhrase, verb } = await import('/src/grammar.js');
+    // How a sentence names it: "Das ist der Tschad", "Das sind die Niederlande".
+    return { code: c, name: COUNTRY_BY_CODE.get(c).name, isThere: `Das ${verb(c, 'ist', 'sind')} ${countryPhrase(c)}` };
   }, code);
 }
 
@@ -138,10 +140,10 @@ test('a wrong answer or "Weiß ich nicht" starts at 3 and shows the country unti
   await open(page);
   for (const answer of [() => page.fill('#answer-input', 'Atlantis').then(() => page.keyboard.press('Enter')),
     () => page.click('#dont-know-btn')]) {
-    const { code, name } = await country(page);
+    const { code, isThere } = await country(page);
     await answer();
     await expect(page.locator('#feedback')).toHaveClass(/bad/);
-    await expect(page.locator('#feedback')).toContainText(`Das ist ${name}`);
+    await expect(page.locator('#feedback')).toContainText(isThere);
     await expect(page.locator('#submit-btn')).toHaveText('Weiter');
     expect(await targetCode(page)).toBe(code);
     expect((await stored(page)).countries[code]).toMatchObject({ score: 3, seen: 1, correct: 0 });
@@ -161,6 +163,16 @@ test('for flags that look the same, either country counts and both are named', a
   await page.keyboard.press('Enter');
   await expect(page.locator('#feedback')).toHaveClass(/good/);
   await expect(page.locator('#feedback')).toContainText('Monaco (gleiche Flagge wie Indonesien)');
+});
+
+test('a wrong answer names the country and its lookalike with their articles', async ({ page }) => {
+  await open(page);
+  const africa = await page.evaluate(async () => (await import('/data/countries.js')).COUNTRIES.filter((c) => c.continent === 'AF').map((c) => c.code));
+  // Above the score limit every other country leaves the rotation.
+  await seed(page, Object.fromEntries(africa.filter((code) => code !== 'TD').map((code) => [code, entry(10)])), { regions: ['AF'], maxScore: 9 });
+  expect(await flagCode(page)).toBe('TD');
+  await page.click('#dont-know-btn');
+  await expect(page.locator('#feedback')).toContainText('Das ist der Tschad (gleiche Flagge wie Rumänien)');
 });
 
 test('keeps its own progress and filters, apart from the other modes', async ({ page }) => {

@@ -7,13 +7,22 @@ const entry = (score) => ({ score, seen: 12, correct: 11, lastSeen: '2026-10-29T
 const mapApi = (page, method, ...args) =>
   page.evaluate(([m, a]) => document.querySelector('#map').mapTestApi[m](...a), [method, args]);
 
-// The asked country is only named, so the tests look its code up by that name.
+// The asked country is only named, so the tests look its code up by that name,
+// which follows its article: "Wo liegen die **Vereinigten Staaten**?"
 function askedCode(page) {
   return page.evaluate(async () => {
     const name = document.querySelector('#prompt-name').textContent;
-    return (await import('/data/countries.js')).COUNTRIES.find((country) => country.name === name)?.code ?? null;
+    const { countryParts } = await import('/src/grammar.js');
+    return (await import('/data/countries.js')).COUNTRIES.find((country) => countryParts(country.code).name === name)?.code ?? null;
   });
 }
+
+// "Die Schweiz liegt hier", "Polen liegt hier", "Die Niederlande liegen hier"
+const liesHere = (page, code) =>
+  page.evaluate(async (c) => {
+    const { capitalize, countryPhrase, verb } = await import('/src/grammar.js');
+    return `${capitalize(countryPhrase(c))} ${verb(c, 'liegt', 'liegen')} hier`;
+  }, code);
 
 const nameOf = (page, code) =>
   page.evaluate(async (c) => (await import('/data/countries.js')).COUNTRY_BY_CODE.get(c).name, code);
@@ -65,7 +74,7 @@ test('loads without console errors and names a country without marking it', asyn
   page.on('pageerror', (error) => problems.push(error.message));
   await open(page);
   await expect(page.locator('h1')).toHaveText('Länder finden');
-  await expect(page.locator('#prompt')).toHaveText(/^Wo liegt .+\?$/);
+  await expect(page.locator('#prompt')).toHaveText(/^Wo (liegt|liegen) .+\?$/);
   expect(await mapApi(page, 'targetCode')).toBeUndefined();
   await expect(page.locator('#next-btn')).toBeDisabled();
   await expect(page.locator('#stat-never')).toHaveText('250');
@@ -193,7 +202,7 @@ test('clicking another country is wrong, names both and turns to the right one',
   const other = await otherCode(page);
   await clickCountry(page, other);
   await expect(page.locator('#feedback')).toHaveClass(/bad/);
-  await expect(page.locator('#feedback')).toHaveText(`Falsch! Das ist ${await nameOf(page, other)}. ${await nameOf(page, code)} liegt hier 3/10`);
+  await expect(page.locator('#feedback')).toHaveText(`Falsch! Das ist ${await nameOf(page, other)}. ${await liesHere(page, code)} 3/10`);
   expect((await stored(page)).countries).toEqual({ [code]: expect.objectContaining({ score: 3, seen: 1, correct: 0 }) });
   expect(await mapApi(page, 'targetCode')).toBe(code);
   expect((await mapApi(page, 'view')).k).toBeLessThanOrEqual(3);
@@ -213,7 +222,7 @@ test('"Weiß ich nicht" counts as wrong and shows the country', async ({ page })
   await open(page);
   const code = await askedCode(page);
   await page.click('#dont-know-btn');
-  await expect(page.locator('#feedback')).toHaveText(`Schade! ${await nameOf(page, code)} liegt hier 3/10`);
+  await expect(page.locator('#feedback')).toHaveText(`Schade! ${await liesHere(page, code)} 3/10`);
   expect((await stored(page)).countries[code]).toMatchObject({ score: 3, correct: 0 });
   expect(await mapApi(page, 'targetCode')).toBe(code);
   await expect(page.locator('#dont-know-btn')).toBeDisabled();
@@ -256,6 +265,18 @@ test('hovering an asked country never names it, not even after the answer', asyn
     await expect(page.getByText(`${name}: 7/10`)).toHaveCount(0);
     await expect(page.locator('#map-wrap')).not.toContainText(`${name}:`);
   }
+});
+
+test('the question and the answer name a country with its article', async ({ page }) => {
+  await open(page);
+  const europe = await page.evaluate(async () => (await import('/data/countries.js')).COUNTRIES.filter((c) => c.continent === 'EU').map((c) => c.code));
+  // Above the score limit every other country leaves the rotation.
+  await seed(page, Object.fromEntries(europe.filter((code) => code !== 'NL').map((code) => [code, entry(10)])), { regions: ['EU'], maxScore: 9 });
+  expect(await askedCode(page)).toBe('NL');
+  await expect(page.locator('#prompt')).toHaveText('Wo liegen die Niederlande?');
+  await expect(page.locator('#prompt-name')).toHaveText('Niederlande');
+  await clickCountry(page, 'CH');
+  await expect(page.locator('#feedback')).toHaveText('Falsch! Das ist die Schweiz. Die Niederlande liegen hier 3/10');
 });
 
 test('a click right next to a small country counts as a hit', async ({ page }) => {
@@ -342,10 +363,14 @@ test.describe('on a phone', () => {
     await open(page);
     const boxes = await page.evaluate(async () => {
       const { COUNTRIES } = await import('/data/countries.js');
+      const { countryParts, verb } = await import('/src/grammar.js');
+      const lead = document.querySelector('#prompt-verb');
       const name = document.querySelector('#prompt-name');
       const caption = document.querySelector('#prompt');
-      return COUNTRIES.map((country) => {
-        name.textContent = country.name;
+      return COUNTRIES.map(({ code }) => {
+        const { article, name: text } = countryParts(code);
+        lead.textContent = [verb(code, 'liegt', 'liegen'), article].filter(Boolean).join(' ');
+        name.textContent = text;
         const { left, right, height } = caption.getBoundingClientRect();
         return { left, right, height };
       });
