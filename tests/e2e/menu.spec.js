@@ -99,6 +99,20 @@ test('every card is a link to a mode', async ({ page }) => {
   await expect(page.locator('a.mode-card')).toHaveCount(6);
 });
 
+test.describe('on a desktop screen', () => {
+  test.use({ viewport: { width: 1280, height: 800 } });
+
+  test('the menu shows four cards side by side', async ({ page }) => {
+    await page.goto('/');
+    const tops = await page.locator('.mode-card').evaluateAll(
+      (cards) => cards.map((card) => Math.round(card.getBoundingClientRect().top)),
+    );
+    expect(new Set(tops.slice(0, 4)).size).toBe(1);
+    expect(tops[4]).toBeGreaterThan(tops[0]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  });
+});
+
 test.describe('on a phone', () => {
   test.use({ viewport: { width: 375, height: 667 }, hasTouch: true });
 
