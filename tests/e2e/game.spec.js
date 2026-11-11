@@ -189,11 +189,13 @@ test('one Enter checks the answer, and the next country follows by itself', asyn
 test('a wrong answer keeps the right name until the player moves on', async ({ page }) => {
   await open(page);
   const code = await targetCode(page);
-  const name = await targetName(page);
+  // The feedback names the country in a sentence, so an adjective in its name is
+  // declined: "Das sind die Amerikanischen Überseeinseln".
+  const phrase = await page.evaluate(async (c) => (await import('/src/grammar.js')).countryPhrase(c), code);
   await page.click('#dont-know-btn');
   await page.waitForTimeout(1500);
   expect(await targetCode(page)).toBe(code);
-  await expect(page.locator('#feedback')).toContainText(name);
+  await expect(page.locator('#feedback')).toContainText(phrase);
   await page.keyboard.press('Enter');
   expect(await targetCode(page)).not.toBe(code);
 });
