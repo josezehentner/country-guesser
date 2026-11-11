@@ -96,7 +96,7 @@ The flags are SVG files in `vendor/flags/`, from flag-icons (see `vendor/NOTICE.
 
 ### Mode "Grenzgänger"
 
-1. The game picks a **start** and an **end** country at random. On the shortest route over land borders at least **three countries** lie between them; there is **no maximum**, so Portugal to China is a round too. The question box says "Von **Portugal** nach **China**" with the start on green and the end on red, and below it how many guesses are left and how many countries lie between at least.
+1. The game picks a **start** and an **end** country at random. On the shortest route over land borders at least **three countries** lie between them; there is **no maximum**, so Portugal to China is a round too. The question box says "Von **Portugal** nach **China**" ("Von der **Schweiz** in die **Niederlande**") with the start on green and the end on red, and below it how many guesses are left and how many countries lie between at least.
 2. The globe shows the land **without borders**: one surface with coasts and large lakes only, so it gives no route away. Start and end are filled and outlined in their colors. The land is one fill, and only the **coastlines** get a line, as thin as the borders in the other modes, so the globe turns as smoothly as there. `src/coasts.js` finds them when the page loads: pieces of outline that no other country shares points with. Around the small, enlarged entries (e.g. San Marino, Vatican City, Monaco), whose outlines overlap their neighbors', a piece only counts as coast if there is no land on it or 2 km beyond it.
 3. If start and end fit on the front of the globe together (within 60° of its center), the globe shows both. Otherwise it shows the **start first**, and after a moment **flies to the end**, zooming out to the whole globe on the way and in again at the end. Touching the globe stops the flight. With reduced motion it jumps instead. A "Start & Ziel" button (⌖, like "Zum Land" in the other modes) shows them again.
 4. The player **types countries** in any order, with the names, aliases and tolerance of "Länder benennen". Each new country shows with its borders: in **yellow** if it lies on a shortest route, in **gray** as a detour. Both count as a guess, and the globe turns a named country into view if it is not. The named countries are listed as chips in their colors below the question box.
@@ -121,6 +121,12 @@ Not purely random, but weighted so weaker countries come up more often:
 - Accept **alternative names** per country (e.g. "USA", "Vereinigte Staaten", "Amerika"; "Großbritannien", "Vereinigtes Königreich", "UK"; "Tschechien", "Tschechische Republik"; "Elfenbeinküste", "Côte d'Ivoire").
 - Tolerate small typos (e.g. Levenshtein distance ≤ 1 for short names, ≤ 2 for longer names), but only if the input does not thereby match the name of a **different** country.
 - German base names can come from `Intl.DisplayNames(['de'], { type: 'region' })` using ISO 3166-1 alpha-2 codes. Maintain alternative names in a separate file `data/aliases.js`.
+
+### Country names in sentences
+
+Where a question or message puts a country name into a sentence, it takes its German **article** in the right case, and verbs agree with plural names: "Wo liegt die Schweiz?", "Wo liegen die Niederlande?", "Das ist der Tschad", "Die Niederlande liegen hier", "Von der Schweiz in die Niederlande", "Meinst du den Iran?". After the article an adjective takes the weak ending ("die Vereinigten Staaten", "dem Vereinigten Königreich"). Countries without an article stay as they are ("Wo liegt Frankreich?", "Von Portugal nach China"); a route leads "nach" those and "in" the others. In the question the article stays out of the bold name ("Wo liegen die **Niederlande**?"). Plain labels and lists keep the bare name: the right answer ("Richtig! Schweiz"), "Schweiz: Bern" and "Gefehlt haben: Schweiz, Iran".
+
+`data/articles.js` lists every country that takes an article, with its gender (feminine, masculine, neuter or plural) and, where they differ, its name after the article and in the dative. `src/grammar.js` builds the phrases from it.
 
 ---
 
@@ -261,6 +267,7 @@ Local testing: because of ES modules, serve via a local web server: `npm start`,
 - [ ] Large lakes such as Lake Victoria, Lake Michigan and Lake Nicaragua are water on the globe, and a click into one is no answer.
 - [ ] Small countries are plain shapes without rings, and the globe turns to the asked country.
 - [ ] "Zum Land" turns the globe back to the marked country in every mode, and in the find modes and "Flaggen erkennen" it only shows after the answer.
+- [ ] Country names in questions and messages take their article and verbs agree with plural names ("Wo liegen die Niederlande?", "Das ist der Tschad", "Von der Schweiz in die Niederlande"), while plain labels keep the bare name.
 - [ ] "Grenzgänger" picks start and end with at least three countries between and no maximum, shows the globe without borders, shows start and end together or one after the other with a smooth flight, accepts countries in any order, tells steps from detours, ends after the fewest countries plus four guesses, and shows what was missing.
 - [ ] The globe turns and zooms smoothly, and borders stay sharp at every zoom level.
 - [ ] In the modes with an answer field the arrow keys move between field and buttons, and inside the text they still move the cursor.

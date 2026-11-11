@@ -4,6 +4,7 @@ import { COUNTRY_BY_CODE } from '../data/countries.js';
 import { FLAG_COUNTRIES, flagUrl, lookalikesOf } from '../data/flags.js';
 import { enableArrowKeys } from './answer-keys.js';
 import { byId, startGame } from './game.js';
+import { countryPhrase, verb } from './grammar.js';
 import { isCorrectFlag } from './quiz.js';
 
 const form = byId('answer-form');
@@ -14,16 +15,18 @@ const flag = byId('flag');
 
 const focusInput = () => input.focus({ preventScroll: true });
 
-// Names the country, and any country whose flag looks the same.
-function solution(code) {
-  const { name } = COUNTRY_BY_CODE.get(code);
-  const others = lookalikesOf(code).map((other) => COUNTRY_BY_CODE.get(other).name);
+// Names the country, and any country whose flag looks the same. In a sentence the
+// country takes its article: "Das ist der Tschad (gleiche Flagge wie Rumänien)".
+function solution(code, inSentence) {
+  const name = inSentence ? countryPhrase(code) : COUNTRY_BY_CODE.get(code).name;
+  const others = lookalikesOf(code).map((other) => countryPhrase(other));
   return others.length ? `${name} (gleiche Flagge wie ${others.join(', ')})` : name;
 }
 
 function answer(game, correct, wrongVerdict) {
-  const text = solution(game.current.code);
-  game.finish(correct, correct ? 'Richtig!' : wrongVerdict, correct ? text : `Das ist ${text}`);
+  const { code } = game.current;
+  const text = correct ? solution(code, false) : `Das ${verb(code, 'ist', 'sind')} ${solution(code, true)}`;
+  game.finish(correct, correct ? 'Richtig!' : wrongVerdict, text);
 }
 
 startGame({
