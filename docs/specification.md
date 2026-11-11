@@ -34,6 +34,8 @@ Each mode keeps its own progress: recognizing a country, finding it, knowing its
 
 Card pictures are drawn from the real map data by `tools/mode-images.js`.
 
+On a desktop screen (at least 1024 px wide) four cards stand side by side; narrower screens show as many as fit, down to one on a phone.
+
 Behind the menu is a comic-style world map: light blue water with halftone dots and waves, light green land with thick ink outlines and an offset shadow, no country borders. It is drawn from the map data by `tools/menu-background.js` and dimmed in dark mode. The centered title uses the comic font Bangers (stored under `fonts/`) in the map's land green with an ink outline and the land's shadow. There is no subtitle.
 
 ---
