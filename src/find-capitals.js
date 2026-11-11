@@ -2,6 +2,7 @@
 import { CAPITALS, capitalLabel } from '../data/capitals.js';
 import { COUNTRIES, COUNTRY_BY_CODE } from '../data/countries.js';
 import { byId, startGame } from './game.js';
+import { countryPhrase, verb } from './grammar.js';
 import { sharesCapital } from './quiz.js';
 
 const prompt = byId('prompt');
@@ -82,7 +83,7 @@ startGame({
       game.setFeedback('Dort ist kein Land aus dem Quiz.', 'hint');
       return;
     }
-    game.finish(false, 'Falsch!', `Das ist ${nameOf(clicked)}. ${CAPITALS[code].name} liegt hier: ${name}`);
+    game.finish(false, 'Falsch!', `Das ${verb(clicked, 'ist', 'sind')} ${countryPhrase(clicked)}. ${CAPITALS[code].name} liegt hier: ${name}`);
     game.map.highlight(code);
   },
 

@@ -40,7 +40,7 @@
     <canvas id="map-target" aria-hidden="true"></canvas>
     <button type="button" id="recenter-btn" class="recenter" aria-label="Start und Ziel zeigen" title="Start und Ziel zeigen" hidden><svg class="recenter-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="7"/><circle class="recenter-dot" cx="12" cy="12" r="2"/><path d="M12 1.5v4.5M12 18v4.5M1.5 12H6M18 12h4.5"/></svg><span class="recenter-label">Start &amp; Ziel</span></button>
     <div class="caption route-caption" id="prompt">
-      <p class="route-ends">Von <strong id="route-start" class="route-end-name start"></strong> nach <strong id="route-end" class="route-end-name end"></strong></p>
+      <p class="route-ends"><span id="route-from">Von</span> <strong id="route-start" class="route-end-name start"></strong> <span id="route-to">nach</span> <strong id="route-end" class="route-end-name end"></strong></p>
       <p class="route-status" id="route-status"></p>
     </div>
     <ol class="route-guesses" id="route-guesses" aria-label="Genannte Länder"></ol>

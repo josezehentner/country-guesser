@@ -150,6 +150,32 @@ test('naming the countries in between in any order solves the round on the short
   expect(await mapApi(page, 'colorOf', 'ES')).toBe(await mapApi(page, 'colorOf', 'IT'));
 });
 
+test('countries with an article keep it in the question and the hints', async ({ page }) => {
+  await open(page);
+  await play(page, 'CH', 'NL');
+  await expect(page.locator('.route-ends')).toHaveText('Von der Schweiz in die Niederlande');
+  await expect(page.locator('#route-start')).toHaveText('Schweiz');
+  await expect(page.locator('#route-end')).toHaveText('Niederlande');
+  const cases = [
+    ['Schweiz', 'Die Schweiz ist der Start.'],
+    ['Niederlande', 'Die Niederlande sind das Ziel.'],
+    ['Kongo', 'Meinst du die Demokratische Republik Kongo oder die Republik Kongo?'],
+  ];
+  for (const [name, hint] of cases) {
+    await guess(page, name);
+    await expect(page.locator('#feedback')).toContainText(hint);
+  }
+  await play(page, 'PT', 'IR');
+  await expect(page.locator('.route-ends')).toHaveText('Von Portugal in den Iran');
+  await play(page, 'CH', 'UA');
+  await guess(page, 'Slowakei');
+  await expect(page.locator('#feedback')).toContainText('Die Slowakei liegt auf einem kürzesten Weg.');
+  await guess(page, 'Slowakei');
+  await expect(page.locator('#feedback')).toContainText('Die Slowakei hast du schon genannt.');
+  await guess(page, 'Niederlande');
+  await expect(page.locator('#feedback')).toContainText('Die Niederlande sind ein Umweg.');
+});
+
 test('a detour is gray and counts as a guess, and a longer way still solves the round', async ({ page }) => {
   await open(page);
   await play(page, 'PT', 'PL');
