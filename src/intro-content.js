@@ -134,7 +134,7 @@ export const INTROS = {
         heading: 'Bedienung',
         items: [
           'Ziehen dreht den Globus, Mausrad oder zwei Finger zoomen.',
-          '⌖ „Start & Ziel“ oben rechts zeigt Start und Ziel noch einmal.',
+          '⌖ „Ziel & Start“ oben rechts zeigt Ziel und Start noch einmal.',
           'Die Zahlen oben zählen deine gelösten Runden, die auf einem kürzesten Weg gelösten und deine Serie. Der Balken zeigt den Anteil gelöster Runden.',
           '⚙ sichert, lädt oder löscht deinen Fortschritt. ? öffnet diese Anleitung wieder.',
         ],

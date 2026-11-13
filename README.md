@@ -73,7 +73,7 @@ The slider beside the color legend on the right leaves out countries you already
 | Turn the globe | drag | swipe |
 | Zoom | mouse wheel | pinch |
 | Back to the marked country | "Zum Land" at the top right | ⌖ at the right edge |
-| Show start and end again ("Grenzgänger") | "Start & Ziel" at the top right | ⌖ at the right edge |
+| Show end and start again ("Grenzgänger") | "Ziel & Start" at the top right | ⌖ at the right edge |
 | Answer (name, capital) | type and press Enter | type and tap "Go" |
 | Move between the answer field and its buttons | ← and → | tap |
 | Answer (find a country or capital) | click the country | tap the country |

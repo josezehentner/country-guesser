@@ -30,13 +30,13 @@ const TARGET_VIEW_SHARE = 0.2;
 const ZOOM_DURATION_MS = 750;
 // In "Grenzgänger" start and end are shown together when they fit on the front of
 // the globe, within ROUTE_FIT_ANGLE of its center. Otherwise the globe shows the
-// start for ROUTE_HOLD_MS, then flies to the end in ROUTE_FLIGHT_MS, zooming out on
+// end for ROUTE_HOLD_MS, then flies to the start in ROUTE_FLIGHT_MS, zooming out on
 // the way.
 const ROUTE_FIT_ANGLE = 60 * (Math.PI / 180);
 const ROUTE_VIEW_SHARE = 0.9;
 const MAX_ROUTE_ZOOM = 6;
-const ROUTE_HOLD_MS = 800;
-const ROUTE_FLIGHT_MS = 1100;
+const ROUTE_HOLD_MS = 250;
+const ROUTE_FLIGHT_MS = 850;
 // Without borders the land is one fill, and only the coastlines get a line, as thin
 // as the borders elsewhere. Thick lines along every border, half covered by the
 // fill again, cost three times the drawing time, and even a coast of 1.2 px twice.
@@ -534,7 +534,7 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
   }
 
   // Shows start and end of a route: together if they fit on the front of the globe,
-  // or else the start first and then a flight to the end.
+  // or else the end first and then a flight to the start, where the player begins.
   function showRoute(animate = true) {
     if (!route) return;
     const [start, end] = [route.start, route.end].map((code) => mainCap(shapeByCode.get(code)));
@@ -543,13 +543,13 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
       viewTo(both.center, fitZoom(both, MAX_ROUTE_ZOOM, ROUTE_VIEW_SHARE), animate);
       return;
     }
-    viewTo(start.center, fitZoom(start, MAX_AUTO_ZOOM), animate);
+    viewTo(end.center, fitZoom(end, MAX_AUTO_ZOOM), animate);
     // Only this view's animation is stopped by a new one; the timer runs on.
     const hold = () => {
-      const endK = fitZoom(end, MAX_AUTO_ZOOM);
+      const startK = fitZoom(start, MAX_AUTO_ZOOM);
       // Halfway there the whole globe is in view.
-      const dip = Math.max(0, (Math.log(k) + Math.log(endK)) / 2);
-      viewTo(end.center, endK, true, { durationMs: ROUTE_FLIGHT_MS, dip, easing: glide, rough: true });
+      const dip = Math.max(0, (Math.log(k) + Math.log(startK)) / 2);
+      viewTo(start.center, startK, true, { durationMs: ROUTE_FLIGHT_MS, dip, easing: glide, rough: true });
     };
     clearTimeout(tourTimer);
     tourTimer = setTimeout(hold, animate && !reducedMotion() ? ZOOM_DURATION_MS + ROUTE_HOLD_MS : ROUTE_HOLD_MS);
@@ -731,7 +731,7 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     targetCode: () => targets[0]?.code,
     targetCodes: () => targets.map(({ code }) => code),
     hidesBorders: () => hideBorders,
-    // True while the globe still shows the start and is about to fly to the end.
+    // True while the globe still shows the end and is about to fly to the start.
     touring: () => Boolean(tourTimer),
     // True while the flight to the end draws coarser borders.
     roughDetail: () => coarse,
