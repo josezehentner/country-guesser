@@ -28,6 +28,13 @@ async function targetName(page) {
   return page.evaluate(async (c) => (await import('/data/countries.js')).COUNTRY_BY_CODE.get(c).name, code);
 }
 
+// How the feedback names the target in a sentence, with its article and declined
+// adjectives: "die Amerikanischen Überseeinseln".
+async function targetPhrase(page) {
+  const code = await targetCode(page);
+  return page.evaluate(async (c) => (await import('/src/grammar.js')).countryPhrase(c), code);
+}
+
 function stored(page) {
   return page.evaluate((key) => JSON.parse(localStorage.getItem(key)), KEY);
 }
@@ -165,10 +172,10 @@ test('first wrong answer starts at 3, reveals the name, and "Weiß ich nicht" co
   for (const answer of [() => page.fill('#answer-input', 'Atlantis').then(() => page.keyboard.press('Enter')),
     () => page.click('#dont-know-btn')]) {
     const code = await targetCode(page);
-    const name = await targetName(page);
+    const phrase = await targetPhrase(page);
     await answer();
     await expect(page.locator('#feedback')).toHaveClass(/bad/);
-    await expect(page.locator('#feedback')).toContainText(name);
+    await expect(page.locator('#feedback')).toContainText(phrase);
     expect((await stored(page)).countries[code]).toMatchObject({ score: 3, seen: 1, correct: 0 });
     await page.keyboard.press('Enter');
   }
@@ -189,9 +196,7 @@ test('one Enter checks the answer, and the next country follows by itself', asyn
 test('a wrong answer keeps the right name until the player moves on', async ({ page }) => {
   await open(page);
   const code = await targetCode(page);
-  // The feedback names the country in a sentence, so an adjective in its name is
-  // declined: "Das sind die Amerikanischen Überseeinseln".
-  const phrase = await page.evaluate(async (c) => (await import('/src/grammar.js')).countryPhrase(c), code);
+  const phrase = await targetPhrase(page);
   await page.click('#dont-know-btn');
   await page.waitForTimeout(1500);
   expect(await targetCode(page)).toBe(code);

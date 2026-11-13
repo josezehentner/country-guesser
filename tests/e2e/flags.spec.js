@@ -48,14 +48,6 @@ async function keepOnly(page, group, codes) {
   }
 }
 
-async function skipUntil(page, code) {
-  for (let i = 0; i < 60 && (await flagCode(page)) !== code; i++) {
-    await page.click('#dont-know-btn');
-    await page.keyboard.press('Enter');
-  }
-  expect(await flagCode(page)).toBe(code);
-}
-
 test('loads without console errors, external requests or policy violations', async ({ page, baseURL }) => {
   const problems = [];
   page.on('console', (message) => { if (message.type() === 'error') problems.push(message.text()); });
@@ -156,9 +148,10 @@ test('a wrong answer or "Weiß ich nicht" starts at 3 and shows the country unti
 
 test('for flags that look the same, either country counts and both are named', async ({ page }) => {
   await open(page);
-  await keepOnly(page, 'regions', ['EU']);
-  await keepOnly(page, 'levels', ['medium']);
-  await skipUntil(page, 'MC');
+  const europe = await page.evaluate(async () => (await import('/data/countries.js')).COUNTRIES.filter((c) => c.continent === 'EU').map((c) => c.code));
+  // Above the score limit every other country leaves the rotation, so Monaco comes up at once.
+  await seed(page, Object.fromEntries(europe.filter((code) => code !== 'MC').map((code) => [code, entry(10)])), { regions: ['EU'], maxScore: 9 });
+  expect(await flagCode(page)).toBe('MC');
   await page.fill('#answer-input', 'Indonesien');
   await page.keyboard.press('Enter');
   await expect(page.locator('#feedback')).toHaveClass(/good/);
