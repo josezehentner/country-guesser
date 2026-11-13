@@ -26,6 +26,7 @@ const nameOf = (code) => COUNTRY_BY_CODE.get(code).name;
 const focusNext = () => (nextButton.disabled ? prompt : nextButton).focus({ preventScroll: true });
 
 startGame({
+  intro: 'find-capitals',
   storageKey: 'countryquiz.capitals-find.v1',
   exportPrefix: 'countryquiz-capitals-find-progress',
   countries,

@@ -38,6 +38,8 @@ Instead of scores per country, this mode counts your solved rounds, the ones sol
 
 Every mode keeps separate progress: recognizing a country, finding it, knowing its capital, placing a capital, knowing its flag and knowing its neighbors are different skills.
 
+Every mode starts with a short guide the first time you open it: the rules, the filters on the left, the scale on the right and what the colors mean. The **?** button at the top opens it again.
+
 ## How your progress works
 
 Every country has a score from 0 to 10, and the globe colors it to match:

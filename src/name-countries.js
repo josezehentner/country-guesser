@@ -17,6 +17,7 @@ function answer(game, correct, wrongVerdict) {
 }
 
 startGame({
+  intro: 'name',
   storageKey: 'countryquiz.v1',
   exportPrefix: 'countryquiz-progress',
   // Short, so one key press is enough to answer and move on.

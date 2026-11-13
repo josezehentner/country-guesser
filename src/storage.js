@@ -121,3 +121,30 @@ export function exportProgress(progress, filePrefix = 'countryquiz-progress') {
   link.remove();
   URL.revokeObjectURL(url);
 }
+
+// Which modes' guides the player has closed, so each opens by itself only once.
+// Kept apart from the progress, so a reset or import does not bring them back.
+export const INTRO_KEY = 'countryquiz.intro.v1';
+
+function seenIntros() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(INTRO_KEY));
+    return Array.isArray(raw?.seen) ? raw.seen.filter((mode) => typeof mode === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+export const hasSeenIntro = (mode) => seenIntros().includes(mode);
+
+// Returns false if it could not be remembered.
+export function markIntroSeen(mode) {
+  const seen = seenIntros();
+  if (seen.includes(mode)) return true;
+  try {
+    localStorage.setItem(INTRO_KEY, JSON.stringify({ version: 1, seen: [...seen, mode] }));
+    return true;
+  } catch {
+    return false;
+  }
+}

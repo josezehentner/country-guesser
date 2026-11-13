@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { beforeEach, test } from 'node:test';
-import { emptyProgress, loadProgress, parseImport, saveProgress } from '../../src/storage.js';
+import { emptyProgress, hasSeenIntro, INTRO_KEY, loadProgress, markIntroSeen, parseImport, saveProgress } from '../../src/storage.js';
 
 const KEY = 'countryquiz.v1';
 const entry = { score: 7, seen: 12, correct: 9, lastSeen: '2026-10-30T21:00:00Z' };
@@ -154,4 +154,33 @@ test('invalid round statistics are dropped when loading and rejected when import
     assert.deepEqual(loadProgress(), emptyProgress(), JSON.stringify(bad));
     assert.equal(parseImport(JSON.stringify(file)), null, JSON.stringify(bad));
   }
+});
+
+test('a guide counts as read once it was closed, separately for each mode', () => {
+  assert.equal(hasSeenIntro('name'), false);
+  assert.equal(markIntroSeen('name'), true);
+  assert.equal(hasSeenIntro('name'), true);
+  assert.equal(hasSeenIntro('find'), false);
+  markIntroSeen('find');
+  markIntroSeen('name');
+  assert.deepEqual(JSON.parse(localStorage.getItem(INTRO_KEY)).seen, ['name', 'find']);
+});
+
+test('read guides are kept apart from the progress', () => {
+  markIntroSeen('name');
+  saveProgress(emptyProgress());
+  assert.equal(hasSeenIntro('name'), true);
+  assert.notEqual(INTRO_KEY, KEY);
+});
+
+test('broken or blocked storage counts every guide as unread', () => {
+  for (const value of ['not json', '{"seen":"name"}', '{"seen":[1,null]}', 'null']) {
+    stubLocalStorage(memoryStorage({ [INTRO_KEY]: value }));
+    assert.equal(hasSeenIntro('name'), false, value);
+    assert.equal(markIntroSeen('name'), true, value);
+    assert.equal(hasSeenIntro('name'), true, value);
+  }
+  stubLocalStorage(throwingStorage);
+  assert.equal(hasSeenIntro('name'), false);
+  assert.equal(markIntroSeen('name'), false);
 });

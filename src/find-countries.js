@@ -17,6 +17,7 @@ const isThere = (code) => `Das ${verb(code, 'ist', 'sind')} ${countryPhrase(code
 const focusNext = () => (nextButton.disabled ? prompt : nextButton).focus({ preventScroll: true });
 
 startGame({
+  intro: 'find',
   storageKey: 'countryquiz.find.v1',
   exportPrefix: 'countryquiz-find-progress',
   // Long enough to see where the found country is marked.

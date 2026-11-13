@@ -166,6 +166,7 @@ function renderStats(game) {
 }
 
 startGame({
+  intro: 'borders',
   storageKey: 'countryquiz.borders.v1',
   exportPrefix: 'countryquiz-borders-progress',
   // Only countries with a land border can be on a route.
