@@ -32,7 +32,7 @@ A flag is shown above the globe, and you type the country it belongs to. It play
 
 ### Cross borders ("Grenzgänger")
 
-You get a start and an end country, such as Portugal and Poland, on a globe without borders. Name the countries in between, in any order, until their land borders connect the two: here Spain, France and Germany. At least three countries lie between, and there is no limit: Portugal to China is a round too. Countries on a shortest route turn yellow, detours gray. You have as many guesses as the shortest route needs, plus four. Only land borders count: no bridges or tunnels, so Denmark and Sweden are not neighbors. If start and end don't fit on one side of the globe, it shows the start first and then flies to the end.
+You get a start and an end country, such as Portugal and Poland, on a globe without borders. Name the countries in between, in any order, until their land borders connect the two: here Spain, France and Germany. At least three countries lie between, and there is no limit: Portugal to China is a round too. Start and end are dark blue. Countries on a shortest route turn green, detours red. You have as many guesses as the shortest route needs, plus four. Only land borders count: no bridges or tunnels, so Denmark and Sweden are not neighbors. If start and end don't fit on one side of the globe, it shows the start first and then flies to the end.
 
 Instead of scores per country, this mode counts your solved rounds, the ones solved on a shortest route, and your streak.
 

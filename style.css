@@ -37,12 +37,13 @@
   /* The asked country lights up in these after an answer. */
   --flash-good: #22c55e;
   --flash-bad: #ef4444;
-  /* "Grenzgänger": start and end, countries on a shortest route, detours, and the
-     ones the player missed */
-  --route-start: #3fb05b;
-  --route-end: #e8505b;
-  --route-step: #f6cf45;
-  --route-detour: #aeb2b8;
+  /* "Grenzgänger": start and end in dark blue with light text, countries on a
+     shortest route in green, detours in red, and the ones the player missed */
+  --route-start: #1f4ea8;
+  --route-end: #1f4ea8;
+  --route-end-text: #ffffff;
+  --route-step: #3fb05b;
+  --route-detour: #e8505b;
   --route-missing: #f4a259;
   /* Main action, e.g. "Prüfen" and "Weiter": the same light green */
   --accent: #b5e48c;
@@ -494,8 +495,8 @@ h1 { margin: 0; font-size: 1.1rem; }
   border-radius: 4px;
 }
 .caption .route-end-name { font-size: 1.25em; }
-.route-end-name.start { background: var(--route-start); }
-.route-end-name.end { background: var(--route-end); }
+.route-end-name.start { background: var(--route-start); color: var(--route-end-text); }
+.route-end-name.end { background: var(--route-end); color: var(--route-end-text); }
 .route-status { margin-top: 2px; font-family: system-ui, sans-serif; font-size: 0.6em; letter-spacing: 0; }
 .route-guesses {
   position: absolute;
@@ -525,9 +526,9 @@ h1 { margin: 0; font-size: 1.1rem; }
 }
 .route-guess.detour { background: var(--route-detour); }
 .route-guess.missing { background: var(--route-missing); border-style: dashed; }
-.stat-dot.solved { background: var(--route-start); }
-.stat-dot.perfect { background: var(--route-step); }
-.stat-dot.streak { background: var(--route-end); }
+.stat-dot.solved { background: var(--route-step); }
+.stat-dot.perfect { background: var(--route-start); }
+.stat-dot.streak { background: var(--route-detour); }
 
 /* The controls float in a small dock at the bottom of the globe, which takes the
    whole height of the page. */
