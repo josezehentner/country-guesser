@@ -66,7 +66,7 @@ test('loads without errors and asks for a route between two countries', async ({
   expect(await mapApi(page, 'hidesBorders')).toBe(true);
   await expect(page.locator('#route-status')).toContainText(`mindestens ${round.between} Länder dazwischen`);
   await expect(page.locator('#recenter-btn')).toBeVisible();
-  await expect(page.locator('#recenter-btn')).toHaveAccessibleName('Start und Ziel zeigen');
+  await expect(page.locator('#recenter-btn')).toHaveAccessibleName('Ziel und Start zeigen');
   // No legend, and only the region filter.
   await expect(page.locator('#legend')).toHaveCount(0);
   await expect(page.locator('#level-filters')).toHaveCount(0);
@@ -257,27 +257,28 @@ test('start and end too far apart are shown one after the other', async ({ page 
   await open(page);
   await play(page, 'PT', 'CN');
   const [pt, cn] = [await mapApi(page, 'centerOf', 'PT'), await mapApi(page, 'centerOf', 'CN')];
-  expectCenter(await mapApi(page, 'view'), pt);
+  // The end first, then the start, where the player begins.
+  expectCenter(await mapApi(page, 'view'), cn);
   expect(await mapApi(page, 'touring')).toBe(true);
   await expect.poll(() => mapApi(page, 'touring'), { timeout: 5000 }).toBe(false);
-  expectCenter(await mapApi(page, 'view'), cn);
-  // "Start und Ziel" shows them again.
+  expectCenter(await mapApi(page, 'view'), pt);
+  // "Ziel & Start" shows them again, in the same order.
   await mapApi(page, 'lookAt', [-100, -40], 1);
   await page.click('#recenter-btn');
-  expectCenter(await mapApi(page, 'view'), pt);
-  await expect.poll(async () => near(await mapApi(page, 'view'), cn), { timeout: 5000 }).toBe(true);
+  expectCenter(await mapApi(page, 'view'), cn);
+  await expect.poll(async () => near(await mapApi(page, 'view'), pt), { timeout: 5000 }).toBe(true);
 });
 
 test.describe('with motion', () => {
   test.use({ reducedMotion: 'no-preference' });
 
-  test('the flight from start to end zooms out on the way and in again', async ({ page }) => {
+  test('the flight from end to start zooms out on the way and in again', async ({ page }) => {
     await open(page);
     // Both ends are small, so the globe zooms in on each of them, and too far apart
     // to be shown together.
     await play(page, 'GM', 'KR');
-    const kr = await mapApi(page, 'centerOf', 'KR');
-    // Samples the zoom every frame until the globe arrives at the end.
+    const gm = await mapApi(page, 'centerOf', 'GM');
+    // Samples the zoom every frame until the globe arrives at the start.
     const zooms = await page.evaluate(async (target) => {
       const api = document.querySelector('#map').mapTestApi;
       const samples = [];
@@ -289,8 +290,8 @@ test.describe('with motion', () => {
         if (!api.touring() && Math.abs(center[0] - target[0]) < 1e-6 && Math.abs(center[1] - target[1]) < 1e-6) break;
       }
       return samples;
-    }, kr);
-    // Zoomed in on Gambia, out to the whole globe on the way, and in on Korea.
+    }, gm);
+    // Zoomed in on Korea, out to the whole globe on the way, and in on Gambia.
     const zoomedIn = zooms.findIndex((zoom) => zoom > 2);
     expect(zoomedIn).toBeGreaterThanOrEqual(0);
     expect(Math.min(...zooms.slice(zoomedIn))).toBeLessThan(1.2);
@@ -299,11 +300,12 @@ test.describe('with motion', () => {
     expect(zooms.length).toBeGreaterThan(30);
   });
 
-  test('the flight from start to end is quick and ends at full detail', async ({ page }) => {
+  test('the tour from end to start is quick and ends at full detail', async ({ page }) => {
     await open(page);
     await play(page, 'PT', 'CN');
-    const cn = await mapApi(page, 'centerOf', 'CN');
-    // Times the flight from the moment the globe leaves the start until it arrives.
+    const pt = await mapApi(page, 'centerOf', 'PT');
+    // Times the tour until the globe arrives at the start, and the flight from the
+    // moment the globe leaves the end.
     const flight = await page.evaluate(async (target) => {
       const api = document.querySelector('#map').mapTestApi;
       const started = performance.now();
@@ -315,14 +317,17 @@ test.describe('with motion', () => {
         rough ||= api.roughDetail();
         const { center } = api.view();
         if (left !== null && Math.abs(center[0] - target[0]) < 1e-6 && Math.abs(center[1] - target[1]) < 1e-6) {
-          return { ms: performance.now() - left, rough, roughAtEnd: api.roughDetail() };
+          const now = performance.now();
+          return { tourMs: now - started, ms: now - left, rough, roughAtEnd: api.roughDetail() };
         }
       }
       return null;
-    }, cn);
+    }, pt);
     expect(flight).not.toBeNull();
-    // About a second, plus frames a busy machine may drop.
-    expect(flight.ms).toBeLessThan(1700);
+    // Turning to the end, a short look and the flight take under two seconds,
+    // plus frames a busy machine may drop.
+    expect(flight.tourMs).toBeLessThan(2300);
+    expect(flight.ms).toBeLessThan(1300);
     expect(flight.rough).toBe(true);
     expect(flight.roughAtEnd).toBe(false);
   });
@@ -330,14 +335,15 @@ test.describe('with motion', () => {
   test('touching the globe during the flight stops it at full detail', async ({ page }) => {
     await open(page);
     await play(page, 'PT', 'CN');
-    await expect.poll(() => mapApi(page, 'roughDetail'), { timeout: 5000 }).toBe(true);
+    // Checked every frame: the flight is too short for expect.poll's growing pauses.
+    await page.waitForFunction(() => document.querySelector('#map').mapTestApi.roughDetail(), null, { polling: 'raf', timeout: 5000 });
     await page.mouse.move(640, 400);
     await page.mouse.down();
     await page.mouse.move(600, 380, { steps: 3 });
     await page.mouse.up();
     expect(await mapApi(page, 'roughDetail')).toBe(false);
-    const cn = await mapApi(page, 'centerOf', 'CN');
-    expect(near(await mapApi(page, 'view'), cn)).toBe(false);
+    const pt = await mapApi(page, 'centerOf', 'PT');
+    expect(near(await mapApi(page, 'view'), pt)).toBe(false);
   });
 
   test('touching the globe during the tour stops it', async ({ page }) => {

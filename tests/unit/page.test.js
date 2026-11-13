@@ -52,8 +52,8 @@ test('every mode has the button that turns the globe back to the marked country,
     const button = html.match(/<button[^>]*id="recenter-btn"[^>]*>/)?.[0];
     assert.ok(button, page);
     assert.match(button, /type="button"/, page);
-    // In "Grenzgänger" it shows start and end of the route again.
-    const label = page === 'borders.html' ? 'Start und Ziel zeigen' : 'Zum markierten Land';
+    // In "Grenzgänger" it shows end and start of the route again.
+    const label = page === 'borders.html' ? 'Ziel und Start zeigen' : 'Zum markierten Land';
     assert.match(button, new RegExp(`aria-label="${label}"`), page);
     assert.match(button, /\shidden[\s>]/, page);
   }

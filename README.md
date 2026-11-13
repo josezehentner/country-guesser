@@ -40,7 +40,7 @@ Get from start to end, say Portugal to Poland, on a globe without borders: name 
 - At least three countries in between, no upper limit: Portugal to China works too.
 - Guesses: what the shortest route needs, plus four.
 - Land borders only, no bridges or tunnels: Denmark and Sweden are not neighbors.
-- Too far apart for one view? The globe shows the start, then flies to the end.
+- Too far apart for one view? The globe shows the end, then flies to the start.
 - Instead of per-country scores, it counts solved rounds, rounds solved on a shortest route, and your streak.
 
 **Every mode tracks its own progress**, since naming, finding, capitals, placing capitals, flags and neighbors are different skills. **First time in a mode?** A short guide ("So geht's") explains the rules, the filters on the left, the scale on the right and the colors. The **?** button at the top reopens it.
@@ -70,7 +70,7 @@ Mix both, e.g. only Africa's easy countries: 250 countries and territories in to
 | Turn the globe | drag | swipe |
 | Zoom | mouse wheel | pinch |
 | Back to the marked country | "Zum Land" at the top right | ⌖ at the right edge |
-| Show start and end again ("Grenzgänger") | "Start & Ziel" at the top right | ⌖ at the right edge |
+| Show end and start again ("Grenzgänger") | "Ziel & Start" at the top right | ⌖ at the right edge |
 | Answer (name, capital) | type, press Enter | type, tap "Go" |
 | Move between the answer field and its buttons | ← and → | tap |
 | Answer (find a country or capital) | click the country | tap the country |
