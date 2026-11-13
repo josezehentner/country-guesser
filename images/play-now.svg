@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" width="360" height="96" role="img" aria-label="Play now">
+  <rect x="14" y="14" width="338" height="74" rx="14" fill="#1b1b1b"/>
+  <rect x="6" y="6" width="338" height="74" rx="14" fill="#b5e48c" stroke="#1b1b1b" stroke-width="5"/>
+  <path d="M36 25 L36 61 L66 43 Z" fill="#1b1b1b"/>
+  <text x="200" y="57" text-anchor="middle" font-family="Impact, 'Arial Black', 'Helvetica Neue', Arial, sans-serif" font-size="40" font-weight="900" letter-spacing="2" fill="#ffffff" stroke="#1b1b1b" stroke-width="6" paint-order="stroke" stroke-linejoin="round">PLAY NOW!</text>
+</svg>

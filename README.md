@@ -1,72 +1,69 @@
-# Country Guesser
+<p align="center">
+  <img src="images/menu-background.svg" alt="Comic world map" width="100%" height="180">
+</p>
 
-A country quiz on a globe you can spin, drawn in a comic style. You learn every country in the world, and the globe shows you, country by country, how well you already know them.
+<h1 align="center">🌍 Country Guesser 🌍</h1>
 
-**[Play now](https://josezehentner.github.io/country-guesser/)**: free, no sign-up, in the browser on a computer or phone.
+<p align="center"><b>Spin the globe. Name the world. Paint it green!</b><br>
+A comic-style quiz for every country on Earth. The globe shows how well you know each one.</p>
 
-The game is in German for now; more languages are planned.
+<p align="center">
+  <a href="https://josezehentner.github.io/country-guesser/"><img src="images/play-now.svg" alt="Play now" width="300"></a>
+</p>
 
-## Game modes
+<h3 align="center"><a href="https://josezehentner.github.io/country-guesser/">👉 josezehentner.github.io/country-guesser 👈</a></h3>
 
-### Name the countries ("Länder benennen")
+<p align="center">Free · no sign-up · in the browser on computer or phone · in German for now, more languages planned</p>
 
-A country is marked on the globe, and you type its name. One press of Enter is enough: after a right answer the next country comes up by itself. After a wrong one you see the right name and move on when you are ready.
+## 🎮 Six ways to play
 
-You don't have to spell perfectly. Upper and lower case, missing umlauts ("Osterreich") and small typos are fine. Common other names count too, such as "USA", "Amerika", "UK" or "Côte d'Ivoire".
+| | | |
+|:---:|:---:|:---:|
+| <img src="images/modes/name-countries.svg" alt="" width="200"><br>**"Länder benennen"**<br>Name the countries | <img src="images/modes/find-countries.svg" alt="" width="200"><br>**"Länder finden"**<br>Find the countries | <img src="images/modes/capitals.svg" alt="" width="200"><br>**"Hauptstädte lernen"**<br>Learn the capitals |
+| <img src="images/modes/find-capitals.svg" alt="" width="200"><br>**"Hauptstädte finden"**<br>Find the capitals | <img src="images/modes/flags.svg" alt="" width="200"><br>**"Flaggen erkennen"**<br>Recognize the flags | <img src="images/modes/borders.svg" alt="" width="200"><br>**"Grenzgänger"**<br>Cross borders |
 
-### Find the countries ("Länder finden")
+**✍️ Type it** (names, capitals, flags): one Enter is enough. Right? The next one comes by itself. Wrong? See the answer, move on when ready. Spelling is forgiving: case, missing umlauts ("Osterreich") and small typos are fine, and other common names count ("USA", "Amerika", "UK", "Côte d'Ivoire").
 
-The game names a country, and you look for it on the globe and click it. For very small countries a click just next to them is enough. If you are wrong, the globe turns to the right country. Another click on the globe moves on.
+**👆 Click it** (find countries, find capitals): a click just next to a tiny country is enough. Wrong? The globe turns to the right one; click again to move on.
 
-### Learn the capitals ("Hauptstädte lernen")
+- 🗺️ **"Länder benennen":** a country is marked; type its name.
+- 📍 **"Länder finden":** the game names a country; click it.
+- 🏛️ **"Hauptstädte lernen":** a country is marked; type its capital. The answer also shows the country. German, English and local names count ("Peking", "Beijing"), and every capital of a country with several, such as Bolivia (Sucre, La Paz) or South Africa. Uninhabited places like Antarctica are left out.
+- 🎯 **"Hauptstädte finden":** the game names a capital, such as Canberra; click its country. Shared names like Kingston (Jamaica, Norfolk Island) accept either.
+- 🚩 **"Flaggen erkennen":** a flag appears; type its country, and the globe turns there. Look-alikes Monaco/Indonesia and Romania/Chad accept either name. Places flying another country's flag (Réunion) and Antarctica are left out.
 
-A country is marked on the globe, and you type its capital. It plays like "Länder benennen": the same tolerance for typos and umlauts, and the answer always shows the country too. German, English and local names count, such as "Peking" or "Beijing". Where a country has more than one capital, such as Bolivia (Sucre and La Paz) or South Africa, each of them is right. Places where nobody lives, such as Antarctica, are left out.
+### 🧭 "Grenzgänger"
 
-### Find the capitals ("Hauptstädte finden")
+Get from start to end, say Portugal to Poland, on a globe without borders: name the countries in between, in any order, until their land borders connect (Spain, France, Germany).
 
-The game names a capital, such as Canberra, and you click the country it belongs to. It plays like "Länder finden". A few capitals have the same name in two places, such as Kingston in Jamaica and on Norfolk Island; then either one is right.
+- 🔵 Start and end are dark blue · 🟢 shortest-route steps green · 🔴 detours red.
+- At least three countries in between, no upper limit: Portugal to China works too.
+- Guesses: what the shortest route needs, plus four.
+- Land borders only, no bridges or tunnels: Denmark and Sweden are not neighbors.
+- Too far apart for one view? The globe shows the end, then flies to the start.
+- Instead of per-country scores, it counts solved rounds, rounds solved on a shortest route, and your streak.
 
-### Recognize the flags ("Flaggen erkennen")
+**Every mode tracks its own progress**, since naming, finding, capitals, placing capitals, flags and neighbors are different skills. **First time in a mode?** A short guide ("So geht's") explains the rules, the filters on the left, the scale on the right and the colors. The **?** button at the top reopens it.
 
-A flag is shown above the globe, and you type the country it belongs to. It plays like "Länder benennen", with the same tolerance for typos. After your answer the globe turns to the country, so you also learn where it lies. Places that fly another country's flag, such as Réunion with the French flag, are left out, and so is Antarctica. Monaco and Indonesia, and Romania and Chad, have flags that look the same: there either name is right.
+## 📈 Paint the globe green
 
-### Cross borders ("Grenzgänger")
+Every country scores 0 to 10 points: **beige** never asked, **gray** 0, **red → yellow → green** 1 to 10, green means mastered.
 
-You get a start and an end country, such as Portugal and Poland, on a globe without borders. Name the countries in between, in any order, until their land borders connect the two: here Spain, France and Germany. At least three countries lie between, and there is no limit: Portugal to China is a round too. Start and end are dark blue. Countries on a shortest route turn green, detours red. You have as many guesses as the shortest route needs, plus four. Only land borders count: no bridges or tunnels, so Denmark and Sweden are not neighbors. If start and end don't fit on one side of the globe, it shows the start first and then flies to the end.
+- First answer: right starts at 5, wrong at 3. Then +1 per right answer, −1 per wrong one or "Weiß ich nicht" ("I don't know").
+- Weak countries come up more often; mastered ones only now and then for review.
 
-Instead of scores per country, this mode counts your solved rounds, the ones solved on a shortest route, and your streak.
+## 🎛️ Pick your countries
 
-Every mode keeps separate progress: recognizing a country, finding it, knowing its capital, placing a capital, knowing its flag and knowing its neighbors are different skills.
+The filters slide in from the left edge on mouse-over; click the tab to keep them open, or tap it on a phone.
 
-Every mode starts with a short guide the first time you open it: the rules, the filters on the left, the scale on the right and what the colors mean. The **?** button at the top opens it again.
+- **Regions:** Europe, Middle East, Asia, Africa, North America, South America, Oceania, Antarctica.
+- **Difficulty:** *Easy* ("Einfach") is about 60 very well-known countries, such as Germany, Brazil or Japan. *Hard* ("Schwer") is every non-UN-member territory, such as Greenland, Kosovo or French Polynesia, plus tiny island states like Nauru or Tuvalu. *Medium* ("Mittel") is everything else.
 
-## How your progress works
+Mix both, e.g. only Africa's easy countries: 250 countries and territories in total. "Grenzgänger" has only the regions, and a round stays inside them.
 
-Every country has a score from 0 to 10, and the globe colors it to match:
+**Skip what you know:** the slider by the color legend on the right drops well-known countries. At 7, countries with 8 to 10 points are no longer asked. Never-asked countries always stay in.
 
-- **Beige:** never asked
-- **Gray:** 0 points
-- **Red through yellow to green:** 1 to 10 points. Green means mastered.
-
-The first time, you start at 5 points if you are right and at 3 if not. After that, every right answer adds a point, and every wrong one or "Weiß ich nicht" ("I don't know") takes one away.
-
-Countries you don't know well yet come up more often. Mastered countries only show up now and then for review.
-
-## Choosing countries
-
-The filters left of the globe choose which countries are asked. Move the mouse to the left edge and they slide in; a click on the tab keeps them open. On a phone, tap the tab.
-
-- **Regions:** Europe, Middle East, Asia, Africa, North America, South America, Oceania and Antarctica.
-- **Difficulty:**
-  - *Easy* ("Einfach") is about 60 very well-known countries, such as Germany, Brazil or Japan.
-  - *Hard* ("Schwer") is every territory that is not a UN member, such as Greenland, Kosovo or French Polynesia, plus tiny island states like Nauru or Tuvalu.
-  - *Medium* ("Mittel") is all other countries.
-
-You can combine both, for example only the easy countries of Africa. In total there are 250 countries and territories. "Grenzgänger" only has the regions: a round then stays in them.
-
-The slider beside the color legend on the right leaves out countries you already know well: set it to 7, and countries at 8, 9 or 10 points are no longer asked. Countries you have never been asked always stay in.
-
-## Controls
+## 🕹️ Controls
 
 | | Computer | Phone |
 |---|---|---|
@@ -74,31 +71,33 @@ The slider beside the color legend on the right leaves out countries you already
 | Zoom | mouse wheel | pinch |
 | Back to the marked country | "Zum Land" at the top right | ⌖ at the right edge |
 | Show end and start again ("Grenzgänger") | "Ziel & Start" at the top right | ⌖ at the right edge |
-| Answer (name, capital) | type and press Enter | type and tap "Go" |
+| Answer (name, capital) | type, press Enter | type, tap "Go" |
 | Move between the answer field and its buttons | ← and → | tap |
 | Answer (find a country or capital) | click the country | tap the country |
-| Move on after a wrong answer | Enter, "Weiter" or a click on the globe | "Weiter" or a tap on the globe |
+| Move on after a wrong answer | Enter, "Weiter" or click the globe | "Weiter" or tap the globe |
 
-A quick swipe gives the globe momentum, so it keeps turning for a moment. If you lose the marked country while looking around, "Zum Land" turns the globe back to it. In the find modes and with the flags the button only appears after your answer, so it never gives the country away.
+A quick swipe gives the globe momentum. In the find modes and with the flags, "Zum Land" only appears after your answer, so it never gives the country away.
 
-## Your data
+## 🔒 Your data stays yours
 
-Your progress stays in your browser on your device. There is no sign-up, no ads and no tracking, and the game loads nothing from other servers.
+No sign-up, no ads, no tracking, nothing loaded from other servers. Progress lives in your browser on your device, so another device or browser starts from zero and private windows save nothing. Under ⚙ you can **export** it as a file, **import** it elsewhere, or **reset** it.
 
-That also means another device or browser starts from zero, and private windows save nothing. Under ⚙ you can **export** your progress as a file and **import** it on another device, or **reset** it.
+## 🙌 Credits and license
 
-## Credits and license
-
-- Map and lakes: [Natural Earth](https://www.naturalearthdata.com), public domain. Very small countries are enlarged so they can be seen.
+- Map and lakes: [Natural Earth](https://www.naturalearthdata.com), public domain. Very small countries are enlarged to stay visible.
 - Globe: [d3](https://d3js.org), ISC license.
 - Flags: [flag-icons](https://github.com/lipis/flag-icons), MIT license.
 - Font: [Bangers](https://github.com/googlefonts/bangers), SIL Open Font License.
-- German country names: from the browser itself (`Intl.DisplayNames`), adjusted where needed.
+- German country names: the browser's own `Intl.DisplayNames`, adjusted where needed.
 
 The game itself is under the [MIT license](LICENSE).
 
-## For developers
+## 🛠️ For developers
 
-The game is a static website in HTML, CSS and JavaScript, with no build step. Run it locally with `npm start`, then open http://localhost:8000. To try it on a phone, run `npm run start:lan` and open the address it prints on the phone, in the same Wi-Fi. Run the tests with `npm test`.
+A static site in HTML, CSS and JavaScript, no build step.
 
-How the game must behave is in the [specification](docs/specification.md). How work on the project is done is in [AGENTS.md](AGENTS.md).
+- `npm start`, then open http://localhost:8000.
+- `npm run start:lan` to try it on a phone in the same Wi-Fi; open the address it prints.
+- `npm test` runs the tests.
+
+Behavior is defined in the [specification](docs/specification.md), the way of working in [AGENTS.md](AGENTS.md).
