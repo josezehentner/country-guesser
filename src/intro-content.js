@@ -123,10 +123,9 @@ export const INTROS = {
       {
         heading: 'Farben',
         items: [
-          { swatches: [{ color: 'var(--route-start)' }], text: 'Grün: Start' },
-          { swatches: [{ color: 'var(--route-end)' }], text: 'Rot: Ziel' },
-          { swatches: [{ color: 'var(--route-step)' }], text: 'Gelb: liegt auf einem kürzesten Weg' },
-          { swatches: [{ color: 'var(--route-detour)' }], text: 'Grau: ein Umweg, kostet trotzdem einen Versuch' },
+          { swatches: [{ color: 'var(--route-start)' }, { color: 'var(--route-end)' }], text: 'Dunkelblau: Start und Ziel' },
+          { swatches: [{ color: 'var(--route-step)' }], text: 'Grün: liegt auf einem kürzesten Weg' },
+          { swatches: [{ color: 'var(--route-detour)' }], text: 'Rot: ein Umweg, kostet trotzdem einen Versuch' },
           { swatches: [{ color: 'var(--route-missing)' }], text: 'Orange: hat am Ende noch gefehlt' },
           'Die genannten Länder stehen in diesen Farben unter der Frage.',
         ],

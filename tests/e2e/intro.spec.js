@@ -64,7 +64,7 @@ test('"Grenzgänger" explains its route colors and has no score scale', async ({
   await page.goto('/borders.html');
   const dialog = intro(page);
   await expect(dialog.getByRole('heading', { name: 'Rechts: Wissensstufen' })).toHaveCount(0);
-  for (const text of ['Grün: Start', 'Rot: Ziel', 'Gelb: liegt auf einem kürzesten Weg', 'Grau: ein Umweg', 'Orange: hat am Ende noch gefehlt']) {
+  for (const text of ['Dunkelblau: Start und Ziel', 'Grün: liegt auf einem kürzesten Weg', 'Rot: ein Umweg', 'Orange: hat am Ende noch gefehlt']) {
     await expect(dialog).toContainText(text);
   }
   await expect(dialog.locator('.swatch')).toHaveCount(5);
