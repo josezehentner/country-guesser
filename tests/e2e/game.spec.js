@@ -860,6 +860,8 @@ test('game works with a notice when localStorage is blocked', async ({ page }) =
     Object.defineProperty(window, 'localStorage', { get() { throw new Error('blocked'); } });
   });
   await open(page);
+  // Without storage the game cannot know the guide was read, so it opens.
+  await page.click('#intro-close');
   await expect(page.locator('#storage-notice')).toBeVisible();
   await page.click('#dont-know-btn');
   await expect(page.locator('#feedback')).toHaveClass(/bad/);
