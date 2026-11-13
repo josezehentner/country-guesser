@@ -6,6 +6,10 @@ import { defineConfig } from '@playwright/test';
 const folderHash = parseInt(createHash('sha1').update(process.cwd()).digest('hex').slice(0, 8), 16);
 const PORT = Number(process.env.TEST_PORT) || 4200 + (folderHash % 800);
 
+// Most tests play straight away, so the guide each mode opens with on a first visit
+// counts as read. tests/e2e/intro.spec.js starts without it.
+const INTROS_SEEN = { version: 1, seen: ['name', 'find', 'capitals', 'find-capitals', 'flags', 'borders'] };
+
 export default defineConfig({
   testDir: 'tests/e2e',
   fullyParallel: true,
@@ -15,6 +19,10 @@ export default defineConfig({
     colorScheme: 'light',
     acceptDownloads: true,
     contextOptions: { reducedMotion: 'reduce' },
+    storageState: {
+      cookies: [],
+      origins: [{ origin: `http://127.0.0.1:${PORT}`, localStorage: [{ name: 'countryquiz.intro.v1', value: JSON.stringify(INTROS_SEEN) }] }],
+    },
   },
   webServer: {
     command: `python3 -m http.server ${PORT} --bind 127.0.0.1`,

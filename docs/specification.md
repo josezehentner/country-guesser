@@ -170,6 +170,8 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 
 "Grenzgänger" keeps no `countries` entries but round statistics: `"rounds": { "played": 9, "solved": 6, "perfect": 2, "streak": 1, "bestStreak": 4 }`, all whole numbers with perfect ≤ solved ≤ played and streak ≤ best streak ≤ solved. A round counts once it is solved, lost or given up.
 
+Which guides the player has closed is kept apart from the progress, so a reset or an import does not bring them back: key `countryquiz.intro.v1`, `{ "version": 1, "seen": ["name", "borders"] }`, one name per mode (`name`, `find`, `capitals`, `find-capitals`, `flags`, `borders`). Without localStorage the guide opens on every visit.
+
 `settings` is optional throughout: a missing `regions` or `levels` means all of them, an empty list means none. `filtersOpen` remembers whether the filter sidebar is open on a wide screen. `maxScore` (0 to 9) is the score limit; missing means all scores are asked. An older `"continent": "AF"` is read as `"regions": ["AF"]`.
 
 - Save immediately after **every** answer.
@@ -211,6 +213,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
   - **Difficulty:** every country has exactly one level. *Einfach*: about 60 very well-known countries. *Schwer*: everything that is not a UN member (territories, dependencies, disputed areas) and UN island states smaller than about 1000 km². *Mittel*: all other UN members. The lists live in `data/countries.js`.
   - Each tick shows how many countries it covers, and the sidebar says how many are asked. A choice without any country says so; then every country comes up until the choice changes.
   - On a wide screen a click on the tab pins the sidebar beside the globe (it starts pinned, or as last left); like the Mac dock, moving the mouse onto the tab or to the left edge of the screen only peeks: the sidebar slides in over the globe and slides out a moment after the mouse leaves it. Running off the left edge of the window keeps it open. On small screens it slides over the globe, starts closed and closes with Escape.
+- **Guide** ("So geht's"): every mode opens with a short dialog for new players, titled with the mode's name. It explains the rules, the filter sidebar on the left, the score scale and the score limit slider on the right (what they mean and what they do), the colors on the globe and the controls (turning and zooming, "Zum Land", the stats, ⚙). "Grenzgänger" has no scale, so its guide explains the route colors instead (start, end, shortest route, detour, missing). The text scrolls between the title and the "Los geht's!" button, which closes it, as do Escape and a click on the backdrop; then the game continues where the player plays, and the globe shows the question again (e.g. the flight from start to end). It opens by itself only until the player has closed it once in that mode; a **?** button beside ⚙ opens it again. The texts live in `src/intro-content.js`.
 - **Settings dialog** behind a ⚙ button in the top bar: the progress actions (export, import, reset). They are rarely needed, so they take no space next to the globe.
 - **Game screen like a HUD**: the globe takes the whole height below the top bar, and everything else floats over it:
   - the question in a light green comic caption box at the top, in dark blue letters ("Welches Land ist markiert?", or "Wo liegt **Frankreich**?" with the name big); clicks go through it to the globe;
@@ -272,4 +275,5 @@ Local testing: because of ES modules, serve via a local web server: `npm start`,
 - [ ] The globe turns and zooms smoothly, and borders stay sharp at every zoom level.
 - [ ] In the modes with an answer field the arrow keys move between field and buttons, and inside the text they still move the cursor.
 - [ ] Usable on mobile (touch zoom, input, no horizontal scrollbar), with most of the screen left for the globe even while the keyboard is open.
+- [ ] Every mode opens with its guide on the first visit; it explains rules, filters, the scale and slider (in "Grenzgänger" the route colors) and the colors, closes into the game, does not open by itself again, and "?" opens it again.
 - [ ] Game works even when localStorage is unavailable (with a notice).

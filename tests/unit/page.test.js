@@ -58,3 +58,14 @@ test('every mode has the button that turns the globe back to the marked country,
     assert.match(button, /\shidden[\s>]/, page);
   }
 });
+
+test('every mode has a button that opens its guide again', () => {
+  for (const page of pages.filter((name) => name !== 'index.html')) {
+    const html = readFileSync(new URL(page, root), 'utf8');
+    const button = html.match(/<button[^>]*id="help-btn"[^>]*>/)?.[0];
+    assert.ok(button, page);
+    assert.match(button, /type="button"/, page);
+    assert.match(button, /aria-label="Spielanleitung"/, page);
+    assert.match(button, /aria-haspopup="dialog"/, page);
+  }
+});

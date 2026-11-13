@@ -2,6 +2,7 @@
 // A mode only decides how a question is asked and answered.
 import { COUNTRIES, CONTINENTS, LEVELS } from '../data/countries.js';
 import { scoreColor } from './colors.js';
+import { setupIntro } from './intro.js';
 import { createMap } from './map.js';
 import { filterCountries, nextScore, pickNextCountry, withinScoreLimit } from './quiz.js';
 import { emptyProgress, exportProgress, loadProgress, parseImport, saveProgress } from './storage.js';
@@ -26,6 +27,7 @@ const FILTER_GROUPS = [
 ];
 
 // `mode` provides:
+//   intro                     which guide of src/intro-content.js it opens with
 //   storageKey, exportPrefix  where its progress is kept and how exports are named
 //   countries                 optional: the countries it asks, all of them if missing
 //   nextDelayMs               pause after a correct answer before the next country
@@ -403,8 +405,14 @@ export function startGame(mode) {
   }
 
   fitToVisibleArea();
-  // The filters do not need the map, so they are ready while it loads.
+  // The filters and the guide do not need the map, so they are ready while it loads.
   setupFilters();
+  // The first time, the guide covered how the globe showed the question, e.g. the
+  // flight from start to end in "Grenzgänger": show it again.
+  setupIntro(mode.intro, (first) => {
+    if (first && game.map?.hasTarget()) game.map.refocus();
+    mode.focus();
+  });
   start();
 }
 

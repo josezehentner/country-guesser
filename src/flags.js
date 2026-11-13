@@ -30,6 +30,7 @@ function answer(game, correct, wrongVerdict) {
 }
 
 startGame({
+  intro: 'flags',
   storageKey: 'countryquiz.flags.v1',
   exportPrefix: 'countryquiz-flags-progress',
   // Territories that fly another entry's flag, and Antarctica, are not asked.

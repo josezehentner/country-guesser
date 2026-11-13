@@ -19,6 +19,7 @@ function answer(game, correct, wrongVerdict) {
 }
 
 startGame({
+  intro: 'capitals',
   storageKey: 'countryquiz.capitals.v1',
   exportPrefix: 'countryquiz-capitals-progress',
   // Places without any settlement have no capital to ask for.
