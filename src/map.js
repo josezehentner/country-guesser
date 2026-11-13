@@ -30,12 +30,13 @@ const TARGET_VIEW_SHARE = 0.2;
 const ZOOM_DURATION_MS = 750;
 // In "Grenzgänger" start and end are shown together when they fit on the front of
 // the globe, within ROUTE_FIT_ANGLE of its center. Otherwise the globe shows the
-// start for ROUTE_HOLD_MS, then flies to the end, zooming out on the way.
+// start for ROUTE_HOLD_MS, then flies to the end in ROUTE_FLIGHT_MS, zooming out on
+// the way.
 const ROUTE_FIT_ANGLE = 60 * (Math.PI / 180);
 const ROUTE_VIEW_SHARE = 0.9;
 const MAX_ROUTE_ZOOM = 6;
-const ROUTE_HOLD_MS = 1200;
-const ROUTE_FLIGHT_MS = 2000;
+const ROUTE_HOLD_MS = 800;
+const ROUTE_FLIGHT_MS = 1100;
 // Without borders the land is one fill, and only the coastlines get a line, as thin
 // as the borders elsewhere. Thick lines along every border, half covered by the
 // fill again, cost three times the drawing time, and even a coast of 1.2 px twice.
@@ -62,6 +63,10 @@ const INERTIA_STOP_SPEED = 0.01;
 const LOD_MAX_ZOOM = 32;
 const LOD_STEPS_PER_DOUBLING = 2;
 const LOD_ERROR_PX = 0.5;
+// During the flight from start to end the copies are this many steps coarser, about
+// 1.4 px, which the motion hides. The whole globe in view otherwise costs Firefox
+// more time per frame than a frame has. The flight ends at full detail.
+const FLIGHT_COARSER_STEPS = 3;
 
 function polygonsOf(geometry) {
   return geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
@@ -108,6 +113,9 @@ function clickablePoint(projection, polygon, centroid) {
 const NEVER = 'var(--never)';
 
 const ease = (t) => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
+// Gentler at both ends than `ease`, so the quick flight across the globe has no rush in
+// the middle: its top speed is 1.6 times the average instead of 3 times.
+const glide = (t) => (1 - Math.cos(Math.PI * t)) / 2;
 
 // `onSelect(event)` is called for a click or tap on the globe. `lakes` are drawn as
 // water over the countries. With `hideBorders` the land is one surface with coasts
@@ -151,6 +159,7 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
   let tourTimer = null;
   let flashing = null;
   let animation = null;
+  let coarse = false;
   let drawScheduled = false;
   let drawCount = 0;
   let drawnShapes = 0;
@@ -179,27 +188,26 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     return corner >= radius * k ? Math.PI / 2 : Math.asin(corner / (radius * k));
   }
 
-  // Each copy must stay sharp up to the zoom where the next one takes over.
+  // Each copy must stay sharp up to the zoom where the next one takes over. Levels
+  // start at -FLIGHT_COARSER_STEPS, so they are stored shifted by that.
+  const levelTolerance = (level) => LOD_ERROR_PX / (lodScale * 2 ** ((level + 1) / LOD_STEPS_PER_DOUBLING));
+
   function polygonsAt(shape, level) {
     if (k >= LOD_MAX_ZOOM) return shape.polygons;
-    if (!shape.levels[level]) {
-      const tolerance = LOD_ERROR_PX / (lodScale * 2 ** ((level + 1) / LOD_STEPS_PER_DOUBLING));
-      shape.levels[level] = shape.polygons.map((polygon) => simplifyPolygon(polygon, tolerance));
-    }
-    return shape.levels[level];
+    const slot = level + FLIGHT_COARSER_STEPS;
+    shape.levels[slot] ??= shape.polygons.map((polygon) => simplifyPolygon(polygon, levelTolerance(level)));
+    return shape.levels[slot];
   }
 
   // The coasts at the same detail as the polygons they belong to.
   function coastsAt(shape, level) {
     if (k >= LOD_MAX_ZOOM) return shape.coasts;
-    if (!shape.coastLevels[level]) {
-      const tolerance = LOD_ERROR_PX / (lodScale * 2 ** ((level + 1) / LOD_STEPS_PER_DOUBLING));
-      shape.coastLevels[level] = shape.coasts.map((lines) => lines.map((line) => simplifyLine(line, tolerance)));
-    }
-    return shape.coastLevels[level];
+    const slot = level + FLIGHT_COARSER_STEPS;
+    shape.coastLevels[slot] ??= shape.coasts.map((lines) => lines.map((line) => simplifyLine(line, levelTolerance(level))));
+    return shape.coastLevels[slot];
   }
 
-  const detailLevel = () => Math.floor(Math.log2(k) * LOD_STEPS_PER_DOUBLING);
+  const detailLevel = () => Math.floor(Math.log2(k) * LOD_STEPS_PER_DOUBLING) - (coarse ? FLIGHT_COARSER_STEPS : 0);
 
   // Orthographic projection of points that lie fully on the front of the globe.
   // It needs no clipping, and skipping d3's stream makes it about three times faster.
@@ -220,14 +228,19 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     }
   }
 
-  function traceFrontRing(ctx, ring) {
+  // A fill closes each ring by itself, and the rings end where they start. Only a
+  // stroke needs `closePath` for the corner at the start. In Chrome every
+  // `closePath` takes longer the longer the path already is: on the land of the
+  // whole globe, thousands of rings in one path, it cost 35 ms per frame.
+  function traceFrontRing(ctx, ring, close) {
     traceFrontPoints(ctx, ring);
-    ctx.closePath();
+    if (close) ctx.closePath();
   }
 
   // Adds the shape's polygons that may be on screen to the current path, at the
-  // detail the zoom needs. Returns false when none is.
-  function traceShape(ctx, clippedPath, shape) {
+  // detail the zoom needs. Returns false when none is. With `close: false` the path
+  // can only be filled, not stroked.
+  function traceShape(ctx, clippedPath, shape, { close = true } = {}) {
     const angle = viewAngle();
     let polygons = null;
     const edge = [];
@@ -235,7 +248,7 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
       const distance = geoDistance(center, cap.center);
       if (distance - cap.radius >= angle) return;
       polygons ??= polygonsAt(shape, detailLevel());
-      if (distance + cap.radius < Math.PI / 2) for (const ring of polygons[i]) traceFrontRing(ctx, ring);
+      if (distance + cap.radius < Math.PI / 2) for (const ring of polygons[i]) traceFrontRing(ctx, ring, close);
       else edge.push(polygons[i]);
     });
     if (edge.length) clippedPath({ type: 'MultiPolygon', coordinates: edge });
@@ -311,7 +324,7 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
   function drawHiddenLand() {
     context.beginPath();
     for (const shape of shapes) {
-      if (!hasOwnColor(shape) && traceShape(context, path, shape)) drawnShapes += 1;
+      if (!hasOwnColor(shape) && traceShape(context, path, shape, { close: false })) drawnShapes += 1;
     }
     context.fillStyle = resolveColor(NEVER);
     context.fill();
@@ -465,6 +478,10 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
   function stopAnimation() {
     if (animation) cancelAnimationFrame(animation);
     animation = null;
+    if (coarse) {
+      coarse = false;
+      scheduleDraw();
+    }
     clearTimeout(tourTimer);
     tourTimer = null;
   }
@@ -473,7 +490,8 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
 
   // With `dip`, the zoom falls by that factor (in log scale) in the middle of the
   // way, so a long flight zooms out to show where it goes.
-  function viewTo(nextCenter, nextK, animate, { durationMs = ZOOM_DURATION_MS, dip = 0 } = {}) {
+  // With `rough`, the borders are coarser until the last frame.
+  function viewTo(nextCenter, nextK, animate, { durationMs = ZOOM_DURATION_MS, dip = 0, easing = ease, rough = false } = {}) {
     stopAnimation();
     if (!animate || reducedMotion()) {
       setView(nextCenter, nextK);
@@ -484,9 +502,10 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     const started = performance.now();
     const step = (now) => {
       const t = Math.min(1, (now - started) / durationMs);
-      const e = ease(t);
+      const e = easing(t);
       const point = between(e);
       const zoomLevel = startK * (nextK / startK) ** e * Math.exp(-dip * 4 * e * (1 - e));
+      coarse = rough && t < 1;
       setView(Number.isFinite(point[0]) ? point : nextCenter, Math.max(1, zoomLevel));
       animation = t < 1 ? requestAnimationFrame(step) : null;
     };
@@ -530,7 +549,7 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
       const endK = fitZoom(end, MAX_AUTO_ZOOM);
       // Halfway there the whole globe is in view.
       const dip = Math.max(0, (Math.log(k) + Math.log(endK)) / 2);
-      viewTo(end.center, endK, true, { durationMs: ROUTE_FLIGHT_MS, dip });
+      viewTo(end.center, endK, true, { durationMs: ROUTE_FLIGHT_MS, dip, easing: glide, rough: true });
     };
     clearTimeout(tourTimer);
     tourTimer = setTimeout(hold, animate && !reducedMotion() ? ZOOM_DURATION_MS + ROUTE_HOLD_MS : ROUTE_HOLD_MS);
@@ -714,6 +733,8 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     hidesBorders: () => hideBorders,
     // True while the globe still shows the start and is about to fly to the end.
     touring: () => Boolean(tourTimer),
+    // True while the flight to the end draws coarser borders.
+    roughDetail: () => coarse,
     // The point the globe turns to the center to show a route that fits at once.
     routeCenter: (start, end) => capAround(mainCap(shapeByCode.get(start)), mainCap(shapeByCode.get(end))),
     codeAt,
