@@ -425,3 +425,27 @@ test.describe('on a phone', () => {
     await expect(page.locator('#feedback .verdict')).toHaveText('Schade!');
   });
 });
+
+// Chips and the globe share the colors: start and end dark blue, steps green,
+// detours red.
+test('start and end are dark blue, steps green and detours red', async ({ page }) => {
+  await open(page);
+  await play(page, 'PT', 'PL');
+  const rgb = (locator, property) => locator.evaluate((element, name) =>
+    getComputedStyle(element)[name].match(/\d+/g).slice(0, 3).map(Number), property);
+  const isGreen = ([r, g, b]) => g > r + 40 && g > b + 40;
+  const isRed = ([r, g, b]) => r > g + 80 && r > b + 80;
+  const isDarkBlue = ([r, g, b]) => b > r + 60 && b > g + 40 && r + g + b < 400;
+  for (const id of ['#route-start', '#route-end']) {
+    expect(isDarkBlue(await rgb(page.locator(id), 'backgroundColor')), id).toBe(true);
+    expect(await rgb(page.locator(id), 'color'), id).toEqual([255, 255, 255]);
+  }
+  await guess(page, 'Deutschland');
+  await guess(page, 'Italien');
+  await expect(chips(page)).toHaveText(['Deutschland', 'Italien']);
+  expect(isGreen(await rgb(chips(page).nth(0), 'backgroundColor'))).toBe(true);
+  expect(isRed(await rgb(chips(page).nth(1), 'backgroundColor'))).toBe(true);
+  const token = (name) => page.evaluate((n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim(), name);
+  expect(await mapApi(page, 'colorOf', 'DE')).toBe(await token('--route-step'));
+  expect(await mapApi(page, 'colorOf', 'IT')).toBe(await token('--route-detour'));
+});
