@@ -299,6 +299,47 @@ test.describe('with motion', () => {
     expect(zooms.length).toBeGreaterThan(30);
   });
 
+  test('the flight from start to end is quick and ends at full detail', async ({ page }) => {
+    await open(page);
+    await play(page, 'PT', 'CN');
+    const cn = await mapApi(page, 'centerOf', 'CN');
+    // Times the flight from the moment the globe leaves the start until it arrives.
+    const flight = await page.evaluate(async (target) => {
+      const api = document.querySelector('#map').mapTestApi;
+      const started = performance.now();
+      let left = null;
+      let rough = false;
+      while (performance.now() - started < 8000) {
+        await new Promise(requestAnimationFrame);
+        if (left === null && !api.touring()) left = performance.now();
+        rough ||= api.roughDetail();
+        const { center } = api.view();
+        if (left !== null && Math.abs(center[0] - target[0]) < 1e-6 && Math.abs(center[1] - target[1]) < 1e-6) {
+          return { ms: performance.now() - left, rough, roughAtEnd: api.roughDetail() };
+        }
+      }
+      return null;
+    }, cn);
+    expect(flight).not.toBeNull();
+    // About a second, plus frames a busy machine may drop.
+    expect(flight.ms).toBeLessThan(1700);
+    expect(flight.rough).toBe(true);
+    expect(flight.roughAtEnd).toBe(false);
+  });
+
+  test('touching the globe during the flight stops it at full detail', async ({ page }) => {
+    await open(page);
+    await play(page, 'PT', 'CN');
+    await expect.poll(() => mapApi(page, 'roughDetail'), { timeout: 5000 }).toBe(true);
+    await page.mouse.move(640, 400);
+    await page.mouse.down();
+    await page.mouse.move(600, 380, { steps: 3 });
+    await page.mouse.up();
+    expect(await mapApi(page, 'roughDetail')).toBe(false);
+    const cn = await mapApi(page, 'centerOf', 'CN');
+    expect(near(await mapApi(page, 'view'), cn)).toBe(false);
+  });
+
   test('touching the globe during the tour stops it', async ({ page }) => {
     await open(page);
     await play(page, 'PT', 'CN');
