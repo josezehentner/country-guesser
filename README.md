@@ -13,7 +13,7 @@ A comic-style quiz for every country on Earth. The globe shows how well you know
 
 <h3 align="center"><a href="https://josezehentner.github.io/country-guesser/">👉 josezehentner.github.io/country-guesser 👈</a></h3>
 
-<p align="center">Free · no sign-up · in the browser on computer or phone · in German for now, more languages planned</p>
+<p align="center">Free · no sign-up · in the browser on computer or phone · in German and English</p>
 
 ## 🎮 Six ways to play
 
@@ -75,6 +75,7 @@ Mix both, e.g. only Africa's easy countries: 250 countries and territories in to
 | Move between the answer field and its buttons | ← and → | tap |
 | Answer (find a country or capital) | click the country | tap the country |
 | Move on after a wrong answer | Enter, "Weiter" or click the globe | "Weiter" or tap the globe |
+| Switch between German and English | "DE \| EN" at the top of the menu, or ⚙ in a mode | the same |
 
 A quick swipe gives the globe momentum. In the find modes and with the flags, "Zum Land" only appears after your answer, so it never gives the country away.
 
@@ -88,7 +89,7 @@ No sign-up, no ads, no tracking, nothing loaded from other servers. Progress liv
 - Globe: [d3](https://d3js.org), ISC license.
 - Flags: [flag-icons](https://github.com/lipis/flag-icons), MIT license.
 - Font: [Bangers](https://github.com/googlefonts/bangers), SIL Open Font License.
-- German country names: the browser's own `Intl.DisplayNames`, adjusted where needed.
+- German and English country names: the browser's own `Intl.DisplayNames`, adjusted where needed.
 
 The game itself is under the [MIT license](LICENSE).
 

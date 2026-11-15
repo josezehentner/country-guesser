@@ -1,8 +1,8 @@
 // "Länder benennen": a country is marked on the globe and the player types its name.
 import { enableArrowKeys } from './answer-keys.js';
 import { byId, startGame } from './game.js';
-import { countryPhrase, verb } from './grammar.js';
 import { isCorrectAnswer } from './quiz.js';
+import { t } from './text.js';
 
 const form = byId('answer-form');
 const input = byId('answer-input');
@@ -13,7 +13,7 @@ const focusInput = () => input.focus({ preventScroll: true });
 
 function answer(game, correct, wrongVerdict) {
   const { code, name } = game.current;
-  game.finish(correct, correct ? 'Richtig!' : wrongVerdict, correct ? name : `Das ${verb(code, 'ist', 'sind')} ${countryPhrase(code)}`);
+  game.finish(correct, correct ? t.right : wrongVerdict, correct ? name : t.thatIs(code));
 }
 
 startGame({
@@ -28,7 +28,7 @@ startGame({
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       if (game.isAnswered) game.nextQuestion();
-      else if (input.value.trim()) answer(game, isCorrectAnswer(input.value, game.current.code), 'Falsch!');
+      else if (input.value.trim()) answer(game, isCorrectAnswer(input.value, game.current.code), t.wrong);
     });
     // Typing the next answer during the pause moves on at once and keeps the letters.
     input.addEventListener('input', () => {
@@ -38,7 +38,7 @@ startGame({
       input.value = typed;
     });
     dontKnowButton.addEventListener('click', () => {
-      if (!game.isAnswered) answer(game, false, 'Schade!');
+      if (!game.isAnswered) answer(game, false, t.dontKnow);
     });
     input.disabled = false;
     submitButton.disabled = false;
@@ -46,7 +46,7 @@ startGame({
 
   ask(game) {
     input.value = '';
-    submitButton.textContent = 'Prüfen';
+    submitButton.textContent = t.check;
     dontKnowButton.disabled = false;
     game.map.highlight(game.current.code);
     focusInput();
@@ -55,7 +55,7 @@ startGame({
   answered() {
     // The field stays editable: a read-only field would close the phone keyboard.
     input.value = '';
-    submitButton.textContent = 'Weiter';
+    submitButton.textContent = t.next;
     dontKnowButton.disabled = true;
     focusInput();
   },

@@ -16,6 +16,8 @@ export default defineConfig({
   use: {
     baseURL: `http://127.0.0.1:${PORT}/`,
     browserName: 'firefox',
+    // A German browser, so the pages are German. tests/e2e/english.spec.js sets English.
+    locale: 'de-DE',
     colorScheme: 'light',
     acceptDownloads: true,
     contextOptions: { reducedMotion: 'reduce' },

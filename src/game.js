@@ -1,11 +1,13 @@
 // What every mode shares: progress, stats, legend, filters, settings and the globe.
 // A mode only decides how a question is asked and answered.
-import { COUNTRIES, CONTINENTS, LEVELS } from '../data/countries.js';
+import { COUNTRIES } from '../data/countries.js';
 import { scoreColor } from './colors.js';
 import { setupIntro } from './intro.js';
 import { createMap } from './map.js';
+import { setupLanguageSwitch, translatePage } from './page-text.js';
 import { filterCountries, nextScore, pickNextCountry, withinScoreLimit } from './quiz.js';
 import { emptyProgress, exportProgress, loadProgress, parseImport, saveProgress } from './storage.js';
+import { t } from './text.js';
 
 export const MAX_SCORE = 10;
 
@@ -22,8 +24,8 @@ const PEEK_CLOSE_DELAY_MS = 300;
 
 // The filter groups in the sidebar, each one a list of codes in the settings.
 const FILTER_GROUPS = [
-  { key: 'regions', boxId: 'region-filters', options: CONTINENTS, field: 'continent' },
-  { key: 'levels', boxId: 'level-filters', options: LEVELS, field: 'level' },
+  { key: 'regions', boxId: 'region-filters', options: t.continents, field: 'continent' },
+  { key: 'levels', boxId: 'level-filters', options: t.levels, field: 'level' },
 ];
 
 // `mode` provides:
@@ -44,6 +46,8 @@ const FILTER_GROUPS = [
 //   renderStats(game)         fills the stats in the top bar
 //   poolSummary(pool)         optional: the filter summary, or null for the default
 export function startGame(mode) {
+  translatePage();
+  setupLanguageSwitch();
   const countries = mode.countries ?? COUNTRIES;
   const scores = mode.scores !== false;
   const filterGroups = FILTER_GROUPS.filter(({ key }) => !mode.filters || mode.filters.includes(key));
@@ -158,7 +162,7 @@ export function startGame(mode) {
     const limit = progress.settings.maxScore ?? MAX_SCORE;
     const slider = byId('score-limit');
     slider.value = String(limit);
-    slider.setAttribute('aria-valuetext', limit >= MAX_SCORE ? 'Alle Stufen' : `Bis Stufe ${limit}`);
+    slider.setAttribute('aria-valuetext', limit >= MAX_SCORE ? t.allLevels : t.upToLevel(limit));
     // The knob and the rail up to it take the color of the highest score still asked.
     slider.style.setProperty('--limit-color', scoreColor(limit));
     slider.style.setProperty('--limit-fill', String(limit / MAX_SCORE));
@@ -230,14 +234,14 @@ export function startGame(mode) {
       if (!file) return;
       const imported = parseImport(await file.text());
       if (!imported) {
-        setFeedback('Import fehlgeschlagen: Die Datei ist ungültig.', 'bad');
+        setFeedback(t.importFailed, 'bad');
         return;
       }
-      if (window.confirm('Aktuellen Fortschritt ersetzen?')) replaceProgress(imported);
+      if (window.confirm(t.confirmImport)) replaceProgress(imported);
     });
 
     byId('reset-btn').addEventListener('click', () => {
-      if (window.confirm('Gesamten Fortschritt wirklich löschen?')) replaceProgress(emptyProgress());
+      if (window.confirm(t.confirmReset)) replaceProgress(emptyProgress());
     });
   }
 
@@ -361,9 +365,7 @@ export function startGame(mode) {
     const count = pool.length;
     const summary = byId('filter-summary');
     const custom = mode.poolSummary?.(pool);
-    summary.textContent = custom?.text ?? (count
-      ? `${count} ${count === 1 ? 'Land wird' : 'Länder werden'} abgefragt.`
-      : 'Keine Länder für diese Auswahl. Bis du etwas auswählst, kommen alle dran.');
+    summary.textContent = custom?.text ?? (count ? t.asked(count) : t.noneAsked);
     summary.classList.toggle('empty', custom ? custom.empty : !count);
   }
 
@@ -387,7 +389,7 @@ export function startGame(mode) {
       game.map = createMap(byId('map'), byId('map-target'), world, onSelect, lakes, mode.mapOptions);
     } catch (error) {
       console.error(error);
-      byId('loading').textContent = 'Die Karte konnte nicht geladen werden.';
+      byId('loading').textContent = t.mapFailed;
       return;
     }
     byId('loading').hidden = true;

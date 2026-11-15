@@ -7,10 +7,16 @@
   <meta name="color-scheme" content="light dark">
   <title>Country Guesser</title>
   <link rel="icon" href="data:,">
+  <script src="src/language-boot.js"></script>
   <link rel="stylesheet" href="style.css">
+  <script type="module" src="src/menu.js"></script>
 </head>
 <body class="menu">
   <header class="menu-header">
+    <div class="language-switch menu-language" role="group" aria-label="Sprache" data-i18n-aria-label="settings.language">
+      <button type="button" data-language="de" lang="de" aria-label="Deutsch" aria-pressed="false">DE</button>
+      <button type="button" data-language="en" lang="en" aria-label="English" aria-pressed="false">EN</button>
+    </div>
     <h1>Country Guesser</h1>
   </header>
 
@@ -20,8 +26,8 @@
         <a class="mode-card" href="name-countries.html">
           <img class="mode-image" src="images/modes/name-countries.svg" alt="" width="320" height="200">
           <div class="mode-text">
-            <h2>Länder benennen</h2>
-            <p>Markiertes Land erkennen und benennen.</p>
+            <h2 data-i18n="mode.name">Länder benennen</h2>
+            <p data-i18n="menu.name">Markiertes Land erkennen und benennen.</p>
           </div>
         </a>
       </li>
@@ -29,8 +35,8 @@
         <a class="mode-card" href="find-countries.html">
           <img class="mode-image" src="images/modes/find-countries.svg" alt="" width="320" height="200">
           <div class="mode-text">
-            <h2>Länder finden</h2>
-            <p>Genanntes Land auf dem Globus finden.</p>
+            <h2 data-i18n="mode.find">Länder finden</h2>
+            <p data-i18n="menu.find">Genanntes Land auf dem Globus finden.</p>
           </div>
         </a>
       </li>
@@ -38,8 +44,8 @@
         <a class="mode-card" href="capitals.html">
           <img class="mode-image" src="images/modes/capitals.svg" alt="" width="320" height="200">
           <div class="mode-text">
-            <h2>Hauptstädte lernen</h2>
-            <p>Hauptstadt des markierten Landes nennen.</p>
+            <h2 data-i18n="mode.capitals">Hauptstädte lernen</h2>
+            <p data-i18n="menu.capitals">Hauptstadt des markierten Landes nennen.</p>
           </div>
         </a>
       </li>
@@ -47,8 +53,8 @@
         <a class="mode-card" href="find-capitals.html">
           <img class="mode-image" src="images/modes/find-capitals.svg" alt="" width="320" height="200">
           <div class="mode-text">
-            <h2>Hauptstädte finden</h2>
-            <p>Land zur genannten Hauptstadt finden.</p>
+            <h2 data-i18n="mode.findCapitals">Hauptstädte finden</h2>
+            <p data-i18n="menu.findCapitals">Land zur genannten Hauptstadt finden.</p>
           </div>
         </a>
       </li>
@@ -56,8 +62,8 @@
         <a class="mode-card" href="flags.html">
           <img class="mode-image" src="images/modes/flags.svg" alt="" width="320" height="200">
           <div class="mode-text">
-            <h2>Flaggen erkennen</h2>
-            <p>Land zur gezeigten Flagge nennen.</p>
+            <h2 data-i18n="mode.flags">Flaggen erkennen</h2>
+            <p data-i18n="menu.flags">Land zur gezeigten Flagge nennen.</p>
           </div>
         </a>
       </li>
@@ -65,8 +71,8 @@
         <a class="mode-card" href="borders.html">
           <img class="mode-image" src="images/modes/borders.svg" alt="" width="320" height="200">
           <div class="mode-text">
-            <h2>Grenzgänger</h2>
-            <p>Über Landgrenzen von Land zu Land.</p>
+            <h2 data-i18n="mode.borders">Grenzgänger</h2>
+            <p data-i18n="menu.borders">Über Landgrenzen von Land zu Land.</p>
           </div>
         </a>
       </li>

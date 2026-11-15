@@ -1,8 +1,11 @@
-// German grammar for country names in sentences: the article ("die Schweiz"), its
+// Grammar for country names in sentences. German: the article ("die Schweiz"), its
 // case ("in der Schweiz"), and verbs that agree with plural names ("Die
-// Niederlande liegen hier"). Free of DOM and map code.
+// Niederlande liegen hier"). English: only "the" before some names ("the
+// Netherlands"). Free of DOM and map code.
 import { ARTICLES } from '../data/articles.js';
+import { WITH_THE } from '../data/articles.en.js';
 import { COUNTRY_BY_CODE } from '../data/countries.js';
+import { LANG } from './language.js';
 
 const DEFINITE = {
   f: { nominative: 'die', accusative: 'die', dative: 'der' },
@@ -13,8 +16,11 @@ const DEFINITE = {
 
 // The article and the name after it, kept apart so a page can set the name in
 // bold: { article: 'den', name: 'Niederlanden' }, or { article: '', name: 'Polen' }.
-export function countryParts(code, grammaticalCase = 'nominative') {
-  const plain = COUNTRY_BY_CODE.get(code).name;
+// In English the case makes no difference: { article: 'the', name: 'Netherlands' }.
+export function countryParts(code, grammaticalCase = 'nominative', language = LANG) {
+  const { names } = COUNTRY_BY_CODE.get(code);
+  if (language === 'en') return { article: WITH_THE.has(code) ? 'the' : '', name: names.en };
+  const plain = names.de;
   const entry = ARTICLES[code];
   if (!entry) return { article: '', name: plain };
   const name = grammaticalCase === 'dative' ? (entry.dative ?? entry.name ?? plain) : (entry.name ?? plain);
@@ -22,8 +28,8 @@ export function countryParts(code, grammaticalCase = 'nominative') {
 }
 
 // The name with its article, e.g. "die Schweiz", "dem Iran", "Polen".
-export function countryPhrase(code, grammaticalCase = 'nominative') {
-  const { article, name } = countryParts(code, grammaticalCase);
+export function countryPhrase(code, grammaticalCase = 'nominative', language = LANG) {
+  const { article, name } = countryParts(code, grammaticalCase, language);
   return article ? `${article} ${name}` : name;
 }
 

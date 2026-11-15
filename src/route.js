@@ -77,9 +77,9 @@ export const isOnShortestRoute = (round, code) =>
   round.fromStart.has(code) && round.fromStart.get(code) + round.fromEnd.get(code) === round.between + 1;
 
 // The countries whose names `input` matches, without typos where an exact match
-// exists. "Kongo" matches both Kongos.
-export function findCountries(input) {
-  const matches = COUNTRIES.filter(({ code }) => isCorrectAnswer(input, code));
+// exists. "Kongo" matches both Kongos. Only names in `language` count.
+export function findCountries(input, language) {
+  const matches = COUNTRIES.filter(({ code }) => isCorrectAnswer(input, code, language));
   return matches.map(({ code }) => code);
 }
 
@@ -124,8 +124,8 @@ export const guessesLeft = (round) => round.maxGuesses - round.guesses.length;
 //   { kind: 'endpoint', code }            the start or the end
 //   { kind: 'repeated', code }            named before
 //   { kind: 'step', code } / 'detour'     a new country on a shortest route, or not
-export function judgeGuess(round, input) {
-  const codes = findCountries(input);
+export function judgeGuess(round, input, language) {
+  const codes = findCountries(input, language);
   if (!codes.length) return { kind: 'unknown' };
   if (codes.length > 1) return { kind: 'ambiguous', codes };
   const [code] = codes;
