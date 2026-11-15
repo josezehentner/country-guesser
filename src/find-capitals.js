@@ -2,8 +2,8 @@
 import { CAPITALS, capitalLabel } from '../data/capitals.js';
 import { COUNTRIES, COUNTRY_BY_CODE } from '../data/countries.js';
 import { byId, startGame } from './game.js';
-import { countryPhrase, verb } from './grammar.js';
 import { sharesCapital } from './quiz.js';
+import { t } from './text.js';
 
 const prompt = byId('prompt');
 const promptName = byId('prompt-name');
@@ -40,7 +40,7 @@ startGame({
     dontKnowButton.addEventListener('click', () => {
       if (game.isAnswered) return;
       const { code, name } = game.current;
-      game.finish(false, 'Schade!', `${CAPITALS[code].name} liegt hier: ${name}`);
+      game.finish(false, t.dontKnow, t.capitalIn(code, name));
       game.map.highlight(code);
     });
   },
@@ -72,8 +72,8 @@ startGame({
     const found = places.find((place) => game.map.hits(place, event.clientX, event.clientY));
     if (found) {
       const others = places.filter((place) => place !== found).map(nameOf);
-      const also = others.length ? `. Auch richtig: ${others.join(', ')}` : '';
-      game.finish(true, 'Richtig!', `${nameOf(found)}: ${capitalLabel(found)}${also}`);
+      const also = others.length ? t.alsoRight(others) : '';
+      game.finish(true, t.right, `${nameOf(found)}: ${capitalLabel(found)}${also}`);
       game.map.highlight(found, { focus: false });
       // The flash belongs where the player clicked, even on the other place.
       if (found !== code) game.map.flash(found, true);
@@ -81,10 +81,10 @@ startGame({
     }
     const clicked = game.map.codeAt(event.clientX, event.clientY);
     if (!clicked) {
-      game.setFeedback('Dort ist kein Land aus dem Quiz.', 'hint');
+      game.setFeedback(t.noCountryThere, 'hint');
       return;
     }
-    game.finish(false, 'Falsch!', `Das ${verb(clicked, 'ist', 'sind')} ${countryPhrase(clicked)}. ${CAPITALS[code].name} liegt hier: ${name}`);
+    game.finish(false, t.wrong, `${t.thatIs(clicked)}. ${t.capitalIn(code, name)}`);
     game.map.highlight(code);
   },
 

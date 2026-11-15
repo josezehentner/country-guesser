@@ -1,7 +1,9 @@
 import { COUNTRIES } from '../data/countries.js';
 import { ALIASES } from '../data/aliases.js';
+import { ALIASES_EN } from '../data/aliases.en.js';
 import { CAPITALS, capitalNames } from '../data/capitals.js';
 import { lookalikesOf } from '../data/flags.js';
+import { LANG } from './language.js';
 
 const MAX_SCORE = 10;
 const FIRST_CORRECT_SCORE = 5;
@@ -20,11 +22,27 @@ export function normalize(text) {
 
 const uniqueNormalized = (names) => [...new Set(names.map(normalize))];
 
-const namesByCode = new Map(
-  COUNTRIES.map(({ code, name, intlName }) => [code, uniqueNormalized([name, intlName, ...(ALIASES[code] ?? [])])]),
-);
+// Only names in the language of the page count: German on German pages, English
+// on English ones. Each table is built when first needed.
+const ALIASES_BY_LANGUAGE = { de: ALIASES, en: ALIASES_EN };
+const cached = (build) => {
+  const tables = new Map();
+  return (language) => {
+    if (!tables.has(language)) tables.set(language, build(language));
+    return tables.get(language);
+  };
+};
 
-const capitalsByCode = new Map(Object.keys(CAPITALS).map((code) => [code, uniqueNormalized(capitalNames(code))]));
+const namesByCode = cached((language) => new Map(
+  COUNTRIES.map(({ code, names, intlNames }) => [
+    code,
+    uniqueNormalized([names[language], intlNames[language], ...(ALIASES_BY_LANGUAGE[language][code] ?? [])]),
+  ]),
+));
+
+const capitalsByCode = cached((language) => new Map(
+  Object.keys(CAPITALS).map((code) => [code, uniqueNormalized(capitalNames(code, language))]),
+));
 
 function levenshtein(a, b) {
   let previous = Array.from({ length: b.length + 1 }, (_, i) => i);
@@ -66,14 +84,15 @@ function matches(answersByCode, input, code) {
 }
 
 // Whether `input` names the country `code`.
-export const isCorrectAnswer = (input, code) => matches(namesByCode, input, code);
+export const isCorrectAnswer = (input, code, language = LANG) => matches(namesByCode(language), input, code);
 
 // Whether `input` names the capital of `code`, or one of its official capitals.
-export const isCorrectCapital = (input, code) => matches(capitalsByCode, input, code);
+export const isCorrectCapital = (input, code, language = LANG) => matches(capitalsByCode(language), input, code);
 
 // Whether `input` names the country of the flag of `code`, or a country whose flag
 // looks the same.
-export const isCorrectFlag = (input, code) => [code, ...lookalikesOf(code)].some((other) => isCorrectAnswer(input, other));
+export const isCorrectFlag = (input, code, language = LANG) =>
+  [code, ...lookalikesOf(code)].some((other) => isCorrectAnswer(input, other, language));
 
 const officialCapitalsByCode = new Map(
   Object.entries(CAPITALS).map(([code, { name, also = [] }]) => [code, uniqueNormalized([name, ...also])]),

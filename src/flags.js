@@ -4,8 +4,8 @@ import { COUNTRY_BY_CODE } from '../data/countries.js';
 import { FLAG_COUNTRIES, flagUrl, lookalikesOf } from '../data/flags.js';
 import { enableArrowKeys } from './answer-keys.js';
 import { byId, startGame } from './game.js';
-import { countryPhrase, verb } from './grammar.js';
 import { isCorrectFlag } from './quiz.js';
+import { t } from './text.js';
 
 const form = byId('answer-form');
 const input = byId('answer-input');
@@ -17,16 +17,10 @@ const focusInput = () => input.focus({ preventScroll: true });
 
 // Names the country, and any country whose flag looks the same. In a sentence the
 // country takes its article: "Das ist der Tschad (gleiche Flagge wie Rumänien)".
-function solution(code, inSentence) {
-  const name = inSentence ? countryPhrase(code) : COUNTRY_BY_CODE.get(code).name;
-  const others = lookalikesOf(code).map((other) => countryPhrase(other));
-  return others.length ? `${name} (gleiche Flagge wie ${others.join(', ')})` : name;
-}
-
 function answer(game, correct, wrongVerdict) {
   const { code } = game.current;
-  const text = correct ? solution(code, false) : `Das ${verb(code, 'ist', 'sind')} ${solution(code, true)}`;
-  game.finish(correct, correct ? 'Richtig!' : wrongVerdict, text);
+  const name = correct ? COUNTRY_BY_CODE.get(code).name : t.thatIs(code);
+  game.finish(correct, correct ? t.right : wrongVerdict, `${name}${t.sameFlag(lookalikesOf(code))}`);
 }
 
 startGame({
@@ -43,7 +37,7 @@ startGame({
     form.addEventListener('submit', (event) => {
       event.preventDefault();
       if (game.isAnswered) game.nextQuestion();
-      else if (input.value.trim()) answer(game, isCorrectFlag(input.value, game.current.code), 'Falsch!');
+      else if (input.value.trim()) answer(game, isCorrectFlag(input.value, game.current.code), t.wrong);
     });
     // Typing the next answer during the pause moves on at once and keeps the letters.
     input.addEventListener('input', () => {
@@ -53,7 +47,7 @@ startGame({
       input.value = typed;
     });
     dontKnowButton.addEventListener('click', () => {
-      if (!game.isAnswered) answer(game, false, 'Schade!');
+      if (!game.isAnswered) answer(game, false, t.dontKnow);
     });
     input.disabled = false;
     submitButton.disabled = false;
@@ -64,7 +58,7 @@ startGame({
     flag.src = flagUrl(game.current.code);
     flag.hidden = false;
     input.value = '';
-    submitButton.textContent = 'Prüfen';
+    submitButton.textContent = t.check;
     dontKnowButton.disabled = false;
     game.map.clearHighlight();
     focusInput();
@@ -74,7 +68,7 @@ startGame({
     game.map.highlight(game.current.code);
     // The field stays editable: a read-only field would close the phone keyboard.
     input.value = '';
-    submitButton.textContent = 'Weiter';
+    submitButton.textContent = t.next;
     dontKnowButton.disabled = true;
     focusInput();
   },

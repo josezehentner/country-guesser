@@ -12,7 +12,7 @@ The owner's general rules for every project (git workflow, Conventional Commits,
 - No external requests at runtime. Libraries and data live in the repo.
 - Keep the Content Security Policy in every HTML page restrictive.
 - Display user input with `textContent` only. Never pass imported data or user input to `innerHTML` or `eval`.
-- UI text is German. Code, comments, file names and commit messages are English.
+- UI text is German and English: every text a player sees exists in both. Pages are written in German, and the English text lives in `src/page-text.js`, `src/text.js` and `src/intro-content.en.js`. Code, comments, file names and commit messages are English.
 - Use relative paths, because GitHub Pages may serve the site from a subfolder.
 - Do not add frameworks, TypeScript, bundlers or CSS frameworks unless the owner asks for them.
 

@@ -1,3 +1,5 @@
+import { LANG } from '../src/language.js';
+
 // Central list of quizzed countries: all 249 ISO 3166-1 entries plus Kosovo,
 // grouped by region (a continent, or the Middle East) and rated by difficulty. Everything else in data/world.json is drawn on the map
 // but never asked.
@@ -49,30 +51,64 @@ function levelOf(code) {
   return EASY.has(code) ? 'easy' : 'medium';
 }
 
-// Preferred display names where Intl.DisplayNames is unusual for a quiz.
+// Preferred display names where Intl.DisplayNames is unusual for a quiz, per language.
 const NAME_OVERRIDES = {
-  CD: 'Demokratische Republik Kongo',
-  CG: 'Republik Kongo',
-  CI: 'Elfenbeinküste',
-  HK: 'Hongkong',
-  MO: 'Macau',
-  PS: 'Palästina',
-  TL: 'Osttimor',
-  US: 'Vereinigte Staaten',
-  VA: 'Vatikanstadt',
-  XK: 'Kosovo',
+  de: {
+    CD: 'Demokratische Republik Kongo',
+    CG: 'Republik Kongo',
+    CI: 'Elfenbeinküste',
+    HK: 'Hongkong',
+    MO: 'Macau',
+    PS: 'Palästina',
+    TL: 'Osttimor',
+    US: 'Vereinigte Staaten',
+    VA: 'Vatikanstadt',
+    XK: 'Kosovo',
+  },
+  // The common English name, without "&" and "St.", and without the "SAR China"
+  // and "(Burma)" that Intl adds.
+  en: {
+    AG: 'Antigua and Barbuda',
+    BA: 'Bosnia and Herzegovina',
+    BL: 'Saint Barthélemy',
+    CD: 'Democratic Republic of the Congo',
+    CG: 'Republic of the Congo',
+    CI: 'Ivory Coast',
+    GS: 'South Georgia and the South Sandwich Islands',
+    HK: 'Hong Kong',
+    HM: 'Heard Island and McDonald Islands',
+    KN: 'Saint Kitts and Nevis',
+    LC: 'Saint Lucia',
+    MF: 'Saint Martin',
+    MM: 'Myanmar',
+    MO: 'Macau',
+    PM: 'Saint Pierre and Miquelon',
+    PS: 'Palestine',
+    SH: 'Saint Helena',
+    SJ: 'Svalbard and Jan Mayen',
+    ST: 'São Tomé and Príncipe',
+    TC: 'Turks and Caicos Islands',
+    TL: 'East Timor',
+    TR: 'Turkey',
+    TT: 'Trinidad and Tobago',
+    UM: 'U.S. Minor Outlying Islands',
+    VC: 'Saint Vincent and the Grenadines',
+    WF: 'Wallis and Futuna',
+    XK: 'Kosovo',
+  },
 };
 
-const displayNames = new Intl.DisplayNames(['de'], { type: 'region' });
+const displayNames = { de: new Intl.DisplayNames(['de'], { type: 'region' }), en: new Intl.DisplayNames(['en'], { type: 'region' }) };
+const perLanguage = (make) => ({ de: make('de'), en: make('en') });
 
+// `names` and `intlNames` hold both languages; `name` and `intlName` are the ones
+// of the page.
 export const COUNTRIES = Object.entries(CODES_BY_CONTINENT).flatMap(([continent, codes]) =>
-  codes.split(' ').map((code) => ({
-    code,
-    continent,
-    level: levelOf(code),
-    intlName: displayNames.of(code),
-    name: NAME_OVERRIDES[code] ?? displayNames.of(code),
-  })),
+  codes.split(' ').map((code) => {
+    const intlNames = perLanguage((language) => displayNames[language].of(code));
+    const names = perLanguage((language) => NAME_OVERRIDES[language][code] ?? intlNames[language]);
+    return { code, continent, level: levelOf(code), intlName: intlNames[LANG], name: names[LANG], intlNames, names };
+  }),
 );
 
 export const COUNTRY_BY_CODE = new Map(COUNTRIES.map((c) => [c.code, c]));

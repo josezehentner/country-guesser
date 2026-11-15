@@ -1,7 +1,12 @@
 // The guide of a mode: a dialog with its rules, the filters, the scale and the
 // colors. It opens by itself on the first visit and again behind the "?" button.
 import { INTROS } from './intro-content.js';
+import { INTROS_EN } from './intro-content.en.js';
+import { LANG } from './language.js';
 import { hasSeenIntro, markIntroSeen } from './storage.js';
+import { t } from './text.js';
+
+const GUIDES = { de: INTROS, en: INTROS_EN };
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -32,7 +37,7 @@ function buildDialog({ title, sections }) {
   const header = element('header', 'intro-header');
   const heading = element('h2', '', title);
   heading.id = 'intro-title';
-  header.append(element('p', 'intro-kicker', 'So geht’s'), heading);
+  header.append(element('p', 'intro-kicker', t.introKicker), heading);
 
   const body = element('div', 'intro-body');
   for (const { heading: name, items } of sections) {
@@ -43,7 +48,7 @@ function buildDialog({ title, sections }) {
     body.append(section);
   }
 
-  const close = element('button', 'primary', 'Los geht’s!');
+  const close = element('button', 'primary', t.introStart);
   close.type = 'button';
   close.id = 'intro-close';
   close.autofocus = true;
@@ -60,7 +65,7 @@ function buildDialog({ title, sections }) {
 // `onClose(first)` runs whenever the guide closes; `first` is true when it had
 // opened by itself on the first visit.
 export function setupIntro(mode, onClose) {
-  const guide = INTROS[mode];
+  const guide = GUIDES[LANG][mode];
   if (!guide) return;
   const dialog = buildDialog(guide);
   document.body.append(dialog);

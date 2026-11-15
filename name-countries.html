@@ -5,77 +5,83 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
   <meta name="color-scheme" content="light dark">
-  <title>Länder benennen – Country Guesser</title>
+  <title data-i18n="title.name">Länder benennen – Country Guesser</title>
   <link rel="icon" href="data:,">
+  <script src="src/language-boot.js"></script>
   <link rel="stylesheet" href="style.css">
   <script type="module" src="src/name-countries.js"></script>
 </head>
 <body>
   <header class="topbar">
-    <a class="back" href="./" aria-label="Zurück zum Menü">← Menü</a>
-    <h1>Länder benennen</h1>
+    <a class="back" href="./" aria-label="Zurück zum Menü" data-i18n="back" data-i18n-aria-label="backLabel">← Menü</a>
+    <h1 data-i18n="mode.name">Länder benennen</h1>
     <dl class="stats">
-      <div><dt><span class="stat-dot mastered" aria-hidden="true"></span><span class="label-long">Gemeistert</span></dt><dd id="stat-mastered">0</dd></div>
-      <div><dt><span class="stat-dot started" aria-hidden="true"></span><span class="label-long">Begonnen</span></dt><dd id="stat-started">0</dd></div>
-      <div><dt><span class="stat-dot never" aria-hidden="true"></span><span class="label-long">Noch nie gefragt</span></dt><dd id="stat-never">0</dd></div>
+      <div><dt><span class="stat-dot mastered" aria-hidden="true"></span><span class="label-long" data-i18n="stat.mastered">Gemeistert</span></dt><dd id="stat-mastered">0</dd></div>
+      <div><dt><span class="stat-dot started" aria-hidden="true"></span><span class="label-long" data-i18n="stat.started">Begonnen</span></dt><dd id="stat-started">0</dd></div>
+      <div><dt><span class="stat-dot never" aria-hidden="true"></span><span class="label-long" data-i18n="stat.never">Noch nie gefragt</span></dt><dd id="stat-never">0</dd></div>
     </dl>
-    <div class="progress" id="progress" role="progressbar" aria-label="Gesamtfortschritt" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress" id="progress" role="progressbar" aria-label="Gesamtfortschritt" data-i18n-aria-label="progress.total" aria-valuemin="0" aria-valuemax="100">
       <div class="progress-fill" id="progress-fill"></div>
     </div>
-    <button type="button" id="help-btn" class="icon-button" aria-label="Spielanleitung" aria-haspopup="dialog" title="Spielanleitung">?</button>
-    <button type="button" id="settings-btn" class="icon-button" aria-label="Einstellungen" aria-haspopup="dialog" title="Einstellungen">⚙&#xFE0E;</button>
+    <button type="button" id="help-btn" class="icon-button" aria-label="Spielanleitung" aria-haspopup="dialog" title="Spielanleitung" data-i18n-aria-label="help" data-i18n-title="help">?</button>
+    <button type="button" id="settings-btn" class="icon-button" aria-label="Einstellungen" aria-haspopup="dialog" title="Einstellungen" data-i18n-aria-label="settings" data-i18n-title="settings">⚙&#xFE0E;</button>
   </header>
 
   <div class="play-area">
   <aside id="filters" class="filters" aria-labelledby="filters-title">
-    <h2 id="filters-title">Filter</h2>
+    <h2 id="filters-title" data-i18n="filters">Filter</h2>
     <fieldset>
-      <legend>Regionen</legend>
+      <legend data-i18n="filters.regions">Regionen</legend>
       <div id="region-filters" class="filter-options"></div>
     </fieldset>
     <fieldset>
-      <legend>Schwierigkeit</legend>
+      <legend data-i18n="filters.levels">Schwierigkeit</legend>
       <div id="level-filters" class="filter-options"></div>
     </fieldset>
     <p id="filter-summary" class="filter-summary" aria-live="polite"></p>
   </aside>
-  <button type="button" id="filters-btn" class="filters-tab" aria-label="Filter" aria-controls="filters" aria-expanded="false" title="Filter"><span class="tab-arrow" aria-hidden="true"></span><span class="tab-label" aria-hidden="true">Filter</span></button>
+  <button type="button" id="filters-btn" class="filters-tab" aria-label="Filter" aria-controls="filters" aria-expanded="false" title="Filter" data-i18n-aria-label="filters" data-i18n-title="filters"><span class="tab-arrow" aria-hidden="true"></span><span class="tab-label" aria-hidden="true" data-i18n="filters">Filter</span></button>
   <main class="map-wrap" id="map-wrap">
-    <canvas id="map" role="img" aria-label="Globus"></canvas>
+    <canvas id="map" role="img" aria-label="Globus" data-i18n-aria-label="map.globe"></canvas>
     <canvas id="map-target" aria-hidden="true"></canvas>
-    <button type="button" id="recenter-btn" class="recenter" aria-label="Zum markierten Land" title="Zum markierten Land" hidden><svg class="recenter-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="7"/><circle class="recenter-dot" cx="12" cy="12" r="2"/><path d="M12 1.5v4.5M12 18v4.5M1.5 12H6M18 12h4.5"/></svg><span class="recenter-label">Zum Land</span></button>
-    <p class="caption" id="prompt">Welches Land ist markiert?</p>
+    <button type="button" id="recenter-btn" class="recenter" aria-label="Zum markierten Land" title="Zum markierten Land" data-i18n-aria-label="recenter.country" data-i18n-title="recenter.country" hidden><svg class="recenter-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="7"/><circle class="recenter-dot" cx="12" cy="12" r="2"/><path d="M12 1.5v4.5M12 18v4.5M1.5 12H6M18 12h4.5"/></svg><span class="recenter-label" data-i18n="recenter.countryShort">Zum Land</span></button>
+    <p class="caption" id="prompt" data-i18n="prompt.name">Welches Land ist markiert?</p>
     <div class="legend">
-      <ul class="legend-scale" id="legend" aria-label="Legende"></ul>
+      <ul class="legend-scale" id="legend" aria-label="Legende" data-i18n-aria-label="legend"></ul>
       <input type="range" id="score-limit" class="score-limit" min="0" max="10" step="1" value="10"
-             aria-label="Höchste Wissensstufe, die noch abgefragt wird" title="Länder über dieser Stufe nicht mehr abfragen">
+             aria-label="Höchste Wissensstufe, die noch abgefragt wird" title="Länder über dieser Stufe nicht mehr abfragen" data-i18n-aria-label="scoreLimit.label" data-i18n-title="scoreLimit.title">
     </div>
-    <p class="loading" id="loading">Karte wird geladen …</p>
+    <p class="loading" id="loading" data-i18n="loading">Karte wird geladen …</p>
   </main>
   </div>
 
   <section class="panel">
     <form id="answer-form" class="answer" autocomplete="off">
-      <label for="answer-input" class="visually-hidden">Name des markierten Landes</label>
-      <input id="answer-input" type="text" placeholder="Name des Landes …"
+      <label for="answer-input" class="visually-hidden" data-i18n="answer.name">Name des markierten Landes</label>
+      <input id="answer-input" type="text" placeholder="Name des Landes …" data-i18n-placeholder="placeholder.name"
              autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" disabled>
-      <button type="submit" id="submit-btn" class="primary" disabled>Prüfen</button>
-      <button type="button" id="dont-know-btn" aria-label="Weiß ich nicht" title="Weiß ich nicht" disabled><span class="label-long">Wei<span class="eszett">ß</span> ich nicht</span><span class="label-short" aria-hidden="true">?</span></button>
+      <button type="submit" id="submit-btn" class="primary" disabled data-i18n="check">Prüfen</button>
+      <button type="button" id="dont-know-btn" aria-label="Weiß ich nicht" title="Weiß ich nicht" data-i18n-aria-label="dontKnow" data-i18n-title="dontKnow" disabled><span class="label-long" data-i18n="dontKnow">Wei<span class="eszett">ß</span> ich nicht</span><span class="label-short" aria-hidden="true">?</span></button>
     </form>
     <p id="feedback" class="feedback" aria-live="polite"></p>
-    <p id="storage-notice" class="notice" hidden>Hinweis: Der Fortschritt kann in diesem Browser nicht gespeichert werden.</p>
+    <p id="storage-notice" class="notice" hidden data-i18n="storageNotice">Hinweis: Der Fortschritt kann in diesem Browser nicht gespeichert werden.</p>
   </section>
 
   <dialog id="settings" class="settings" aria-labelledby="settings-title">
-    <h2 id="settings-title">Einstellungen</h2>
-    <p class="setting-group">Fortschritt</p>
+    <h2 id="settings-title" data-i18n="settings">Einstellungen</h2>
+    <p class="setting-group" id="language-label" data-i18n="settings.language">Sprache</p>
+    <div class="language-switch" role="group" aria-labelledby="language-label">
+      <button type="button" data-language="de" lang="de" aria-pressed="false">Deutsch</button>
+      <button type="button" data-language="en" lang="en" aria-pressed="false">English</button>
+    </div>
+    <p class="setting-group" data-i18n="settings.progress">Fortschritt</p>
     <div class="setting-actions">
-      <button type="button" id="export-btn">Exportieren</button>
-      <button type="button" id="import-btn">Importieren</button>
-      <button type="button" id="reset-btn">Zurücksetzen</button>
+      <button type="button" id="export-btn" data-i18n="settings.export">Exportieren</button>
+      <button type="button" id="import-btn" data-i18n="settings.import">Importieren</button>
+      <button type="button" id="reset-btn" data-i18n="settings.reset">Zurücksetzen</button>
     </div>
     <input type="file" id="import-file" accept="application/json,.json" hidden>
-    <button type="button" id="settings-close" class="primary">Fertig</button>
+    <button type="button" id="settings-close" class="primary" data-i18n="settings.done">Fertig</button>
   </dialog>
 </body>
 </html>

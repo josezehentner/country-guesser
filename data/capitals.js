@@ -1,3 +1,6 @@
+import { LANG } from '../src/language.js';
+import { CAPITALS_EN } from './capitals.en.js';
+
 // Capitals per ISO code, for the capital modes. `name` is the German name shown as
 // the answer. `also` lists further official capitals or seats of government, which
 // count as correct and are shown with it ("Sucre (auch La Paz)"). `aliases` are
@@ -273,14 +276,20 @@ export const CAPITALS = {
   TF: { name: 'Port-aux-Français' },
 };
 
+const CAPITALS_BY_LANGUAGE = { de: CAPITALS, en: CAPITALS_EN };
+const ALSO = { de: 'auch', en: 'also' };
+
+// The capital of `code` in a language: { name, also, aliases }.
+export const capitalOf = (code, language = LANG) => CAPITALS_BY_LANGUAGE[language][code];
+
 // The answer as shown to the player, with further official capitals.
-export function capitalLabel(code) {
-  const { name, also } = CAPITALS[code];
-  return also ? `${name} (auch ${also.join(', ')})` : name;
+export function capitalLabel(code, language = LANG) {
+  const { name, also } = capitalOf(code, language);
+  return also ? `${name} (${ALSO[language]} ${also.join(', ')})` : name;
 }
 
 // Every name accepted as the capital of `code`.
-export function capitalNames(code) {
-  const { name, also = [], aliases = [] } = CAPITALS[code];
+export function capitalNames(code, language = LANG) {
+  const { name, also = [], aliases = [] } = capitalOf(code, language);
   return [name, ...also, ...aliases];
 }

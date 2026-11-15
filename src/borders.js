@@ -4,8 +4,8 @@
 import { COUNTRY_BY_CODE } from '../data/countries.js';
 import { enableArrowKeys } from './answer-keys.js';
 import { byId, startGame } from './game.js';
-import { capitalize, countryParts, countryPhrase, verb } from './grammar.js';
 import { addGuess, bestRoute, createRound, guessesLeft, judgeGuess, pickRound, ROUTE_COUNTRIES } from './route.js';
+import { t } from './text.js';
 
 const form = byId('answer-form');
 const input = byId('answer-input');
@@ -25,10 +25,7 @@ const NEVER = 'var(--never)';
 const EMPTY_ROUNDS = { played: 0, solved: 0, perfect: 0, streak: 0, bestStreak: 0 };
 
 const nameOf = (code) => COUNTRY_BY_CODE.get(code).name;
-// At the start of a sentence, with its article: "Die Schweiz", "Polen".
-const subject = (code) => capitalize(countryPhrase(code));
 const focusInput = () => input.focus({ preventScroll: true });
-const plural = (count, one, many) => `${count} ${count === 1 ? one : many}`;
 
 // Every country colored in this round, so the next one can clear them.
 let colored = [];
@@ -53,9 +50,7 @@ function renderGuesses(round) {
 
 function renderStatus(round) {
   const left = guessesLeft(round);
-  status.textContent = isOver
-    ? `Mindestens ${plural(round.between, 'Land', 'Länder')} dazwischen`
-    : `Noch ${plural(left, 'Versuch', 'Versuche')} · mindestens ${plural(round.between, 'Land', 'Länder')} dazwischen`;
+  status.textContent = isOver ? t.routeOverStatus(round.between) : t.routeStatus(left, round.between);
 }
 
 function endRound(game, solved, perfect = false) {
@@ -69,7 +64,7 @@ function endRound(game, solved, perfect = false) {
   game.progress.rounds = rounds;
   game.persist();
   renderStats(game);
-  submitButton.textContent = 'Weiter';
+  submitButton.textContent = t.next;
   dontKnowButton.disabled = true;
   input.value = '';
   focusInput();
@@ -92,14 +87,14 @@ function giveUp(game, verdict) {
   endRound(game, false);
   renderGuesses(round);
   renderStatus(round);
-  game.setFeedback(`Gefehlt ${missing.length === 1 ? 'hat' : 'haben'}: ${missing.map(nameOf).join(', ')}`, 'bad', { verdict });
+  game.setFeedback(t.missing(missing.map(nameOf)), 'bad', { verdict });
 }
 
 const HINTS = {
-  unknown: () => 'Kein Land mit diesem Namen.',
-  ambiguous: ({ codes }) => `Meinst du ${codes.map((code) => countryPhrase(code, 'accusative')).join(' oder ')}?`,
-  endpoint: ({ code }, round) => `${subject(code)} ${verb(code, 'ist', 'sind')} ${code === round.start ? 'der Start' : 'das Ziel'}.`,
-  repeated: ({ code }) => `${capitalize(countryPhrase(code, 'accusative'))} hast du schon genannt.`,
+  unknown: () => t.unknownCountry,
+  ambiguous: ({ codes }) => t.ambiguous(codes),
+  endpoint: ({ code }, round) => t.endpoint(code, code === round.start),
+  repeated: ({ code }) => t.repeated(code),
 };
 
 function guess(game, text) {
@@ -119,13 +114,13 @@ function guess(game, text) {
   const result = addGuess(round, code);
   if (result.state === 'solved') {
     endRound(game, true, result.perfect);
-    const text = result.perfect ? 'Kürzester Weg!' : `Mit ${plural(round.guesses.length, 'Land', 'Ländern')}, ${round.between} hätten gereicht.`;
-    game.setFeedback(text, 'good', { verdict: 'Geschafft!' });
+    const text = result.perfect ? t.shortest : t.longer(round.guesses.length, round.between);
+    game.setFeedback(text, 'good', { verdict: t.solved });
   } else if (result.state === 'lost') {
-    giveUp(game, 'Vorbei!');
+    giveUp(game, t.lost);
     return;
   } else {
-    game.setFeedback(kind === 'step' ? `${subject(code)} ${verb(code, 'liegt', 'liegen')} auf einem kürzesten Weg.` : `${subject(code)} ${verb(code, 'ist', 'sind')} ein Umweg.`, kind === 'step' ? 'good' : 'hint');
+    game.setFeedback(kind === 'step' ? t.onRoute(code) : t.detour(code), kind === 'step' ? 'good' : 'hint');
   }
   renderGuesses(round);
   renderStatus(round);
@@ -140,17 +135,16 @@ function ask(game) {
   paint(game, round.start, 'start');
   paint(game, round.end, 'end');
   game.map.setRoute(round.start, round.end);
-  // "Von der **Schweiz** in die **Niederlande**", "Von **Polen** nach **Spanien**"
-  const from = countryParts(round.start, 'dative');
-  const to = countryParts(round.end, 'accusative');
-  byId('route-from').textContent = from.article ? `Von ${from.article}` : 'Von';
+  const from = t.routeFrom(round.start);
+  const to = t.routeTo(round.end);
+  byId('route-from').textContent = from.lead;
   byId('route-start').textContent = from.name;
-  byId('route-to').textContent = to.article ? `in ${to.article}` : 'nach';
+  byId('route-to').textContent = to.lead;
   byId('route-end').textContent = to.name;
   renderGuesses(round);
   renderStatus(round);
   input.value = '';
-  submitButton.textContent = 'Prüfen';
+  submitButton.textContent = t.check;
   dontKnowButton.disabled = false;
   focusInput();
 }
@@ -180,8 +174,8 @@ startGame({
   next: (game, pool) => pickRound(pool) ?? pickRound(ROUTE_COUNTRIES),
 
   poolSummary(pool) {
-    if (pickRound(pool)) return { text: 'Start, Ziel und kürzester Weg liegen in dieser Auswahl.', empty: false };
-    return { text: 'In dieser Auswahl gibt es keinen Weg mit mindestens drei Ländern dazwischen. Bis du etwas änderst, kommen alle dran.', empty: true };
+    if (pickRound(pool)) return { text: t.poolHasRoute, empty: false };
+    return { text: t.poolNoRoute, empty: true };
   },
 
   setup(game) {
@@ -192,7 +186,7 @@ startGame({
       else if (input.value.trim()) guess(game, input.value);
     });
     dontKnowButton.addEventListener('click', () => {
-      if (!isOver) giveUp(game, 'Schade!');
+      if (!isOver) giveUp(game, t.dontKnow);
     });
     input.disabled = false;
     submitButton.disabled = false;

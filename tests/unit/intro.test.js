@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { INTROS } from '../../src/intro-content.js';
+import { INTROS_EN } from '../../src/intro-content.en.js';
+import { PAGE_TEXT_EN } from '../../src/page-text.js';
 
 const root = new URL('../../', import.meta.url);
 const css = readFileSync(new URL('style.css', root), 'utf8');
@@ -23,8 +25,22 @@ test('every mode page opens with a guide of its own, named like the page', () =>
   const used = modePages.map(introOf);
   assert.deepEqual([...used].sort(), Object.keys(INTROS).sort());
   for (const page of modePages) {
-    const title = readFileSync(new URL(page, root), 'utf8').match(/<h1>([^<]+)<\/h1>/)[1];
+    const [, key, title] = readFileSync(new URL(page, root), 'utf8').match(/<h1 data-i18n="([^"]+)">([^<]+)<\/h1>/);
     assert.equal(INTROS[introOf(page)].title, title, page);
+    assert.equal(INTROS_EN[introOf(page)].title, PAGE_TEXT_EN[key], page);
+  }
+});
+
+test('the English guides have the same sections, items and colors as the German ones', () => {
+  assert.deepEqual(Object.keys(INTROS_EN), Object.keys(INTROS));
+  for (const [mode, guide] of Object.entries(INTROS)) {
+    const english = INTROS_EN[mode];
+    assert.equal(english.sections.length, guide.sections.length, mode);
+    guide.sections.forEach((section, i) => assert.equal(english.sections[i].items.length, section.items.length, `${mode}: ${section.heading}`));
+    assert.deepEqual(colorsOf(english), colorsOf(guide), mode);
+    assert.match(allText(english), /“Filters” tab on the left edge/, mode);
+    assert.match(allText(english), /“Don’t know”/, mode);
+    assert.doesNotMatch(allText(english), /[äöüß„]/, mode);
   }
 });
 

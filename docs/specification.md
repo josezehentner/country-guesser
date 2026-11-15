@@ -11,7 +11,7 @@ This document is the specification for the implementation: it says how the game 
 - **Purely static website**: HTML, CSS, JavaScript. No backend, no server, no database, no login.
 - **Hosting**: GitHub Pages (public repository). The site must work directly from the repo without a build step, or alternatively be built with a simple GitHub Actions workflow. Preferred: **no build step**, vanilla JS with ES modules.
 - **No runtime dependencies on external CDNs**: All libraries and map data live locally in the repo (e.g. under `vendor/` and `data/`), so the game does not depend on third-party servers.
-- **UI language**: German (country names, buttons, messages). Code, comments and file names in English.
+- **UI languages**: German and English (country names, buttons, messages), see [Languages](#languages). Code, comments and file names in English.
 - **License**: MIT (add a `LICENSE` file).
 - Works on desktop and mobile (touch, small screens).
 
@@ -34,9 +34,23 @@ Each mode keeps its own progress: recognizing a country, finding it, knowing its
 
 Card pictures are drawn from the real map data by `tools/mode-images.js`.
 
+At the top right a switch "DE | EN" chooses the language, see [Languages](#languages).
+
 On a desktop screen (at least 1024 px wide) four cards stand side by side; narrower screens show as many as fit, down to one on a phone.
 
 Behind the menu is a comic-style world map: light blue water with halftone dots and waves, light green land with thick ink outlines and an offset shadow, no country borders. It is drawn from the map data by `tools/menu-background.js` and dimmed in dark mode. The centered title uses the comic font Bangers (stored under `fonts/`) in the map's land green with an ink outline and the land's shadow. There is no subtitle.
+
+---
+
+## Languages
+
+Every page is in **German or English**. The player chooses with "DE | EN" at the top right of the menu or under "Sprache" / "Language" in the ⚙ settings of every mode; the choice holds for every page and survives a reload (key `countryquiz.language`, `"de"` or `"en"`). Without a choice the page follows the first German or English language the browser prefers, and is English otherwise. Switching reloads the page: a running question starts over, the progress stays.
+
+- The pages are written in German. `src/page-text.js` holds the English text of everything fixed on them; `src/text.js` everything the game writes itself (verdicts, messages, filter labels), and `src/intro-content.en.js` the English guides.
+- The English mode names are: Name the Country, Find the Country, Learn Capitals, Find the Capital, Guess the Flag, Border Hopper.
+- **Answers count only in the language of the page**: English pages accept English names and their usual variants ("USA", "UK", "Ivory Coast", "Côte d'Ivoire"), German pages German ones. A German name on an English page is wrong, unless it is also a small typo away from the English one ("Indonesien" for "Indonesia"). English capitals are their English names and local spellings ("Vienna", "Prague" or "Praha", but not "Wien"), in `data/capitals.en.js`; English alternative country names are in `data/aliases.en.js`.
+- English country names come from `Intl.DisplayNames(['en'])`, with the common name where it differs ("Ivory Coast", "Turkey", "East Timor", "Saint Lucia" instead of "St. Lucia", "and" instead of "&"). In sentences some take "the" ("the Netherlands", "the United States", "the Gambia"), listed in `data/articles.en.js`; every country takes a singular verb ("The Netherlands is here").
+- `src/language-boot.js` picks the language before the page is drawn and keeps an English page hidden until it is translated, so it never shows German text first.
 
 ---
 
@@ -170,6 +184,8 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 
 "Grenzgänger" keeps no `countries` entries but round statistics: `"rounds": { "played": 9, "solved": 6, "perfect": 2, "streak": 1, "bestStreak": 4 }`, all whole numbers with perfect ≤ solved ≤ played and streak ≤ best streak ≤ solved. A round counts once it is solved, lost or given up.
 
+The chosen language is kept apart from the progress too: key `countryquiz.language`, `"de"` or `"en"`.
+
 Which guides the player has closed is kept apart from the progress, so a reset or an import does not bring them back: key `countryquiz.intro.v1`, `{ "version": 1, "seen": ["name", "borders"] }`, one name per mode (`name`, `find`, `capitals`, `find-capitals`, `flags`, `borders`). Without localStorage the guide opens on every visit.
 
 `settings` is optional throughout: a missing `regions` or `levels` means all of them, an empty list means none. `filtersOpen` remembers whether the filter sidebar is open on a wide screen. `maxScore` (0 to 9) is the score limit; missing means all scores are asked. An older `"continent": "AF"` is read as `"regions": ["AF"]`.
@@ -214,7 +230,7 @@ Which guides the player has closed is kept apart from the progress, so a reset o
   - Each tick shows how many countries it covers, and the sidebar says how many are asked. A choice without any country says so; then every country comes up until the choice changes.
   - On a wide screen a click on the tab pins the sidebar beside the globe (it starts pinned, or as last left); like the Mac dock, moving the mouse onto the tab or to the left edge of the screen only peeks: the sidebar slides in over the globe and slides out a moment after the mouse leaves it. Running off the left edge of the window keeps it open. On small screens it slides over the globe, starts closed and closes with Escape.
 - **Guide** ("So geht's"): every mode opens with a short dialog for new players, titled with the mode's name. It explains the rules, the filter sidebar on the left, the score scale and the score limit slider on the right (what they mean and what they do), the colors on the globe and the controls (turning and zooming, "Zum Land", the stats, ⚙). "Grenzgänger" has no scale, so its guide explains the route colors instead (start, end, shortest route, detour, missing). The text scrolls between the title and the "Los geht's!" button, which closes it, as do Escape and a click on the backdrop; then the game continues where the player plays, and the globe shows the question again (e.g. the flight from start to end). It opens by itself only until the player has closed it once in that mode; a **?** button beside ⚙ opens it again. The texts live in `src/intro-content.js`.
-- **Settings dialog** behind a ⚙ button in the top bar: the progress actions (export, import, reset). They are rarely needed, so they take no space next to the globe.
+- **Settings dialog** behind a ⚙ button in the top bar: the language and the progress actions (export, import, reset). They are rarely needed, so they take no space next to the globe.
 - **Game screen like a HUD**: the globe takes the whole height below the top bar, and everything else floats over it:
   - the question in a light green comic caption box at the top, in dark blue letters ("Welches Land ist markiert?", or "Wo liegt **Frankreich**?" with the name big); clicks go through it to the globe;
   - the controls in a small rounded dock at the bottom center: the input with "Prüfen"/"Weiter" and "Weiß ich nicht", or in "Länder finden" and "Hauptstädte finden" just "Weiß ich nicht" and "Weiter";
@@ -277,3 +293,4 @@ Local testing: because of ES modules, serve via a local web server: `npm start`,
 - [ ] Usable on mobile (touch zoom, input, no horizontal scrollbar), with most of the screen left for the globe even while the keyboard is open.
 - [ ] Every mode opens with its guide on the first visit; it explains rules, filters, the scale and slider (in "Grenzgänger" the route colors) and the colors, closes into the game, does not open by itself again, and "?" opens it again.
 - [ ] Game works even when localStorage is unavailable (with a notice).
+- [ ] Every page is fully in German or fully in English. "DE | EN" in the menu and the language in ⚙ switch every page and keep the choice; without one, the browser's language decides. English pages accept only English names, German pages only German ones, and English sentences name countries with "the" where English does.

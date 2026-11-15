@@ -688,6 +688,17 @@ button.primary { background: var(--accent); color: var(--accent-text); }
 .setting-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 #settings-close { display: block; width: 100%; margin-top: 20px; }
 
+/* The language switch: "Deutsch | English" in the settings, "DE | EN" at the top
+   right of the menu. The pressed button is the language of the page. */
+.language-switch { display: flex; flex-wrap: wrap; gap: 8px; }
+.language-switch button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); cursor: default; }
+.menu-language { position: absolute; top: 14px; right: 16px; z-index: 1; gap: 6px; }
+.menu-language button { padding: 4px 10px; font-size: 0.9rem; }
+
+/* src/language-boot.js hides an English page until src/page-text.js has translated
+   it, so its German text never shows. */
+html[data-translating] body { visibility: hidden; }
+
 /* The guide of a mode (src/intro.js): its text scrolls between the title and the
    button, so "Los geht's!" always stays in reach. */
 .intro { width: min(560px, calc(100% - 32px)); max-height: min(760px, calc(100% - 32px)); padding: 0; }
@@ -809,6 +820,12 @@ body.menu::before {
 .menu-header, .modes { max-width: 960px; margin: 0 auto; }
 
 .menu-header { padding: 36px 16px 0; text-align: center; }
+
+/* On a phone the title spans the width: the switch sits above it instead. */
+@media (max-width: 640px) {
+  .menu-header { padding-top: 12px; }
+  .menu-language { position: static; justify-content: flex-end; margin-bottom: 10px; }
+}
 
 /* Comic title: land-green letters with an ink outline and the land's shadow. */
 .menu-header h1 {

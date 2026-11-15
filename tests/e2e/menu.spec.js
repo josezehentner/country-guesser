@@ -55,6 +55,10 @@ test('the "Hauptstädte lernen" card opens its mode', async ({ page }) => {
 
 test('cards work with the keyboard', async ({ page }) => {
   await page.goto('/');
+  // The language switch at the top comes first: "DE", then "EN".
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.menu-language [data-language="de"]')).toBeFocused();
+  await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await expect(page.locator('a.mode-card').first()).toBeFocused();
   await page.keyboard.press('Enter');

@@ -1,6 +1,7 @@
 // "Länder finden": a country is named and the player clicks it on the globe.
 import { byId, startGame } from './game.js';
-import { capitalize, countryParts, countryPhrase, verb } from './grammar.js';
+import { countryParts } from './grammar.js';
+import { t } from './text.js';
 
 const prompt = byId('prompt');
 const promptName = byId('prompt-name');
@@ -10,10 +11,6 @@ const dontKnowButton = byId('dont-know-btn');
 
 // While a question is open the focus rests on the prompt, not on a button: an Enter
 // meant to skip the pause must not answer the next question with "Weiß ich nicht".
-// "Die Niederlande liegen hier"
-const liesHere = (code) => `${capitalize(countryPhrase(code))} ${verb(code, 'liegt', 'liegen')} hier`;
-const isThere = (code) => `Das ${verb(code, 'ist', 'sind')} ${countryPhrase(code)}`;
-
 const focusNext = () => (nextButton.disabled ? prompt : nextButton).focus({ preventScroll: true });
 
 startGame({
@@ -29,7 +26,7 @@ startGame({
     });
     dontKnowButton.addEventListener('click', () => {
       if (game.isAnswered) return;
-      game.finish(false, 'Schade!', liesHere(game.current.code));
+      game.finish(false, t.dontKnow, t.liesHere(game.current.code));
       game.map.highlight(game.current.code);
     });
   },
@@ -38,9 +35,8 @@ startGame({
   ask(game) {
     // "Wo liegen die **Niederlande**?": the name in bold, the article before it.
     const { code } = game.current;
-    const { article, name } = countryParts(code);
-    promptVerb.textContent = [verb(code, 'liegt', 'liegen'), article].filter(Boolean).join(' ');
-    promptName.textContent = name;
+    promptVerb.textContent = t.whereVerb(code);
+    promptName.textContent = countryParts(code).name;
     nextButton.disabled = true;
     dontKnowButton.disabled = false;
     game.map.clearHighlight();
@@ -62,16 +58,16 @@ startGame({
     }
     const { code, name } = game.current;
     if (game.map.hits(code, event.clientX, event.clientY)) {
-      game.finish(true, 'Richtig!', name);
+      game.finish(true, t.right, name);
       game.map.highlight(code, { focus: false });
       return;
     }
     const clicked = game.map.codeAt(event.clientX, event.clientY);
     if (!clicked) {
-      game.setFeedback('Dort ist kein Land aus dem Quiz.', 'hint');
+      game.setFeedback(t.noCountryThere, 'hint');
       return;
     }
-    game.finish(false, 'Falsch!', `${isThere(clicked)}. ${liesHere(code)}`);
+    game.finish(false, t.wrong, `${t.thatIs(clicked)}. ${t.liesHere(code)}`);
     game.map.highlight(code);
   },
 
