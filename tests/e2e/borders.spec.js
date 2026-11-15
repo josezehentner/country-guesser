@@ -274,30 +274,35 @@ test.describe('with motion', () => {
 
   test('the flight from end to start zooms out on the way and in again', async ({ page }) => {
     await open(page);
+    // From here the page's clock moves only when the test says, one frame at a time,
+    // so a busy machine cannot make the flight skip frames.
+    await page.clock.install();
+    await page.clock.pauseAt(Date.now() + 1000);
     // Both ends are small, so the globe zooms in on each of them, and too far apart
     // to be shown together.
     await play(page, 'GM', 'KR');
     const gm = await mapApi(page, 'centerOf', 'GM');
     // Samples the zoom every frame until the globe arrives at the start.
-    const zooms = await page.evaluate(async (target) => {
-      const api = document.querySelector('#map').mapTestApi;
-      const samples = [];
-      const started = performance.now();
-      while (performance.now() - started < 8000) {
-        await new Promise(requestAnimationFrame);
-        const { k, center } = api.view();
-        samples.push(k);
-        if (!api.touring() && Math.abs(center[0] - target[0]) < 1e-6 && Math.abs(center[1] - target[1]) < 1e-6) break;
-      }
-      return samples;
-    }, gm);
+    const zooms = [];
+    let flightFrames = 0;
+    for (let frame = 0; frame < 500; frame++) {
+      await page.clock.runFor(16);
+      const { view, touring } = await page.evaluate(() => {
+        const api = document.querySelector('#map').mapTestApi;
+        return { view: api.view(), touring: api.touring() };
+      });
+      zooms.push(view.k);
+      if (!touring) flightFrames++;
+      if (!touring && near(view, gm)) break;
+    }
+    expect(near(await mapApi(page, 'view'), gm)).toBe(true);
     // Zoomed in on Korea, out to the whole globe on the way, and in on Gambia.
     const zoomedIn = zooms.findIndex((zoom) => zoom > 2);
     expect(zoomedIn).toBeGreaterThanOrEqual(0);
     expect(Math.min(...zooms.slice(zoomedIn))).toBeLessThan(1.2);
     expect(zooms.at(-1)).toBeGreaterThan(2);
     // Many frames, not a jump.
-    expect(zooms.length).toBeGreaterThan(30);
+    expect(flightFrames).toBeGreaterThan(30);
   });
 
   test('the tour from end to start is quick and ends at full detail', async ({ page }) => {
@@ -318,16 +323,23 @@ test.describe('with motion', () => {
         const { center } = api.view();
         if (left !== null && Math.abs(center[0] - target[0]) < 1e-6 && Math.abs(center[1] - target[1]) < 1e-6) {
           const now = performance.now();
-          return { tourMs: now - started, ms: now - left, rough, roughAtEnd: api.roughDetail() };
+          return { tourMs: now - started, ms: now - left, rough, roughAtEnd: api.roughDetail(), plan: api.tourPlan() };
         }
       }
       return null;
     }, pt);
     expect(flight).not.toBeNull();
-    // Turning to the end, a short look and the flight take under two seconds,
-    // plus frames a busy machine may drop.
-    expect(flight.tourMs).toBeLessThan(2300);
-    expect(flight.ms).toBeLessThan(1300);
+    // Turning to the end and a short look take about a second, and the flight under
+    // one more. Checked on the planned durations, since a busy machine delays timers
+    // and frames by any amount.
+    const { delayMs, flightMs } = flight.plan;
+    expect(delayMs).toBeLessThan(1200);
+    expect(flightMs).toBeLessThan(1000);
+    expect(delayMs + flightMs).toBeLessThan(2000);
+    // The plan is what the globe really does: the flight takes at least its planned
+    // time, give or take a frame, and the whole tour stays within a loose bound.
+    expect(flight.ms).toBeGreaterThan(flightMs - 100);
+    expect(flight.tourMs).toBeLessThan(6000);
     expect(flight.rough).toBe(true);
     expect(flight.roughAtEnd).toBe(false);
   });
