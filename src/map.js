@@ -157,6 +157,10 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
   let targets = [];
   let route = null;
   let tourTimer = null;
+  // How long the last tour waited before the flight, and the last animation took,
+  // as planned. Wall-clock times vary with a busy machine; these do not.
+  let tourDelayMs = null;
+  let animationMs = null;
   let flashing = null;
   let animation = null;
   let coarse = false;
@@ -497,6 +501,7 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
       setView(nextCenter, nextK);
       return;
     }
+    animationMs = durationMs;
     const startK = k;
     const between = geoInterpolate(center, nextCenter);
     const started = performance.now();
@@ -552,7 +557,8 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
       viewTo(start.center, startK, true, { durationMs: ROUTE_FLIGHT_MS, dip, easing: glide, rough: true });
     };
     clearTimeout(tourTimer);
-    tourTimer = setTimeout(hold, animate && !reducedMotion() ? ZOOM_DURATION_MS + ROUTE_HOLD_MS : ROUTE_HOLD_MS);
+    tourDelayMs = animate && !reducedMotion() ? ZOOM_DURATION_MS + ROUTE_HOLD_MS : ROUTE_HOLD_MS;
+    tourTimer = setTimeout(hold, tourDelayMs);
   }
 
   function resize() {
@@ -735,6 +741,9 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     touring: () => Boolean(tourTimer),
     // True while the flight to the end draws coarser borders.
     roughDetail: () => coarse,
+    // Planned durations of the last tour: the wait before the flight, and the
+    // flight itself once it has started.
+    tourPlan: () => ({ delayMs: tourDelayMs, flightMs: animationMs }),
     // The point the globe turns to the center to show a route that fits at once.
     routeCenter: (start, end) => capAround(mainCap(shapeByCode.get(start)), mainCap(shapeByCode.get(end))),
     codeAt,
