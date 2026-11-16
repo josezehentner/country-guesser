@@ -124,12 +124,12 @@ Only countries with a land border take part (164 of 250); islands like Iceland o
 
 ### Mode "Nachbarn finden"
 
-1. A country is **highlighted** and turned to the front as in "Länder benennen". The question box asks "Welche Länder grenzen an **Deutschland**?" ("an die **Schweiz**", "an die **Niederlande**"; English "Which countries border the **Netherlands**?"), and below it how many neighbors were found of how many, and how many wrong clicks are left: "2 von 9 gefunden · noch 3 Fehlversuche".
+1. A country is **highlighted** and turned to the front as in "Länder benennen", on a globe **without borders** as in "Grenzgänger": one surface with coasts and large lakes only, so the outline of the marked country is all the player sees of where its neighbors are. The question box asks "Welche Länder grenzen an **Deutschland**?" ("an die **Schweiz**", "an die **Niederlande**"; English "Which countries border the **Netherlands**?"), and below it how many neighbors were found of how many, and how many wrong clicks are left: "2 von 9 gefunden · noch 3 Fehlversuche".
 2. The player **clicks or taps** the neighbors in any order. Neighbors are the land borders of `data/borders.js`, as in "Grenzgänger": no bridges or tunnels. Small neighbors (under 8,000 km²) count within 11 pixels, as in "Länder finden", so Vatican City can be clicked in Rome.
 3. A neighbor gets a **green outline** and lights up green ("Nachbar: Frankreich"). Any other country gets a **red outline** and pulses red ("Kein Nachbar: Spanien"); that is a wrong click. A click on the ocean, on the marked country itself or on a country clicked before only gets a hint and costs nothing. The globe does not move.
 4. Once every neighbor is found, the answer is **correct** ("Richtig! Alle 9 Nachbarn gefunden") and the next country follows after 1.5 seconds. The **third wrong click** ("Vorbei!") or "Weiß ich nicht" ("Schade!") make it **wrong**: the missing neighbors get an **orange outline** and are listed ("Gefehlt haben: Polen, Tschechien"). Then the game waits for "Weiter", Enter or a click on the globe, as in "Länder finden".
 
-Only countries with a land border are asked (164 of 250), and they are the ones its stats and filter counts cover. Scores, colors by score, filters, score limit and the flash of the asked country work as in the other modes; the outlines lie over the score colors and go away with the next country.
+Only countries with a land border are asked (164 of 250), and they are the ones its stats and filter counts cover. Scores, filters, score limit and the flash of the asked country work as in the other modes, but the globe is **not colored by score**: a filled country would show its borders. The score shows in the badge after each round, and the legend stays for the score limit slider. The outlines go away with the next country.
 
 ### Choosing the next country
 

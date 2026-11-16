@@ -108,6 +108,7 @@ export const INTROS = {
 
   neighbors: scoreGuide('Nachbarn finden', [
     'Ein Land auf dem Globus ist markiert. Klick oder tipp alle Länder an, mit denen es eine Landgrenze hat. Brücken und Tunnel zählen nicht.',
+    'Der Globus zeigt nur Küsten, keine Grenzen, und ist nicht nach Punkten eingefärbt: Das würde die Nachbarn verraten. Deine Punkte für das Land siehst du nach jeder Runde.',
     'Unter der Frage steht, wie viele Nachbarn es gibt und wie viele du schon gefunden hast. Bei sehr kleinen Ländern reicht ein Klick knapp daneben.',
     'Drei Fehlklicks beenden die Runde. Ein Klick aufs Meer, auf das markierte Land oder ein zweites Mal auf dasselbe Land kostet nichts.',
     'Findest du alle, zählt das als richtig, und das nächste Land kommt von selbst. Sonst geht es mit „Weiter“, Enter oder einem Klick auf den Globus weiter.',

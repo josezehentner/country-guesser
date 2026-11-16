@@ -68,6 +68,20 @@ test('loads without console errors, marks a country with land borders and says h
   expect(problems).toEqual([]);
 });
 
+test('the globe shows no borders and no score colors, even after a scored round', async ({ page }) => {
+  await askOnly(page, 'PT');
+  expect(await mapApi(page, 'hidesBorders')).toBe(true);
+  await expect(page.locator('#map')).toHaveAttribute('aria-label', 'Globus ohne Grenzen');
+  const plain = await mapApi(page, 'colorOf', 'FR');
+  expect(await mapApi(page, 'colorOf', 'PT')).toBe(plain);
+  await clickCountry(page, 'ES');
+  await expect(feedback(page)).toHaveText('Richtig! Den einzigen Nachbarn gefunden 5/10');
+  expect((await stored(page)).countries.PT.score).toBe(5);
+  for (const code of ['PT', 'ES', 'DE']) expect(await mapApi(page, 'colorOf', code)).toBe(plain);
+  // The legend stays for the score limit slider.
+  await expect(page.locator('#legend li')).toHaveCount(11);
+});
+
 test('the question takes the article of the country', async ({ page }) => {
   await askOnly(page, 'CH');
   await expect(page.locator('#prompt p').first()).toHaveText('Welche Länder grenzen an die Schweiz?');

@@ -32,7 +32,7 @@ A comic-style quiz for every country on Earth. The globe shows how well you know
 - 🏛️ **"Hauptstädte lernen":** a country is marked; type its capital. The answer also shows the country. German, English and local names count ("Peking", "Beijing"), and every capital of a country with several, such as Bolivia (Sucre, La Paz) or South Africa. Uninhabited places like Antarctica are left out.
 - 🎯 **"Hauptstädte finden":** the game names a capital, such as Canberra; click its country. Shared names like Kingston (Jamaica, Norfolk Island) accept either.
 - 🚩 **"Flaggen erkennen":** a flag appears; type its country, and the globe turns there. Look-alikes Monaco/Indonesia and Romania/Chad accept either name. Places flying another country's flag (Réunion) and Antarctica are left out.
-- 🤝 **"Nachbarn finden":** a country is marked; click every country it shares a land border with. The question says how many there are. Found ones get a green outline, wrong clicks a red one; three wrong clicks end the round, and the missing neighbors show in orange. Islands without land borders are left out.
+- 🤝 **"Nachbarn finden":** a country is marked on a globe without borders; click every country it shares a land border with. The question says how many there are. Found ones get a green outline, wrong clicks a red one; three wrong clicks end the round, and the missing neighbors show in orange. Islands without land borders are left out.
 
 ### 🧭 "Grenzgänger"
 

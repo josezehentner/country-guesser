@@ -102,6 +102,7 @@ export const INTROS_EN = {
 
   neighbors: scoreGuide('Find the Neighbors', [
     'A country on the globe is marked. Click or tap every country it shares a land border with. Bridges and tunnels don’t count.',
+    'The globe shows only coasts, no borders, and is not colored by score: that would give the neighbors away. You see your points for the country after each round.',
     'Below the question you see how many neighbors there are and how many you have found. For very small countries a click just next to them is enough.',
     'Three wrong clicks end the round. A click on the sea, on the marked country or a second time on the same country costs nothing.',
     'Find them all and it counts as correct, and the next country comes by itself. Otherwise go on with “Next”, Enter or a click on the globe.',

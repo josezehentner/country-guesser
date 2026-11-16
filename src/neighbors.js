@@ -1,5 +1,5 @@
-// "Nachbarn finden": a country is marked, and the player clicks every country it
-// shares a land border with.
+// "Nachbarn finden": a country is marked on a globe without borders, and the player
+// clicks every country it shares a land border with.
 import { COUNTRY_BY_CODE } from '../data/countries.js';
 import { byId, startGame } from './game.js';
 import { countryParts } from './grammar.js';
@@ -54,6 +54,10 @@ startGame({
   storageKey: 'countryquiz.neighbors.v1',
   exportPrefix: 'countryquiz-neighbors-progress',
   countries: NEIGHBOR_COUNTRIES,
+  // Borders would give the neighbors away. Score colors would too, since a filled
+  // country shows its outline, so the globe stays uncolored.
+  mapOptions: { hideBorders: true },
+  colorByScore: false,
   // Long enough to see all neighbors outlined.
   nextDelayMs: 1500,
 
