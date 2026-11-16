@@ -60,14 +60,9 @@ const controls = (recenter) => ({
 const RECENTER_MARKED = '⌖ „Zum Land“ oben rechts dreht den Globus zurück zum markierten Land.';
 const RECENTER_AFTER = '⌖ „Zum Land“ oben rechts erscheint nach der Antwort und dreht den Globus zurück zum Land.';
 
-// `colors` adds rows to the score colors, e.g. the outlines of "Nachbarn finden".
-const scoreGuide = (title, rules, recenter, colors = []) => ({
+const scoreGuide = (title, rules, recenter) => ({
   title,
-  sections: [
-    { heading: 'Spielregeln', items: rules }, FILTERS, SCALE,
-    { ...SCORE_COLORS, items: [...SCORE_COLORS.items.slice(0, -1), ...colors, SCORE_COLORS.items.at(-1)] },
-    controls(recenter),
-  ],
+  sections: [{ heading: 'Spielregeln', items: rules }, FILTERS, SCALE, SCORE_COLORS, controls(recenter)],
 });
 
 export const INTROS = {
@@ -106,18 +101,42 @@ export const INTROS = {
     DONT_KNOW,
   ], RECENTER_AFTER),
 
-  neighbors: scoreGuide('Nachbarn finden', [
-    'Ein Land auf dem Globus ist markiert. Klick oder tipp alle Länder an, mit denen es eine Landgrenze hat. Brücken und Tunnel zählen nicht.',
-    'Der Globus zeigt nur Küsten, keine Grenzen, und ist nicht nach Punkten eingefärbt: Das würde die Nachbarn verraten. Deine Punkte für das Land siehst du nach jeder Runde.',
-    'Unter der Frage steht, wie viele Nachbarn es gibt und wie viele du schon gefunden hast. Bei sehr kleinen Ländern reicht ein Klick knapp daneben.',
-    'Drei Fehlklicks beenden die Runde. Ein Klick aufs Meer, auf das markierte Land oder ein zweites Mal auf dasselbe Land kostet nichts.',
-    'Findest du alle, zählt das als richtig, und das nächste Land kommt von selbst. Sonst geht es mit „Weiter“, Enter oder einem Klick auf den Globus weiter.',
-    '„Weiß ich nicht“ zeigt die fehlenden Nachbarn und zählt als falsch.',
-  ], RECENTER_MARKED, [
-    { swatches: [{ color: 'var(--never)', ring: 'var(--route-step)' }], text: 'Grüner Rand: ein gefundener Nachbar' },
-    { swatches: [{ color: 'var(--never)', ring: 'var(--route-detour)' }], text: 'Roter Rand: kein Nachbar, ein Fehlklick' },
-    { swatches: [{ color: 'var(--never)', ring: 'var(--route-missing)' }], text: 'Oranger Rand: ein Nachbar, der am Ende gefehlt hat' },
-  ]),
+  neighbors: {
+    title: 'Nachbarn finden',
+    sections: [
+      {
+        heading: 'Spielregeln',
+        items: [
+          'Ein Land auf dem Globus ist markiert. Tippe nacheinander alle Länder ein, mit denen es eine Landgrenze hat, und drück jeweils Enter. Brücken und Tunnel zählen nicht.',
+          'Der Globus zeigt nur Küsten, keine Grenzen: Die würden die Nachbarn verraten.',
+          `Unter der Frage steht, wie viele Nachbarn es gibt und wie viele du schon gefunden hast, darunter die genannten Länder. ${TOLERANCE}`,
+          'Drei falsche Länder beenden die Runde. Ein unbekannter Name, das markierte Land selbst oder ein Land zum zweiten Mal kostet nichts.',
+          'Findest du alle, ist die Runde gelöst, und das nächste Land kommt von selbst. Sonst geht es mit „Weiter“ oder Enter weiter.',
+          '„Weiß ich nicht“ beendet die Runde und zeigt die fehlenden Nachbarn.',
+        ],
+      },
+      FILTERS,
+      {
+        heading: 'Farben',
+        items: [
+          { swatches: [{ color: 'var(--never)', ring: true }], text: 'Hellgrüner Rand: das markierte Land' },
+          { swatches: [{ color: 'var(--never)', ring: 'var(--route-step)' }], text: 'Grüner Rand: ein gefundener Nachbar' },
+          { swatches: [{ color: 'var(--never)', ring: 'var(--route-detour)' }], text: 'Roter Rand: kein Nachbar, ein Fehlversuch' },
+          { swatches: [{ color: 'var(--never)', ring: 'var(--route-missing)' }], text: 'Oranger Rand: ein Nachbar, der am Ende gefehlt hat' },
+          'Die genannten Länder stehen in diesen Farben unter der Frage.',
+        ],
+      },
+      {
+        heading: 'Bedienung',
+        items: [
+          'Ziehen dreht den Globus, Mausrad oder zwei Finger zoomen.',
+          RECENTER_MARKED,
+          'Die Zahlen oben zählen deine gelösten Runden, die ohne Fehlversuch gelösten und deine Serie. Der Balken zeigt den Anteil gelöster Runden.',
+          '⚙ sichert, lädt oder löscht deinen Fortschritt. ? öffnet diese Anleitung wieder.',
+        ],
+      },
+    ],
+  },
 
   borders: {
     title: 'Grenzgänger',

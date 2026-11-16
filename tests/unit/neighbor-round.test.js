@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { BORDERS } from '../../data/borders.js';
 import { COUNTRIES } from '../../data/countries.js';
-import { clickCountry, createNeighborRound, MAX_MISSES, missesLeft, missingNeighbors, NEIGHBOR_COUNTRIES } from '../../src/neighbor-round.js';
+import { createNeighborRound, guessNeighbor, MAX_MISSES, missesLeft, missingNeighbors, NEIGHBOR_COUNTRIES, pickNeighborRound } from '../../src/neighbor-round.js';
 
 test('only countries with a land border are asked', () => {
   const codes = NEIGHBOR_COUNTRIES.map(({ code }) => code);
@@ -20,34 +20,47 @@ test('a round knows every neighbor of the asked country', () => {
   assert.equal(missesLeft(round), MAX_MISSES);
 });
 
-test('the round is solved once every neighbor is clicked', () => {
+test('the round is solved once every neighbor is named, with the usual tolerance', () => {
   const round = createNeighborRound('BE');
-  assert.deepEqual(clickCountry(round, 'FR'), { kind: 'found', code: 'FR' });
-  assert.deepEqual(clickCountry(round, 'DE'), { kind: 'found', code: 'DE' });
-  assert.deepEqual(clickCountry(round, 'NL'), { kind: 'found', code: 'NL' });
+  assert.deepEqual(guessNeighbor(round, 'Frankreich', 'de'), { kind: 'found', code: 'FR' });
+  assert.deepEqual(guessNeighbor(round, 'deutschland', 'de'), { kind: 'found', code: 'DE' });
+  assert.deepEqual(guessNeighbor(round, 'Holland', 'de'), { kind: 'found', code: 'NL' });
   assert.deepEqual(missingNeighbors(round), ['LU']);
-  assert.deepEqual(clickCountry(round, 'LU'), { kind: 'solved', code: 'LU' });
+  assert.deepEqual(guessNeighbor(round, 'Luxenburg', 'de'), { kind: 'solved', code: 'LU' });
   assert.deepEqual(missingNeighbors(round), []);
 });
 
-test('water, the asked country and repeated clicks cost nothing', () => {
+test('only names in the language of the page count', () => {
   const round = createNeighborRound('BE');
-  assert.equal(clickCountry(round, null).kind, 'water');
-  assert.equal(clickCountry(round, 'BE').kind, 'asked');
-  clickCountry(round, 'FR');
-  assert.equal(clickCountry(round, 'FR').kind, 'repeated');
-  clickCountry(round, 'ES');
-  assert.equal(clickCountry(round, 'ES').kind, 'repeated');
-  assert.deepEqual(round.found, ['FR']);
-  assert.deepEqual(round.misses, ['ES']);
+  assert.deepEqual(guessNeighbor(round, 'Germany', 'en'), { kind: 'found', code: 'DE' });
+  assert.equal(guessNeighbor(round, 'Frankreich', 'en').kind, 'unknown');
+});
+
+test('unknown, ambiguous, repeated names and the country itself cost nothing', () => {
+  const round = createNeighborRound('AO');
+  assert.deepEqual(guessNeighbor(round, 'Atlantis', 'de'), { kind: 'unknown' });
+  assert.deepEqual(guessNeighbor(round, 'Kongo', 'de').kind, 'ambiguous');
+  assert.equal(guessNeighbor(round, 'Angola', 'de').kind, 'asked');
+  guessNeighbor(round, 'Sambia', 'de');
+  assert.equal(guessNeighbor(round, 'Sambia', 'de').kind, 'repeated');
+  guessNeighbor(round, 'Kenia', 'de');
+  assert.equal(guessNeighbor(round, 'Kenia', 'de').kind, 'repeated');
+  assert.deepEqual(round.found, ['ZM']);
+  assert.deepEqual(round.misses, ['KE']);
   assert.equal(missesLeft(round), MAX_MISSES - 1);
 });
 
 test('the last allowed miss ends the round', () => {
   const round = createNeighborRound('BE');
-  assert.equal(clickCountry(round, 'ES').kind, 'miss');
-  assert.equal(clickCountry(round, 'IT').kind, 'miss');
-  assert.equal(clickCountry(round, 'PL').kind, 'lost');
+  assert.equal(guessNeighbor(round, 'Spanien', 'de').kind, 'miss');
+  assert.equal(guessNeighbor(round, 'Italien', 'de').kind, 'miss');
+  assert.equal(guessNeighbor(round, 'Polen', 'de').kind, 'lost');
   assert.equal(missesLeft(round), 0);
   assert.deepEqual(missingNeighbors(round), ['DE', 'FR', 'LU', 'NL']);
+});
+
+test('a new round picks a country from the pool, never the previous one twice in a row', () => {
+  const pool = NEIGHBOR_COUNTRIES.filter(({ code }) => ['BE', 'NL'].includes(code));
+  for (const random of [0, 0.5, 0.99]) assert.equal(pickNeighborRound(pool, 'BE', () => random).code, 'NL');
+  assert.deepEqual(pickNeighborRound(pool.slice(0, 1), 'BE', () => 0), createNeighborRound('BE'));
 });

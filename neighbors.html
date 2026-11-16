@@ -16,11 +16,11 @@
     <a class="back" href="./" aria-label="Zurück zum Menü" data-i18n="back" data-i18n-aria-label="backLabel">← Menü</a>
     <h1 data-i18n="mode.neighbors">Nachbarn finden</h1>
     <dl class="stats">
-      <div><dt><span class="stat-dot mastered" aria-hidden="true"></span><span class="label-long" data-i18n="stat.mastered">Gemeistert</span></dt><dd id="stat-mastered">0</dd></div>
-      <div><dt><span class="stat-dot started" aria-hidden="true"></span><span class="label-long" data-i18n="stat.started">Begonnen</span></dt><dd id="stat-started">0</dd></div>
-      <div><dt><span class="stat-dot never" aria-hidden="true"></span><span class="label-long" data-i18n="stat.never">Noch nie gefragt</span></dt><dd id="stat-never">0</dd></div>
+      <div><dt><span class="stat-dot solved" aria-hidden="true"></span><span class="label-long" data-i18n="stat.solved">Gelöst</span></dt><dd id="stat-solved">0</dd></div>
+      <div><dt><span class="stat-dot perfect" aria-hidden="true"></span><span class="label-long" data-i18n="stat.flawless">Fehlerfrei</span></dt><dd id="stat-perfect">0</dd></div>
+      <div><dt><span class="stat-dot streak" aria-hidden="true"></span><span class="label-long" data-i18n="stat.streak">Serie</span></dt><dd id="stat-streak">0</dd></div>
     </dl>
-    <div class="progress" id="progress" role="progressbar" aria-label="Gesamtfortschritt" data-i18n-aria-label="progress.total" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress" id="progress" role="progressbar" aria-label="Anteil gelöster Runden" data-i18n-aria-label="progress.rounds" aria-valuemin="0" aria-valuemax="100">
       <div class="progress-fill" id="progress-fill"></div>
     </div>
     <button type="button" id="help-btn" class="icon-button" aria-label="Spielanleitung" aria-haspopup="dialog" title="Spielanleitung" data-i18n-aria-label="help" data-i18n-title="help">?</button>
@@ -45,24 +45,23 @@
     <canvas id="map" role="img" aria-label="Globus ohne Grenzen" data-i18n-aria-label="map.globeNoBorders"></canvas>
     <canvas id="map-target" aria-hidden="true"></canvas>
     <button type="button" id="recenter-btn" class="recenter" aria-label="Zum markierten Land" title="Zum markierten Land" data-i18n-aria-label="recenter.country" data-i18n-title="recenter.country" hidden><svg class="recenter-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="7"/><circle class="recenter-dot" cx="12" cy="12" r="2"/><path d="M12 1.5v4.5M12 18v4.5M1.5 12H6M18 12h4.5"/></svg><span class="recenter-label" data-i18n="recenter.countryShort">Zum Land</span></button>
-    <div class="caption neighbor-caption" id="prompt" tabindex="-1" aria-live="polite">
+    <div class="caption neighbor-caption" id="prompt" aria-live="polite">
       <p><span data-i18n="prompt.neighbors">Welche Länder grenzen</span> <span id="prompt-lead">an</span> <strong id="prompt-name">…</strong>?</p>
       <p class="route-status" id="neighbor-status"></p>
     </div>
-    <div class="legend">
-      <ul class="legend-scale" id="legend" aria-label="Legende" data-i18n-aria-label="legend"></ul>
-      <input type="range" id="score-limit" class="score-limit" min="0" max="10" step="1" value="10"
-             aria-label="Höchste Wissensstufe, die noch abgefragt wird" title="Länder über dieser Stufe nicht mehr abfragen" data-i18n-aria-label="scoreLimit.label" data-i18n-title="scoreLimit.title">
-    </div>
+    <ol class="route-guesses" id="neighbor-guesses" aria-label="Genannte Länder" data-i18n-aria-label="route.guesses"></ol>
     <p class="loading" id="loading" data-i18n="loading">Karte wird geladen …</p>
   </main>
   </div>
 
-  <section class="panel compact">
-    <div class="answer buttons-only">
+  <section class="panel">
+    <form id="answer-form" class="answer" autocomplete="off">
+      <label for="answer-input" class="visually-hidden" data-i18n="answer.neighbor">Nachbarland des markierten Landes</label>
+      <input id="answer-input" type="text" placeholder="Nachbarland …" data-i18n-placeholder="placeholder.neighbor"
+             autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" disabled>
+      <button type="submit" id="submit-btn" class="primary" disabled data-i18n="check">Prüfen</button>
       <button type="button" id="dont-know-btn" aria-label="Weiß ich nicht" title="Weiß ich nicht" data-i18n-aria-label="dontKnow" data-i18n-title="dontKnow" disabled><span class="label-long" data-i18n="dontKnow">Wei<span class="eszett">ß</span> ich nicht</span><span class="label-short" aria-hidden="true">?</span></button>
-      <button type="button" id="next-btn" class="primary" disabled data-i18n="next">Weiter</button>
-    </div>
+    </form>
     <p id="feedback" class="feedback" aria-live="polite"></p>
     <p id="storage-notice" class="notice" hidden data-i18n="storageNotice">Hinweis: Der Fortschritt kann in diesem Browser nicht gespeichert werden.</p>
   </section>

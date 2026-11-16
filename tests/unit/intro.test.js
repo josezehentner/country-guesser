@@ -55,7 +55,8 @@ test('every guide explains the rules, the filters on the left, the colors and th
 });
 
 test('modes with scores explain the scale and slider on the right and every score color', () => {
-  for (const [mode, guide] of Object.entries(INTROS).filter(([name]) => name !== 'borders')) {
+  // "Grenzgänger" and "Nachbarn finden" count rounds instead.
+  for (const [mode, guide] of Object.entries(INTROS).filter(([name]) => !['borders', 'neighbors'].includes(name))) {
     assert.ok(headings(guide).includes('Rechts: Wissensstufen'), mode);
     assert.match(allText(guide), /Schieber/, mode);
     const colors = colorsOf(guide);
@@ -70,6 +71,14 @@ test('"Grenzgänger" has no scale and explains its route colors instead', () => 
   assert.ok(!headings(guide).includes('Rechts: Wissensstufen'));
   assert.doesNotMatch(allText(guide), /Schwierigkeit/);
   assert.deepEqual(colorsOf(guide), ['start', 'end', 'step', 'detour', 'missing'].map((kind) => `var(--route-${kind})`));
+});
+
+test('"Nachbarn finden" has no scale and explains its outlines instead', () => {
+  const guide = INTROS.neighbors;
+  assert.ok(!headings(guide).includes('Rechts: Wissensstufen'));
+  assert.doesNotMatch(allText(guide), /Punkte/);
+  const rings = colorItems(guide).flatMap(({ swatches }) => swatches.map(({ ring }) => ring));
+  assert.deepEqual(rings, [true, 'var(--route-step)', 'var(--route-detour)', 'var(--route-missing)']);
 });
 
 test('every color in a guide is a token defined in style.css, with a text saying what it means', () => {

@@ -51,7 +51,7 @@ const de = {
   neighborFound: (name) => `Nachbar: ${name}`,
   notNeighbor: (name) => `Kein Nachbar: ${name}`,
   askedItself: 'Das ist das markierte Land selbst.',
-  clickedBefore: (code) => `${capitalize(countryPhrase(code, 'accusative', 'de'))} hast du schon angeklickt.`,
+  flawless: 'ohne Fehler',
   allNeighbors: (count) => (count === 1 ? 'Den einzigen Nachbarn gefunden' : `Alle ${count} Nachbarn gefunden`),
 
   // "Grenzgänger"
@@ -129,12 +129,12 @@ const en = {
 
   // "Which countries border the **Netherlands**?"
   neighborsLead: (code) => countryParts(code, 'nominative', 'en').article ?? '',
-  neighborStatus: (found, total, left) => `${found} of ${total} found · ${plural(left, 'miss', 'misses')} left`,
+  neighborStatus: (found, total, left) => `${found} of ${total} found · ${plural(left, 'wrong guess', 'wrong guesses')} left`,
   neighborOverStatus: (found, total) => `${found} of ${total} found`,
   neighborFound: (name) => `Neighbor: ${name}`,
   notNeighbor: (name) => `Not a neighbor: ${name}`,
   askedItself: 'That’s the marked country itself.',
-  clickedBefore: (code) => `You already clicked ${the(code)}.`,
+  flawless: 'no mistakes',
   allNeighbors: (count) => (count === 1 ? 'Found the only neighbor' : `All ${count} neighbors found`),
 
   // "From **Portugal** to **China**", "From the **Netherlands** to the **United States**"
