@@ -37,13 +37,11 @@ const FILTER_GROUPS = [
 //   ask(game)                 shows the new question in game.current
 //   answered(game, correct)   updates its controls after an answer
 //   onSelect(game, event)     optional: a click on the globe
-//   colorByScore: false       optional: keeps scores, legend and slider, but leaves
-//                             the globe uncolored, e.g. on a globe without borders
-//   mapOptions                optional: passed on to createMap, e.g. { hideBorders: true }
 //   focus()                   puts the keyboard focus where the player continues
 // A mode without per-country scores ("Grenzgänger") also provides:
 //   scores: false             no legend and no country colors by score
 //   filters                   the filter groups it uses, e.g. ['regions']
+//   mapOptions                passed on to createMap, e.g. { hideBorders: true }
 //   next(game, pool)          returns the new game.current from the filtered pool
 //   renderStats(game)         fills the stats in the top bar
 //   poolSummary(pool)         optional: the filter summary, or null for the default
@@ -52,7 +50,6 @@ export function startGame(mode) {
   setupLanguageSwitch();
   const countries = mode.countries ?? COUNTRIES;
   const scores = mode.scores !== false;
-  const colorByScore = scores && mode.colorByScore !== false;
   const filterGroups = FILTER_GROUPS.filter(({ key }) => !mode.filters || mode.filters.includes(key));
   const feedback = byId('feedback');
   const importFile = byId('import-file');
@@ -123,7 +120,7 @@ export function startGame(mode) {
   }
 
   function renderAll() {
-    if (colorByScore) for (const { code } of countries) renderCountry(code);
+    if (scores) for (const { code } of countries) renderCountry(code);
     renderStats();
   }
 
@@ -201,7 +198,7 @@ export function startGame(mode) {
     entry.lastSeen = new Date().toISOString().replace(/\.\d+Z$/, 'Z');
     progress.countries[code] = entry;
     persist();
-    if (colorByScore) renderCountry(code);
+    renderCountry(code);
     renderStats();
     // A country may have just passed the score limit.
     renderFilters();

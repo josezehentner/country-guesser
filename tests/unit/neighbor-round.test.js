@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { BORDERS } from '../../data/borders.js';
 import { COUNTRIES } from '../../data/countries.js';
-import { createNeighborRound, guessNeighbor, MAX_MISSES, missesLeft, missingNeighbors, NEIGHBOR_COUNTRIES } from '../../src/neighbor-round.js';
+import { createNeighborRound, guessNeighbor, MAX_MISSES, missesLeft, missingNeighbors, NEIGHBOR_COUNTRIES, pickNeighborRound } from '../../src/neighbor-round.js';
 
 test('only countries with a land border are asked', () => {
   const codes = NEIGHBOR_COUNTRIES.map(({ code }) => code);
@@ -57,4 +57,10 @@ test('the last allowed miss ends the round', () => {
   assert.equal(guessNeighbor(round, 'Polen', 'de').kind, 'lost');
   assert.equal(missesLeft(round), 0);
   assert.deepEqual(missingNeighbors(round), ['DE', 'FR', 'LU', 'NL']);
+});
+
+test('a new round picks a country from the pool, never the previous one twice in a row', () => {
+  const pool = NEIGHBOR_COUNTRIES.filter(({ code }) => ['BE', 'NL'].includes(code));
+  for (const random of [0, 0.5, 0.99]) assert.equal(pickNeighborRound(pool, 'BE', () => random).code, 'NL');
+  assert.deepEqual(pickNeighborRound(pool.slice(0, 1), 'BE', () => 0), createNeighborRound('BE'));
 });

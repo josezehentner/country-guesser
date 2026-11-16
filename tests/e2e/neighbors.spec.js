@@ -4,7 +4,6 @@ const KEY = 'countryquiz.neighbors.v1';
 const GREEN = 'var(--route-step)';
 const RED = 'var(--route-detour)';
 const ORANGE = 'var(--route-missing)';
-const mastered = { score: 10, seen: 12, correct: 12, lastSeen: '2026-10-29T18:00:00Z' };
 
 const mapApi = (page, method, ...args) =>
   page.evaluate(([m, a]) => document.querySelector('#map').mapTestApi[m](...a), [method, args]);
@@ -16,17 +15,11 @@ function stored(page) {
   return page.evaluate((k) => JSON.parse(localStorage.getItem(k)), KEY);
 }
 
-// Every other country is mastered and above the score limit, so only `code` is asked.
+// Rounds are random, so the tests start one on `code` through the page's test hook.
 async function askOnly(page, code) {
   await page.goto('/neighbors.html');
-  // The page saves its progress once the map is ready: seed only after that.
   await expect.poll(() => askedCode(page)).toBeTruthy();
-  await page.evaluate(async ([key, asked, entry]) => {
-    const { NEIGHBOR_COUNTRIES } = await import('/src/neighbor-round.js');
-    const countries = Object.fromEntries(NEIGHBOR_COUNTRIES.filter((c) => c.code !== asked).map((c) => [c.code, entry]));
-    localStorage.setItem(key, JSON.stringify({ version: 1, countries, settings: { maxScore: 9 } }));
-  }, [KEY, code, mastered]);
-  await page.reload();
+  await page.evaluate((c) => document.querySelector('#prompt').neighborTestApi.play(c), code);
   await expect.poll(() => askedCode(page)).toBe(code);
 }
 
@@ -50,7 +43,9 @@ test('loads without console errors, marks a country with land borders and asks f
   const count = await page.evaluate(async (c) => (await import('/data/borders.js')).BORDERS[c].length, code);
   expect(count).toBeGreaterThan(0);
   await expect(status(page)).toHaveText(`0 von ${count} gefunden · noch 3 Fehlversuche`);
-  await expect(page.locator('#stat-never')).toHaveText('164');
+  await expect(page.locator('#stat-solved')).toHaveText('0');
+  await expect(page.locator('#legend')).toHaveCount(0);
+  await expect(page.locator('#score-limit')).toHaveCount(0);
   await expect(page.locator('#filter-summary')).toHaveText('164 Länder werden abgefragt.');
   await expect(page.locator('#answer-input')).toBeFocused();
   await expect(page.locator('#answer-input')).toHaveAttribute('placeholder', 'Nachbarland …');
@@ -59,18 +54,15 @@ test('loads without console errors, marks a country with land borders and asks f
   expect(problems).toEqual([]);
 });
 
-test('the globe shows no borders and no score colors, even after a scored round', async ({ page }) => {
+test('the globe shows no borders and no colors, even after a round', async ({ page }) => {
   await askOnly(page, 'PT');
   expect(await mapApi(page, 'hidesBorders')).toBe(true);
   await expect(page.locator('#map')).toHaveAttribute('aria-label', 'Globus ohne Grenzen');
   const plain = await mapApi(page, 'colorOf', 'FR');
   expect(await mapApi(page, 'colorOf', 'PT')).toBe(plain);
   await type(page, 'Spanien');
-  await expect(feedback(page)).toHaveText('Richtig! Den einzigen Nachbarn gefunden 5/10');
-  expect((await stored(page)).countries.PT.score).toBe(5);
+  await expect(feedback(page)).toHaveText('Richtig! Den einzigen Nachbarn gefunden, ohne Fehler');
   for (const code of ['PT', 'ES', 'DE']) expect(await mapApi(page, 'colorOf', code)).toBe(plain);
-  // The legend stays for the score limit slider.
-  await expect(page.locator('#legend li')).toHaveCount(11);
 });
 
 test('the question takes the article of the country', async ({ page }) => {
@@ -95,31 +87,52 @@ test('typing every neighbor outlines them green, lists them, is correct and move
   await expect(status(page)).toHaveText('3 von 4 gefunden · noch 3 Fehlversuche');
   await expect(chips(page)).toHaveText(['Frankreich', 'Deutschland', 'Niederlande']);
   await expect(chips(page).first()).toHaveClass(/step/);
-  expect(await stored(page)).not.toHaveProperty('countries.BE');
+  expect(await stored(page)).not.toHaveProperty('rounds');
 
   await type(page, 'Luxenburg');
-  await expect(feedback(page)).toHaveText('Richtig! Alle 4 Nachbarn gefunden 5/10');
+  await expect(feedback(page)).toHaveText('Richtig! Alle 4 Nachbarn gefunden, ohne Fehler');
   await expect(status(page)).toHaveText('4 von 4 gefunden');
   expect(await mapApi(page, 'targetColors')).toEqual({ BE: 'var(--target)', FR: GREEN, DE: GREEN, NL: GREEN, LU: GREEN });
-  expect((await stored(page)).countries.BE).toMatchObject({ score: 5, seen: 1, correct: 1 });
+  expect((await stored(page)).rounds).toEqual({ played: 1, solved: 1, perfect: 1, streak: 1, bestStreak: 1 });
+  expect((await stored(page)).countries).toEqual({});
+  await expect(page.locator('#stat-solved')).toHaveText('1');
+  await expect(page.locator('#stat-perfect')).toHaveText('1');
+  await expect(page.locator('#stat-streak')).toHaveText('1');
   expect(await mapApi(page, 'flashing')).toEqual({ code: 'BE', kind: 'good' });
 
-  // Belgium is now the only country left, so it comes again with fresh outlines.
+  // Another country follows, with fresh outlines.
   await expect(feedback(page)).toHaveText('', { timeout: 5000 });
-  expect(await mapApi(page, 'targetColors')).toEqual({ BE: 'var(--target)' });
-  await expect(status(page)).toHaveText('0 von 4 gefunden · noch 3 Fehlversuche');
+  expect(await mapApi(page, 'targetCodes')).toHaveLength(1);
+  expect(await askedCode(page)).not.toBe('BE');
+  await expect(status(page)).toHaveText(/^0 von \d+ gefunden · noch 3 Fehlversuche$/);
   await expect(chips(page)).toHaveCount(0);
   await expect(page.locator('#submit-btn')).toHaveText('Prüfen');
 });
 
-test('Enter skips the pause after a correct answer', async ({ page }) => {
+test('a round with a wrong guess is solved, but not without mistakes; Enter skips the pause', async ({ page }) => {
   await askOnly(page, 'PT');
+  await type(page, 'Frankreich');
   await type(page, 'Spanien');
-  await expect(feedback(page)).toHaveClass(/good/);
+  await expect(feedback(page)).toHaveText('Richtig! Den einzigen Nachbarn gefunden');
+  expect((await stored(page)).rounds).toEqual({ played: 1, solved: 1, perfect: 0, streak: 1, bestStreak: 1 });
+  expect(await mapApi(page, 'flashing')).toEqual({ code: 'PT', kind: 'good' });
   await expect(page.locator('#submit-btn')).toHaveText('Weiter');
   await page.press('#answer-input', 'Enter');
   await expect(feedback(page)).toHaveText('');
-  await expect(status(page)).toHaveText('0 von 1 gefunden · noch 3 Fehlversuche');
+  expect(await askedCode(page)).not.toBe('PT');
+  await expect(page.locator('#submit-btn')).toHaveText('Prüfen');
+});
+
+test('the round statistics survive a reload', async ({ page }) => {
+  await askOnly(page, 'PT');
+  await type(page, 'Spanien');
+  await expect(page.locator('#stat-solved')).toHaveText('1');
+  await page.reload();
+  await expect.poll(() => askedCode(page)).toBeTruthy();
+  await expect(page.locator('#stat-solved')).toHaveText('1');
+  await expect(page.locator('#stat-perfect')).toHaveText('1');
+  await expect(page.locator('#stat-streak')).toHaveText('1');
+  await expect(page.locator('#progress')).toHaveAttribute('aria-valuenow', '100');
 });
 
 test('a wrong country outlines it red and costs a guess; unknown, ambiguous, repeated names and the country itself cost nothing', async ({ page }) => {
@@ -143,7 +156,7 @@ test('a wrong country outlines it red and costs a guess; unknown, ambiguous, rep
   await type(page, 'Kongo');
   await expect(feedback(page)).toHaveText(/^Meinst du /);
   await expect(status(page)).toHaveText('0 von 4 gefunden · noch 2 Fehlversuche');
-  expect(await stored(page)).not.toHaveProperty('countries.AO');
+  expect(await stored(page)).not.toHaveProperty('rounds');
 });
 
 test('the third wrong country ends the round and shows the missing neighbors in orange', async ({ page }) => {
@@ -151,14 +164,15 @@ test('the third wrong country ends the round and shows the missing neighbors in 
   await type(page, 'Niederlande');
   for (const name of ['Spanien', 'Italien']) await type(page, name);
   await type(page, 'Polen');
-  await expect(feedback(page)).toHaveText('Vorbei! Gefehlt haben: Deutschland, Frankreich, Luxemburg 3/10');
+  await expect(feedback(page)).toHaveText('Vorbei! Gefehlt haben: Deutschland, Frankreich, Luxemburg');
   await expect(status(page)).toHaveText('1 von 4 gefunden');
   expect(await mapApi(page, 'targetColors')).toEqual({
     BE: 'var(--target)', NL: GREEN, ES: RED, IT: RED, PL: RED, DE: ORANGE, FR: ORANGE, LU: ORANGE,
   });
   await expect(chips(page)).toHaveText(['Niederlande', 'Spanien', 'Italien', 'Polen', 'Deutschland', 'Frankreich', 'Luxemburg']);
   await expect(chips(page).last()).toHaveClass(/missing/);
-  expect((await stored(page)).countries.BE).toMatchObject({ score: 3, seen: 1, correct: 0 });
+  expect((await stored(page)).rounds).toEqual({ played: 1, solved: 0, perfect: 0, streak: 0, bestStreak: 0 });
+  expect(await mapApi(page, 'flashing')).toEqual({ code: 'BE', kind: 'bad' });
 
   // It waits for the player.
   await page.waitForTimeout(2000);
@@ -167,14 +181,15 @@ test('the third wrong country ends the round and shows the missing neighbors in 
   await expect(page.locator('#dont-know-btn')).toBeDisabled();
   await page.press('#answer-input', 'Enter');
   await expect(feedback(page)).toHaveText('');
-  expect(await mapApi(page, 'targetColors')).toEqual({ BE: 'var(--target)' });
-  expect((await stored(page)).countries.BE.seen).toBe(1);
+  expect(await askedCode(page)).not.toBe('BE');
+  expect(await mapApi(page, 'targetCodes')).toHaveLength(1);
+  expect((await stored(page)).rounds.played).toBe(1);
 });
 
 test('"Weiß ich nicht" shows the missing neighbors and counts as wrong', async ({ page }) => {
   await askOnly(page, 'PT');
   await page.click('#dont-know-btn');
-  await expect(feedback(page)).toHaveText('Schade! Gefehlt hat: Spanien 3/10');
+  await expect(feedback(page)).toHaveText('Schade! Gefehlt hat: Spanien');
   expect(await mapApi(page, 'targetColors')).toEqual({ PT: 'var(--target)', ES: ORANGE });
   await expect(page.locator('#dont-know-btn')).toBeDisabled();
   await expect(page.locator('#answer-input')).toBeFocused();

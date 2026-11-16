@@ -51,6 +51,7 @@ const de = {
   neighborFound: (name) => `Nachbar: ${name}`,
   notNeighbor: (name) => `Kein Nachbar: ${name}`,
   askedItself: 'Das ist das markierte Land selbst.',
+  flawless: 'ohne Fehler',
   allNeighbors: (count) => (count === 1 ? 'Den einzigen Nachbarn gefunden' : `Alle ${count} Nachbarn gefunden`),
 
   // "Grenzgänger"
@@ -133,6 +134,7 @@ const en = {
   neighborFound: (name) => `Neighbor: ${name}`,
   notNeighbor: (name) => `Not a neighbor: ${name}`,
   askedItself: 'That’s the marked country itself.',
+  flawless: 'no mistakes',
   allNeighbors: (count) => (count === 1 ? 'Found the only neighbor' : `All ${count} neighbors found`),
 
   // "From **Portugal** to **China**", "From the **Netherlands** to the **United States**"

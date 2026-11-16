@@ -12,6 +12,13 @@ const neighborsOf = (code) => BORDERS[code] ?? [];
 // Only countries with at least one land border can be asked.
 export const NEIGHBOR_COUNTRIES = COUNTRIES.filter(({ code }) => neighborsOf(code).length);
 
+// A random country from `pool`, never `previous` twice in a row unless it is the
+// only one, as a new round.
+export function pickNeighborRound(pool, previous, random = Math.random) {
+  const choices = pool.length > 1 ? pool.filter(({ code }) => code !== previous) : pool;
+  return createNeighborRound(choices[Math.floor(random() * choices.length)].code);
+}
+
 export function createNeighborRound(code) {
   return { code, neighbors: [...neighborsOf(code)], found: [], misses: [] };
 }

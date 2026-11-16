@@ -34,6 +34,7 @@ export const PAGE_TEXT_EN = {
   'stat.never': 'Never asked',
   'stat.solved': 'Solved',
   'stat.perfect': 'Shortest route',
+  'stat.flawless': 'Flawless',
   'stat.streak': 'Streak',
   'progress.total': 'Overall progress',
   'progress.rounds': 'Share of rounds solved',
