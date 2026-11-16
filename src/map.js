@@ -352,7 +352,9 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     targetContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     targetContext.clearRect(0, 0, cssWidth, cssHeight);
     targetContext.lineJoin = 'round';
-    for (const { shape, color } of targets) {
+    // The marked country comes last, so outlined neighbors never cover the border
+    // they share with it.
+    for (const { shape, color } of [...targets].reverse()) {
       targetContext.beginPath();
       if (!traceShape(targetContext, targetPath, shape)) continue;
       targetContext.strokeStyle = resolveColor('var(--ink)');
@@ -614,6 +616,16 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     announceTarget();
   }
 
+  // Outlines one more country in `color`, beside the marked one, without turning
+  // the globe: e.g. a neighbor found in "Nachbarn finden". The next highlight
+  // clears it.
+  function mark(code, color) {
+    const shape = shapeByCode.get(code);
+    if (!shape) return;
+    targets = [...targets.filter((target) => target.code !== code), { code, shape, color }];
+    scheduleDraw();
+  }
+
   // Outlines the start and the end of a route in their colors and shows both.
   function setRoute(start, end) {
     route = { start, end };
@@ -736,6 +748,7 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
   canvas.mapTestApi = {
     targetCode: () => targets[0]?.code,
     targetCodes: () => targets.map(({ code }) => code),
+    targetColors: () => Object.fromEntries(targets.map(({ code, color }) => [code, color])),
     hidesBorders: () => hideBorders,
     // True while the globe still shows the end and is about to fly to the start.
     touring: () => Boolean(tourTimer),
@@ -770,5 +783,5 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     isFacing: (location) => geoDistance(center, location) < Math.PI / 2,
   };
 
-  return { setColor, highlight, setRoute, reveal, refocus, hasTarget, flash, clearHighlight, codeAt, hits };
+  return { setColor, highlight, mark, setRoute, reveal, refocus, hasTarget, flash, clearHighlight, codeAt, hits };
 }

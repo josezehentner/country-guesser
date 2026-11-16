@@ -54,6 +54,7 @@ capitals.html           the "Hauptstädte lernen" mode
 find-capitals.html      the "Hauptstädte finden" mode
 flags.html              the "Flaggen erkennen" mode
 borders.html            the "Grenzgänger" mode
+neighbors.html          the "Nachbarn finden" mode
 style.css               styles for all pages
 images/                 menu background and card pictures, generated with `npm run build:images`
 fonts/                  web fonts with their licenses

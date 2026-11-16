@@ -23,6 +23,8 @@ function renderItem(item) {
   for (const { color, label, ring } of item.swatches) {
     const swatch = element('span', ring ? 'swatch intro-ring' : 'swatch', label);
     swatch.style.background = color;
+    // `ring: true` is the outline of the marked country, a color another outline.
+    if (typeof ring === 'string') swatch.style.setProperty('--ring', ring);
     samples.append(swatch);
   }
   row.append(samples, element('span', '', item.text));

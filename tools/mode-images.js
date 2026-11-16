@@ -16,10 +16,11 @@ function round(path) {
   return path.replace(/\d+\.\d+/g, (n) => Number(n).toFixed(1));
 }
 
-// `highlight` outlines a country, `pin` puts a map pin on a point, `flag` adds a
+// `highlight` outlines a country, `outlines` maps more codes to outline colors,
+// `pin` puts a map pin on a point, `flag` adds a
 // picture of a flag in the top left corner. `route` maps codes to fill colors and
 // hides the borders of all other countries, as in "Grenzgänger".
-function globe({ center, highlight, pin, flag, route }) {
+function globe({ center, highlight, outlines = {}, pin, flag, route }) {
   const projection = geoOrthographic()
     .clipAngle(90)
     .precision(0)
@@ -52,6 +53,11 @@ function globe({ center, highlight, pin, flag, route }) {
         ...Object.entries(route).map(([code, color]) => `<path d="${round(path(simplified(world.features.find((feature) => feature.properties.id === code))))}" fill="${color}" stroke="${COLORS.border}" stroke-width="0.6" stroke-linejoin="round"/>`),
       ].join('\n')
       : `<path d="${countries.join('')}" fill="${COLORS.land}" stroke="${COLORS.border}" stroke-width="0.4" stroke-linejoin="round"/>`,
+    // Countries too small to show at this size get no outline.
+    ...Object.entries(outlines)
+      .map(([code, color]) => [path(simplified(world.features.find((feature) => feature.properties.id === code))), color])
+      .filter(([d]) => d)
+      .map(([d, color]) => `<path d="${round(d)}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>`),
     target && `<path d="${target}" fill="none" stroke="${COLORS.target}" stroke-width="2.5" stroke-linejoin="round"/>`,
     // A drop-shaped pin whose tip touches the point.
     pin && `<path d="M${pinX} ${pinY}c-4-9-12-15-12-23a12 12 0 0 1 24 0c0 8-8 14-12 23z" fill="${COLORS.target}" stroke="${COLORS.border}" stroke-width="1.2" stroke-linejoin="round"/>`,
@@ -77,3 +83,7 @@ writeFileSync(new URL('../images/modes/flags.svg', import.meta.url), globe({ cen
 // Portugal to Poland: start in green, end in red, the way between in yellow.
 const ROUTE = { PT: '#3fb05b', ES: '#f6cf45', FR: '#f6cf45', DE: '#f6cf45', PL: '#e8505b' };
 writeFileSync(new URL('../images/modes/borders.svg', import.meta.url), globe({ center: [5, 40], route: ROUTE }));
+
+// Germany marked, its neighbors outlined in green as they are found.
+const NEIGHBORS = Object.fromEntries('AT BE CH CZ DK FR LU NL PL'.split(' ').map((code) => [code, '#3fb05b']));
+writeFileSync(new URL('../images/modes/neighbors.svg', import.meta.url), globe({ center: [10, 46], highlight: 'DE', outlines: NEIGHBORS }));
