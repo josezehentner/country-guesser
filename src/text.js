@@ -43,6 +43,17 @@ const de = {
   // " (gleiche Flagge wie Rumänien)", or nothing.
   sameFlag: (codes) => (codes.length ? ` (gleiche Flagge wie ${codes.map((code) => countryPhrase(code, 'nominative', 'de')).join(', ')})` : ''),
 
+  // "Nachbarn finden"
+  // "Welche Länder grenzen an die **Schweiz**?": what comes before the name in bold.
+  neighborsLead: (code) => ['an', countryParts(code, 'accusative', 'de').article].filter(Boolean).join(' '),
+  neighborStatus: (found, total, left) => `${found} von ${total} gefunden · noch ${plural(left, 'Fehlversuch', 'Fehlversuche')}`,
+  neighborOverStatus: (found, total) => `${found} von ${total} gefunden`,
+  neighborFound: (name) => `Nachbar: ${name}`,
+  notNeighbor: (name) => `Kein Nachbar: ${name}`,
+  askedItself: 'Das ist das markierte Land selbst.',
+  clickedBefore: (code) => `${capitalize(countryPhrase(code, 'accusative', 'de'))} hast du schon angeklickt.`,
+  allNeighbors: (count) => (count === 1 ? 'Den einzigen Nachbarn gefunden' : `Alle ${count} Nachbarn gefunden`),
+
   // "Grenzgänger"
   // "Von der **Schweiz** in die **Niederlande**", "Von **Polen** nach **Spanien**"
   routeFrom: (code) => {
@@ -115,6 +126,16 @@ const en = {
   capitalIn: (capitalCode, countryName) => `${capitalOf(capitalCode, 'en').name} is here: ${countryName}`,
   alsoRight: (names) => `. Also correct: ${names.join(', ')}`,
   sameFlag: (codes) => (codes.length ? ` (same flag as ${codes.map(the).join(', ')})` : ''),
+
+  // "Which countries border the **Netherlands**?"
+  neighborsLead: (code) => countryParts(code, 'nominative', 'en').article ?? '',
+  neighborStatus: (found, total, left) => `${found} of ${total} found · ${plural(left, 'miss', 'misses')} left`,
+  neighborOverStatus: (found, total) => `${found} of ${total} found`,
+  neighborFound: (name) => `Neighbor: ${name}`,
+  notNeighbor: (name) => `Not a neighbor: ${name}`,
+  askedItself: 'That’s the marked country itself.',
+  clickedBefore: (code) => `You already clicked ${the(code)}.`,
+  allNeighbors: (count) => (count === 1 ? 'Found the only neighbor' : `All ${count} neighbors found`),
 
   // "From **Portugal** to **China**", "From the **Netherlands** to the **United States**"
   routeFrom: (code) => {

@@ -4,8 +4,8 @@
 //
 // A guide is { title, sections }, a section { heading, items }, and an item either
 // a line of text or { swatches, text }: a row of color samples with what they mean.
-// A swatch is { color } with an optional `label` inside it and `ring` for the
-// outline of the marked country.
+// A swatch is { color } with an optional `label` inside it and `ring`: true for the
+// outline of the marked country, or the color of another outline.
 
 const SCORE_SCALE = Array.from({ length: 10 }, (_, i) => ({ color: `var(--score-${i + 1})`, label: String(i + 1) }));
 
@@ -60,9 +60,14 @@ const controls = (recenter) => ({
 const RECENTER_MARKED = '⌖ „Zum Land“ oben rechts dreht den Globus zurück zum markierten Land.';
 const RECENTER_AFTER = '⌖ „Zum Land“ oben rechts erscheint nach der Antwort und dreht den Globus zurück zum Land.';
 
-const scoreGuide = (title, rules, recenter) => ({
+// `colors` adds rows to the score colors, e.g. the outlines of "Nachbarn finden".
+const scoreGuide = (title, rules, recenter, colors = []) => ({
   title,
-  sections: [{ heading: 'Spielregeln', items: rules }, FILTERS, SCALE, SCORE_COLORS, controls(recenter)],
+  sections: [
+    { heading: 'Spielregeln', items: rules }, FILTERS, SCALE,
+    { ...SCORE_COLORS, items: [...SCORE_COLORS.items.slice(0, -1), ...colors, SCORE_COLORS.items.at(-1)] },
+    controls(recenter),
+  ],
 });
 
 export const INTROS = {
@@ -100,6 +105,19 @@ export const INTROS = {
     'Danach dreht sich der Globus zum Land, so lernst du auch, wo es liegt.',
     DONT_KNOW,
   ], RECENTER_AFTER),
+
+  neighbors: scoreGuide('Nachbarn finden', [
+    'Ein Land auf dem Globus ist markiert. Klick oder tipp alle Länder an, mit denen es eine Landgrenze hat. Brücken und Tunnel zählen nicht.',
+    'Der Globus zeigt nur Küsten, keine Grenzen, und ist nicht nach Punkten eingefärbt: Das würde die Nachbarn verraten. Deine Punkte für das Land siehst du nach jeder Runde.',
+    'Unter der Frage steht, wie viele Nachbarn es gibt und wie viele du schon gefunden hast. Bei sehr kleinen Ländern reicht ein Klick knapp daneben.',
+    'Drei Fehlklicks beenden die Runde. Ein Klick aufs Meer, auf das markierte Land oder ein zweites Mal auf dasselbe Land kostet nichts.',
+    'Findest du alle, zählt das als richtig, und das nächste Land kommt von selbst. Sonst geht es mit „Weiter“, Enter oder einem Klick auf den Globus weiter.',
+    '„Weiß ich nicht“ zeigt die fehlenden Nachbarn und zählt als falsch.',
+  ], RECENTER_MARKED, [
+    { swatches: [{ color: 'var(--never)', ring: 'var(--route-step)' }], text: 'Grüner Rand: ein gefundener Nachbar' },
+    { swatches: [{ color: 'var(--never)', ring: 'var(--route-detour)' }], text: 'Roter Rand: kein Nachbar, ein Fehlklick' },
+    { swatches: [{ color: 'var(--never)', ring: 'var(--route-missing)' }], text: 'Oranger Rand: ein Nachbar, der am Ende gefehlt hat' },
+  ]),
 
   borders: {
     title: 'Grenzgänger',

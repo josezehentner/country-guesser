@@ -29,8 +29,9 @@ The start page is titled **Country Guesser** and is a menu with one **card** per
 | Hauptstädte finden | `find-capitals.html` | Land zur genannten Hauptstadt finden. |
 | Flaggen erkennen | `flags.html` | Land zur gezeigten Flagge nennen. |
 | Grenzgänger | `borders.html` | Über Landgrenzen von Land zu Land. |
+| Nachbarn finden | `neighbors.html` | Alle Nachbarn des markierten Landes finden. |
 
-Each mode keeps its own progress: recognizing a country, finding it, knowing its capital, placing a capital, knowing its flag and knowing its neighbors are different skills.
+Each mode keeps its own progress: recognizing a country, finding it, knowing its capital, placing a capital, knowing its flag, getting from country to country and knowing a country's neighbors are different skills.
 
 Card pictures are drawn from the real map data by `tools/mode-images.js`.
 
@@ -47,7 +48,7 @@ Behind the menu is a comic-style world map: light blue water with halftone dots 
 Every page is in **German or English**. The player chooses with "DE | EN" at the top right of the menu or under "Sprache" / "Language" in the ⚙ settings of every mode; the choice holds for every page and survives a reload (key `countryquiz.language`, `"de"` or `"en"`). Without a choice the page follows the first German or English language the browser prefers, and is English otherwise. Switching reloads the page: a running question starts over, the progress stays.
 
 - The pages are written in German. `src/page-text.js` holds the English text of everything fixed on them; `src/text.js` everything the game writes itself (verdicts, messages, filter labels), and `src/intro-content.en.js` the English guides.
-- The English mode names are: Name the Country, Find the Country, Learn Capitals, Find the Capital, Guess the Flag, Border Hopper.
+- The English mode names are: Name the Country, Find the Country, Learn Capitals, Find the Capital, Guess the Flag, Border Hopper, Find the Neighbors.
 - **Answers count only in the language of the page**: English pages accept English names and their usual variants ("USA", "UK", "Ivory Coast", "Côte d'Ivoire"), German pages German ones. A German name on an English page is wrong, unless it is also a small typo away from the English one ("Indonesien" for "Indonesia"). English capitals are their English names and local spellings ("Vienna", "Prague" or "Praha", but not "Wien"), in `data/capitals.en.js`; English alternative country names are in `data/aliases.en.js`.
 - English country names come from `Intl.DisplayNames(['en'])`, with the common name where it differs ("Ivory Coast", "Turkey", "East Timor", "Saint Lucia" instead of "St. Lucia", "and" instead of "&"). In sentences some take "the" ("the Netherlands", "the United States", "the Gambia"), listed in `data/articles.en.js`; every country takes a singular verb ("The Netherlands is here").
 - `src/language-boot.js` picks the language before the page is drawn and keeps an English page hidden until it is translated, so it never shows German text first.
@@ -56,7 +57,7 @@ Every page is in **German or English**. The player chooses with "DE | EN" at the
 
 ## Gameplay
 
-This section describes the "Länder benennen" mode. "Länder finden" works the other way round, see [below](#mode-länder-finden); "Hauptstädte lernen" asks for the capital instead of the name, see [below](#mode-hauptstädte-lernen), "Hauptstädte finden" names a capital whose country is to be clicked, see [below](#mode-hauptstädte-finden), "Flaggen erkennen" shows a flag instead of marking the country, see [below](#mode-flaggen-erkennen), and "Grenzgänger" asks for a route over land borders instead of single countries, see [below](#mode-grenzgänger).
+This section describes the "Länder benennen" mode. "Länder finden" works the other way round, see [below](#mode-länder-finden); "Hauptstädte lernen" asks for the capital instead of the name, see [below](#mode-hauptstädte-lernen), "Hauptstädte finden" names a capital whose country is to be clicked, see [below](#mode-hauptstädte-finden), "Flaggen erkennen" shows a flag instead of marking the country, see [below](#mode-flaggen-erkennen), "Grenzgänger" asks for a route over land borders instead of single countries, see [below](#mode-grenzgänger), and "Nachbarn finden" marks a country whose neighbors are to be clicked, see [below](#mode-nachbarn-finden).
 
 1. One country on the world map is **highlighted** (clearly marked, e.g. thick outline + pulsing effect).
 2. The player **types the country's name** into an input field and confirms with Enter.
@@ -121,6 +122,15 @@ The flags are SVG files in `vendor/flags/`, from flag-icons (see `vendor/NOTICE.
 
 Only countries with a land border take part (164 of 250); islands like Iceland or Japan can still be typed, as a detour. The **region filter** keeps a round inside the ticked regions: start, end and at least one shortest route lie in them. A choice without such a route says so, and then rounds come from everywhere. There is no difficulty filter, no score limit and no country colors by score; the top bar shows solved rounds, rounds solved on a shortest route and the current streak, and the bar the share of solved rounds.
 
+### Mode "Nachbarn finden"
+
+1. A country is **highlighted** and turned to the front as in "Länder benennen", on a globe **without borders** as in "Grenzgänger": one surface with coasts and large lakes only, so the outline of the marked country is all the player sees of where its neighbors are. The question box asks "Welche Länder grenzen an **Deutschland**?" ("an die **Schweiz**", "an die **Niederlande**"; English "Which countries border the **Netherlands**?"), and below it how many neighbors were found of how many, and how many wrong clicks are left: "2 von 9 gefunden · noch 3 Fehlversuche".
+2. The player **clicks or taps** the neighbors in any order. Neighbors are the land borders of `data/borders.js`, as in "Grenzgänger": no bridges or tunnels. Small neighbors (under 8,000 km²) count within 11 pixels, as in "Länder finden", so Vatican City can be clicked in Rome.
+3. A neighbor gets a **green outline** and lights up green ("Nachbar: Frankreich"). Any other country gets a **red outline** and pulses red ("Kein Nachbar: Spanien"); that is a wrong click. A click on the ocean, on the marked country itself or on a country clicked before only gets a hint and costs nothing. The globe does not move.
+4. Once every neighbor is found, the answer is **correct** ("Richtig! Alle 9 Nachbarn gefunden") and the next country follows after 1.5 seconds. The **third wrong click** ("Vorbei!") or "Weiß ich nicht" ("Schade!") make it **wrong**: the missing neighbors get an **orange outline** and are listed ("Gefehlt haben: Polen, Tschechien"). Then the game waits for "Weiter", Enter or a click on the globe, as in "Länder finden".
+
+Only countries with a land border are asked (164 of 250), and they are the ones its stats and filter counts cover. Scores, filters, score limit and the flash of the asked country work as in the other modes, but the globe is **not colored by score**: a filled country would show its borders. The score shows in the badge after each round, and the legend stays for the score limit slider. The outlines go away with the next country.
+
 ### Choosing the next country
 
 Not purely random, but weighted so weaker countries come up more often:
@@ -169,7 +179,7 @@ Colors must be clearly visible in both light and dark mode. A small **legend** s
 
 ## Storage (localStorage)
 
-Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder finden", `countryquiz.capitals.v1` for "Hauptstädte lernen", `countryquiz.capitals-find.v1` for "Hauptstädte finden", `countryquiz.flags.v1` for "Flaggen erkennen", `countryquiz.borders.v1` for "Grenzgänger", all in the format below.
+Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder finden", `countryquiz.capitals.v1` for "Hauptstädte lernen", `countryquiz.capitals-find.v1` for "Hauptstädte finden", `countryquiz.flags.v1` for "Flaggen erkennen", `countryquiz.borders.v1` for "Grenzgänger", `countryquiz.neighbors.v1` for "Nachbarn finden", all in the format below.
 
 ```json
 {
@@ -186,7 +196,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 
 The chosen language is kept apart from the progress too: key `countryquiz.language`, `"de"` or `"en"`.
 
-Which guides the player has closed is kept apart from the progress, so a reset or an import does not bring them back: key `countryquiz.intro.v1`, `{ "version": 1, "seen": ["name", "borders"] }`, one name per mode (`name`, `find`, `capitals`, `find-capitals`, `flags`, `borders`). Without localStorage the guide opens on every visit.
+Which guides the player has closed is kept apart from the progress, so a reset or an import does not bring them back: key `countryquiz.intro.v1`, `{ "version": 1, "seen": ["name", "borders"] }`, one name per mode (`name`, `find`, `capitals`, `find-capitals`, `flags`, `borders`, `neighbors`). Without localStorage the guide opens on every visit.
 
 `settings` is optional throughout: a missing `regions` or `levels` means all of them, an empty list means none. `filtersOpen` remembers whether the filter sidebar is open on a wide screen. `maxScore` (0 to 9) is the score limit; missing means all scores are asked. An older `"continent": "AF"` is read as `"regions": ["AF"]`.
 
@@ -197,7 +207,7 @@ Which guides the player has closed is kept apart from the progress, so a reset o
 
 ### Export / Import
 
-- **Export**: downloads the mode's progress as `countryquiz-progress-YYYY-MM-DD.json` ("Länder finden": `countryquiz-find-progress-YYYY-MM-DD.json`, "Hauptstädte lernen": `countryquiz-capitals-progress-YYYY-MM-DD.json`, "Hauptstädte finden": `countryquiz-capitals-find-progress-YYYY-MM-DD.json`, "Flaggen erkennen": `countryquiz-flags-progress-YYYY-MM-DD.json`, "Grenzgänger": `countryquiz-borders-progress-YYYY-MM-DD.json`).
+- **Export**: downloads the mode's progress as `countryquiz-progress-YYYY-MM-DD.json` ("Länder finden": `countryquiz-find-progress-YYYY-MM-DD.json`, "Hauptstädte lernen": `countryquiz-capitals-progress-YYYY-MM-DD.json`, "Hauptstädte finden": `countryquiz-capitals-find-progress-YYYY-MM-DD.json`, "Flaggen erkennen": `countryquiz-flags-progress-YYYY-MM-DD.json`, "Grenzgänger": `countryquiz-borders-progress-YYYY-MM-DD.json`, "Nachbarn finden": `countryquiz-neighbors-progress-YYYY-MM-DD.json`).
 - **Import**: select a file, validate its contents, show a confirmation dialog ("Replace current progress?"), then apply.
 - **Reset**: deletes all progress after confirmation.
 
@@ -229,11 +239,11 @@ Which guides the player has closed is kept apart from the progress, so a reset o
   - **Difficulty:** every country has exactly one level. *Einfach*: about 60 very well-known countries. *Schwer*: everything that is not a UN member (territories, dependencies, disputed areas) and UN island states smaller than about 1000 km². *Mittel*: all other UN members. The lists live in `data/countries.js`.
   - Each tick shows how many countries it covers, and the sidebar says how many are asked. A choice without any country says so; then every country comes up until the choice changes.
   - On a wide screen a click on the tab pins the sidebar beside the globe (it starts pinned, or as last left); like the Mac dock, moving the mouse onto the tab or to the left edge of the screen only peeks: the sidebar slides in over the globe and slides out a moment after the mouse leaves it. Running off the left edge of the window keeps it open. On small screens it slides over the globe, starts closed and closes with Escape.
-- **Guide** ("So geht's"): every mode opens with a short dialog for new players, titled with the mode's name. It explains the rules, the filter sidebar on the left, the score scale and the score limit slider on the right (what they mean and what they do), the colors on the globe and the controls (turning and zooming, "Zum Land", the stats, ⚙). "Grenzgänger" has no scale, so its guide explains the route colors instead (start, end, shortest route, detour, missing). The text scrolls between the title and the "Los geht's!" button, which closes it, as do Escape and a click on the backdrop; then the game continues where the player plays, and the globe shows the question again (e.g. the flight from start to end). It opens by itself only until the player has closed it once in that mode; a **?** button beside ⚙ opens it again. The texts live in `src/intro-content.js`.
+- **Guide** ("So geht's"): every mode opens with a short dialog for new players, titled with the mode's name. It explains the rules, the filter sidebar on the left, the score scale and the score limit slider on the right (what they mean and what they do), the colors on the globe and the controls (turning and zooming, "Zum Land", the stats, ⚙). "Grenzgänger" has no scale, so its guide explains the route colors instead (start, end, shortest route, detour, missing). "Nachbarn finden" also explains its outlines (found neighbor, wrong click, missing neighbor). The text scrolls between the title and the "Los geht's!" button, which closes it, as do Escape and a click on the backdrop; then the game continues where the player plays, and the globe shows the question again (e.g. the flight from start to end). It opens by itself only until the player has closed it once in that mode; a **?** button beside ⚙ opens it again. The texts live in `src/intro-content.js`.
 - **Settings dialog** behind a ⚙ button in the top bar: the language and the progress actions (export, import, reset). They are rarely needed, so they take no space next to the globe.
 - **Game screen like a HUD**: the globe takes the whole height below the top bar, and everything else floats over it:
   - the question in a light green comic caption box at the top, in dark blue letters ("Welches Land ist markiert?", or "Wo liegt **Frankreich**?" with the name big); clicks go through it to the globe;
-  - the controls in a small rounded dock at the bottom center: the input with "Prüfen"/"Weiter" and "Weiß ich nicht", or in "Länder finden" and "Hauptstädte finden" just "Weiß ich nicht" and "Weiter";
+  - the controls in a small rounded dock at the bottom center: the input with "Prüfen"/"Weiter" and "Weiß ich nicht", or in "Länder finden", "Hauptstädte finden" and "Nachbarn finden" just "Weiß ich nicht" and "Weiter";
   - the result just above the dock: a comic burst with the verdict ("Richtig!", "Falsch!", "Schade!"), the country and the new score as a badge in its color. Hints, e.g. a click on the ocean, show without burst or score;
   - the legend upright at the right edge, scores 0 to 10 with 10 at the top, with the score limit slider upright to its right. Never-asked countries have no swatch: they are plain land. On small screens the legend lies flat above the dock, with the slider flat beneath it.
 - **Small screens** (narrow, or phones held sideways): one layout for all devices, only CSS adapts it. The top bar shrinks to one row (menu link, stats as colored dots, ⚙, a thin progress line), the dock spans the width, "Weiß ich nicht" in "Länder benennen" becomes "?", and the legend lies flat above the dock. Even the longest country name fits the caption box.
@@ -288,6 +298,7 @@ Local testing: because of ES modules, serve via a local web server: `npm start`,
 - [ ] "Zum Land" turns the globe back to the marked country in every mode, and in the find modes and "Flaggen erkennen" it only shows after the answer.
 - [ ] Country names in questions and messages take their article and verbs agree with plural names ("Wo liegen die Niederlande?", "Das ist der Tschad", "Von der Schweiz in die Niederlande"), while plain labels keep the bare name.
 - [ ] "Grenzgänger" picks start and end with at least three countries between and no maximum, shows the globe without borders, shows start and end together or one after the other with a smooth flight, accepts countries in any order, tells steps from detours, ends after the fewest countries plus four guesses, and shows what was missing.
+- [ ] "Nachbarn finden" marks a country with land borders and says how many neighbors it has; clicking a neighbor outlines it green, another country outlines it red and costs one of three wrong clicks, and water, the country itself or a repeated click cost nothing. All found is correct; the third wrong click or "Weiß ich nicht" is wrong and outlines the missing neighbors in orange.
 - [ ] The globe turns and zooms smoothly, and borders stay sharp at every zoom level.
 - [ ] In the modes with an answer field the arrow keys move between field and buttons, and inside the text they still move the cursor.
 - [ ] Usable on mobile (touch zoom, input, no horizontal scrollbar), with most of the screen left for the globe even while the keyboard is open.

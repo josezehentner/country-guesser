@@ -15,22 +15,24 @@ A comic-style quiz for every country on Earth. The globe shows how well you know
 
 <p align="center">Free · no sign-up · in the browser on computer or phone · in German and English</p>
 
-## 🎮 Six ways to play
+## 🎮 Seven ways to play
 
 | | | |
 |:---:|:---:|:---:|
 | <img src="images/modes/name-countries.svg" alt="" width="200"><br>**"Länder benennen"**<br>Name the countries | <img src="images/modes/find-countries.svg" alt="" width="200"><br>**"Länder finden"**<br>Find the countries | <img src="images/modes/capitals.svg" alt="" width="200"><br>**"Hauptstädte lernen"**<br>Learn the capitals |
 | <img src="images/modes/find-capitals.svg" alt="" width="200"><br>**"Hauptstädte finden"**<br>Find the capitals | <img src="images/modes/flags.svg" alt="" width="200"><br>**"Flaggen erkennen"**<br>Recognize the flags | <img src="images/modes/borders.svg" alt="" width="200"><br>**"Grenzgänger"**<br>Cross borders |
+| <img src="images/modes/neighbors.svg" alt="" width="200"><br>**"Nachbarn finden"**<br>Find the neighbors | | |
 
 **✍️ Type it** (names, capitals, flags): one Enter is enough. Right? The next one comes by itself. Wrong? See the answer, move on when ready. Spelling is forgiving: case, missing umlauts ("Osterreich") and small typos are fine, and other common names count ("USA", "Amerika", "UK", "Côte d'Ivoire").
 
-**👆 Click it** (find countries, find capitals): a click just next to a tiny country is enough. Wrong? The globe turns to the right one; click again to move on.
+**👆 Click it** (find countries, find capitals, find neighbors): a click just next to a tiny country is enough. Wrong? The globe turns to the right one; click again to move on.
 
 - 🗺️ **"Länder benennen":** a country is marked; type its name.
 - 📍 **"Länder finden":** the game names a country; click it.
 - 🏛️ **"Hauptstädte lernen":** a country is marked; type its capital. The answer also shows the country. German, English and local names count ("Peking", "Beijing"), and every capital of a country with several, such as Bolivia (Sucre, La Paz) or South Africa. Uninhabited places like Antarctica are left out.
 - 🎯 **"Hauptstädte finden":** the game names a capital, such as Canberra; click its country. Shared names like Kingston (Jamaica, Norfolk Island) accept either.
 - 🚩 **"Flaggen erkennen":** a flag appears; type its country, and the globe turns there. Look-alikes Monaco/Indonesia and Romania/Chad accept either name. Places flying another country's flag (Réunion) and Antarctica are left out.
+- 🤝 **"Nachbarn finden":** a country is marked on a globe without borders; click every country it shares a land border with. The question says how many there are. Found ones get a green outline, wrong clicks a red one; three wrong clicks end the round, and the missing neighbors show in orange. Islands without land borders are left out.
 
 ### 🧭 "Grenzgänger"
 
@@ -73,7 +75,7 @@ Mix both, e.g. only Africa's easy countries: 250 countries and territories in to
 | Show end and start again ("Grenzgänger") | "Ziel & Start" at the top right | ⌖ at the right edge |
 | Answer (name, capital) | type, press Enter | type, tap "Go" |
 | Move between the answer field and its buttons | ← and → | tap |
-| Answer (find a country or capital) | click the country | tap the country |
+| Answer (find a country, capital or neighbor) | click the country | tap the country |
 | Move on after a wrong answer | Enter, "Weiter" or click the globe | "Weiter" or tap the globe |
 | Switch between German and English | "DE \| EN" at the top of the menu, or ⚙ in a mode | the same |
 

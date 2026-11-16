@@ -487,7 +487,7 @@ h1 { margin: 0; font-size: 1.1rem; }
 
 /* "Grenzgänger": start and end in their colors, and below the caption the named
    countries as chips in the colors they have on the globe. */
-.route-caption p { margin: 0; }
+.route-caption p, .neighbor-caption p { margin: 0; }
 .route-end-name {
   display: inline-block;
   padding: 0 6px;
@@ -715,7 +715,7 @@ html[data-translating] body { visibility: hidden; }
 .intro-color > span:last-child { flex: 1 1 200px; }
 .intro-swatches { display: flex; flex: none; flex-wrap: wrap; gap: 2px; }
 /* The highlight of the marked country: light green with an ink edge */
-.intro-ring { border: 2px solid var(--ink); box-shadow: inset 0 0 0 3px var(--target); }
+.intro-ring { border: 2px solid var(--ink); box-shadow: inset 0 0 0 3px var(--ring, var(--target)); }
 #intro-close { flex: none; margin: 10px 20px 18px; }
 
 .back {

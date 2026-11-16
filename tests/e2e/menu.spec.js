@@ -95,12 +95,22 @@ test('the "Grenzgänger" card opens its mode', async ({ page }) => {
   await expect(page.locator('h1')).toHaveText('Grenzgänger');
 });
 
+test('the "Nachbarn finden" card opens its mode', async ({ page }) => {
+  await page.goto('/');
+  const card = page.locator('a.mode-card', { hasText: 'Nachbarn finden' });
+  await expect(card.locator('p')).toHaveText('Alle Nachbarn des markierten Landes finden.');
+  expect(await card.locator('img').evaluate((image) => image.complete && image.naturalWidth > 0)).toBe(true);
+  await card.click();
+  await expect(page).toHaveURL(/neighbors\.html$/);
+  await expect(page.locator('h1')).toHaveText('Nachbarn finden');
+});
+
 // Every mode is ready, so no card is left as "Demnächst".
 test('every card is a link to a mode', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('.mode-card')).toHaveCount(6);
+  await expect(page.locator('.mode-card')).toHaveCount(7);
   await expect(page.locator('.mode-card.soon')).toHaveCount(0);
-  await expect(page.locator('a.mode-card')).toHaveCount(6);
+  await expect(page.locator('a.mode-card')).toHaveCount(7);
 });
 
 test.describe('on a desktop screen', () => {

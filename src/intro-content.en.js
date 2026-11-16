@@ -54,9 +54,14 @@ const controls = (recenter) => ({
 const RECENTER_MARKED = '⌖ “To country” at the top right turns the globe back to the marked country.';
 const RECENTER_AFTER = '⌖ “To country” at the top right appears after your answer and turns the globe back to the country.';
 
-const scoreGuide = (title, rules, recenter) => ({
+// `colors` adds rows to the score colors, e.g. the outlines of "Find the Neighbors".
+const scoreGuide = (title, rules, recenter, colors = []) => ({
   title,
-  sections: [{ heading: 'Rules', items: rules }, FILTERS, SCALE, SCORE_COLORS, controls(recenter)],
+  sections: [
+    { heading: 'Rules', items: rules }, FILTERS, SCALE,
+    { ...SCORE_COLORS, items: [...SCORE_COLORS.items.slice(0, -1), ...colors, SCORE_COLORS.items.at(-1)] },
+    controls(recenter),
+  ],
 });
 
 export const INTROS_EN = {
@@ -94,6 +99,19 @@ export const INTROS_EN = {
     'Then the globe turns to the country, so you also learn where it lies.',
     DONT_KNOW,
   ], RECENTER_AFTER),
+
+  neighbors: scoreGuide('Find the Neighbors', [
+    'A country on the globe is marked. Click or tap every country it shares a land border with. Bridges and tunnels don’t count.',
+    'The globe shows only coasts, no borders, and is not colored by score: that would give the neighbors away. You see your points for the country after each round.',
+    'Below the question you see how many neighbors there are and how many you have found. For very small countries a click just next to them is enough.',
+    'Three wrong clicks end the round. A click on the sea, on the marked country or a second time on the same country costs nothing.',
+    'Find them all and it counts as correct, and the next country comes by itself. Otherwise go on with “Next”, Enter or a click on the globe.',
+    '“Don’t know” shows the missing neighbors and counts as wrong.',
+  ], RECENTER_MARKED, [
+    { swatches: [{ color: 'var(--never)', ring: 'var(--route-step)' }], text: 'Green outline: a neighbor you found' },
+    { swatches: [{ color: 'var(--never)', ring: 'var(--route-detour)' }], text: 'Red outline: no neighbor, a wrong click' },
+    { swatches: [{ color: 'var(--never)', ring: 'var(--route-missing)' }], text: 'Orange outline: a neighbor that was still missing at the end' },
+  ]),
 
   borders: {
     title: 'Border Hopper',
