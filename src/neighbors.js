@@ -1,34 +1,51 @@
 // "Nachbarn finden": a country is marked on a globe without borders, and the player
-// clicks every country it shares a land border with.
+// types every country it shares a land border with.
 import { COUNTRY_BY_CODE } from '../data/countries.js';
+import { enableArrowKeys } from './answer-keys.js';
 import { byId, startGame } from './game.js';
 import { countryParts } from './grammar.js';
-import { clickCountry, createNeighborRound, missesLeft, missingNeighbors, NEIGHBOR_COUNTRIES } from './neighbor-round.js';
+import { createNeighborRound, guessNeighbor, missesLeft, missingNeighbors, NEIGHBOR_COUNTRIES } from './neighbor-round.js';
 import { t } from './text.js';
 
-const prompt = byId('prompt');
+const form = byId('answer-form');
+const input = byId('answer-input');
+const submitButton = byId('submit-btn');
+const dontKnowButton = byId('dont-know-btn');
 const promptLead = byId('prompt-lead');
 const promptName = byId('prompt-name');
 const status = byId('neighbor-status');
-const nextButton = byId('next-btn');
-const dontKnowButton = byId('dont-know-btn');
+const guessList = byId('neighbor-guesses');
 
-// Outlines beside the marked country: found neighbors, wrong clicks and, at the
-// end, the neighbors still missing.
+// Outlines beside the marked country, and the chips below the question in the
+// same colors: found neighbors, wrong names and, at the end, the missing neighbors.
 const COLORS = {
   found: 'var(--route-step)',
   miss: 'var(--route-detour)',
   missing: 'var(--route-missing)',
 };
+// The chips share their look with "Grenzgänger".
+const CHIP_CLASS = { found: 'step', miss: 'detour', missing: 'missing' };
 
 const nameOf = (code) => COUNTRY_BY_CODE.get(code).name;
+const focusInput = () => input.focus({ preventScroll: true });
 
-// The round of the asked country.
+// The round of the asked country, and how each named or revealed country is shown.
 let round = null;
+let kinds = new Map();
 
-// While a question is open the focus rests on the prompt, not on a button: an Enter
-// meant to skip the pause must not answer the next question with "Weiß ich nicht".
-const focusNext = () => (nextButton.disabled ? prompt : nextButton).focus({ preventScroll: true });
+function show(game, code, kind) {
+  kinds.set(code, kind);
+  game.map.mark(code, COLORS[kind]);
+}
+
+function renderGuesses() {
+  guessList.replaceChildren(...[...kinds].map(([code, kind]) => {
+    const item = document.createElement('li');
+    item.className = `route-guess ${CHIP_CLASS[kind]}`;
+    item.textContent = nameOf(code);
+    return item;
+  }));
+}
 
 function renderStatus(over = false) {
   const found = round.found.length;
@@ -39,15 +56,45 @@ function renderStatus(over = false) {
 // Ends the round as lost or given up: the missing neighbors get their outline.
 function showMissing(game, verdict) {
   const missing = missingNeighbors(round);
-  for (const code of missing) game.map.mark(code, COLORS.missing);
+  for (const code of missing) show(game, code, 'missing');
   game.finish(false, verdict, t.missing(missing.map(nameOf)));
+  renderGuesses();
   renderStatus(true);
 }
 
-// The neighbor the click is meant for, if any. Small neighbors count within a few
-// pixels, like in "Länder finden", so Vatican City can be clicked inside Rome.
-const neighborAt = (game, event) =>
-  missingNeighbors(round).find((code) => game.map.hits(code, event.clientX, event.clientY));
+const HINTS = {
+  unknown: () => t.unknownCountry,
+  ambiguous: ({ codes }) => t.ambiguous(codes),
+  asked: () => t.askedItself,
+  repeated: ({ code }) => t.repeated(code),
+};
+
+function guess(game, text) {
+  const verdict = guessNeighbor(round, text);
+  if (HINTS[verdict.kind]) {
+    game.setFeedback(HINTS[verdict.kind](verdict), 'hint');
+    input.select();
+    return;
+  }
+  const { kind, code } = verdict;
+  const isNeighbor = kind === 'found' || kind === 'solved';
+  show(game, code, isNeighbor ? 'found' : 'miss');
+  input.value = '';
+  if (kind === 'solved') {
+    game.finish(true, t.right, t.allNeighbors(round.neighbors.length));
+    renderGuesses();
+    renderStatus(true);
+    return;
+  }
+  if (kind === 'lost') {
+    showMissing(game, t.lost);
+    return;
+  }
+  game.map.flash(code, isNeighbor);
+  game.setFeedback(isNeighbor ? t.neighborFound(nameOf(code)) : t.notNeighbor(nameOf(code)), isNeighbor ? 'good' : 'hint');
+  renderGuesses();
+  renderStatus();
+}
 
 startGame({
   intro: 'neighbors',
@@ -62,64 +109,42 @@ startGame({
   nextDelayMs: 1500,
 
   setup(game) {
-    nextButton.addEventListener('click', () => {
+    enableArrowKeys(form);
+    // Once the round is over, Enter or "Weiter" moves on, also during the pause
+    // after a correct answer.
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
       if (game.isAnswered) game.nextQuestion();
+      else if (input.value.trim()) guess(game, input.value);
     });
     dontKnowButton.addEventListener('click', () => {
       if (!game.isAnswered) showMissing(game, t.dontKnow);
     });
+    input.disabled = false;
+    submitButton.disabled = false;
   },
 
   ask(game) {
     const { code } = game.current;
     round = createNeighborRound(code);
+    kinds = new Map();
     promptLead.textContent = t.neighborsLead(code);
     promptName.textContent = countryParts(code, 'accusative').name;
+    renderGuesses();
     renderStatus();
-    nextButton.disabled = true;
+    input.value = '';
+    submitButton.textContent = t.check;
     dontKnowButton.disabled = false;
     game.map.highlight(code);
-    focusNext();
+    focusInput();
   },
 
   answered() {
-    nextButton.disabled = false;
+    input.value = '';
+    submitButton.textContent = t.next;
     dontKnowButton.disabled = true;
-    focusNext();
+    focusInput();
   },
 
-  // Once answered, a click anywhere on the globe moves on, like "Weiter". Dragging
-  // the globe is no click, so the player can still look around first.
-  onSelect(game, event) {
-    if (game.isAnswered) {
-      game.nextQuestion();
-      return;
-    }
-    const clicked = neighborAt(game, event) ?? game.map.codeAt(event.clientX, event.clientY);
-    const { kind, code } = clickCountry(round, clicked);
-    if (kind === 'water') {
-      game.setFeedback(t.noCountryThere, 'hint');
-      return;
-    }
-    if (kind === 'asked' || kind === 'repeated') {
-      game.setFeedback(kind === 'asked' ? t.askedItself : t.clickedBefore(code), 'hint');
-      return;
-    }
-    const isNeighbor = kind === 'found' || kind === 'solved';
-    game.map.mark(code, isNeighbor ? COLORS.found : COLORS.miss);
-    if (kind === 'solved') {
-      game.finish(true, t.right, t.allNeighbors(round.neighbors.length));
-      renderStatus(true);
-      return;
-    }
-    if (kind === 'lost') {
-      showMissing(game, t.lost);
-      return;
-    }
-    game.map.flash(code, isNeighbor);
-    game.setFeedback(isNeighbor ? t.neighborFound(nameOf(code)) : t.notNeighbor(nameOf(code)), isNeighbor ? 'good' : 'hint');
-    renderStatus();
-  },
-
-  focus: focusNext,
+  focus: focusInput,
 });

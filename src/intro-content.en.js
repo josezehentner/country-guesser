@@ -101,15 +101,15 @@ export const INTROS_EN = {
   ], RECENTER_AFTER),
 
   neighbors: scoreGuide('Find the Neighbors', [
-    'A country on the globe is marked. Click or tap every country it shares a land border with. Bridges and tunnels don’t count.',
+    'A country on the globe is marked. Type every country it shares a land border with, one at a time, pressing Enter after each. Bridges and tunnels don’t count.',
     'The globe shows only coasts, no borders, and is not colored by score: that would give the neighbors away. You see your points for the country after each round.',
-    'Below the question you see how many neighbors there are and how many you have found. For very small countries a click just next to them is enough.',
-    'Three wrong clicks end the round. A click on the sea, on the marked country or a second time on the same country costs nothing.',
-    'Find them all and it counts as correct, and the next country comes by itself. Otherwise go on with “Next”, Enter or a click on the globe.',
+    `Below the question you see how many neighbors there are and how many you have found, and below that the countries you named. ${TOLERANCE}`,
+    'Three wrong countries end the round. An unknown name, the marked country itself or a country named twice costs nothing.',
+    'Find them all and it counts as correct, and the next country comes by itself. Otherwise go on with “Next” or Enter.',
     '“Don’t know” shows the missing neighbors and counts as wrong.',
   ], RECENTER_MARKED, [
     { swatches: [{ color: 'var(--never)', ring: 'var(--route-step)' }], text: 'Green outline: a neighbor you found' },
-    { swatches: [{ color: 'var(--never)', ring: 'var(--route-detour)' }], text: 'Red outline: no neighbor, a wrong click' },
+    { swatches: [{ color: 'var(--never)', ring: 'var(--route-detour)' }], text: 'Red outline: no neighbor, a wrong guess' },
     { swatches: [{ color: 'var(--never)', ring: 'var(--route-missing)' }], text: 'Orange outline: a neighbor that was still missing at the end' },
   ]),
 
