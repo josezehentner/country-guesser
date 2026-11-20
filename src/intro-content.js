@@ -35,6 +35,10 @@ const SCALE = {
   ],
 };
 
+const FLASH = { swatches: [{ color: 'var(--flash-good)' }, { color: 'var(--flash-bad)' }], text: 'Nach der Antwort leuchtet das Land grün (richtig) oder blinkt rot (falsch).' };
+const SCORING =
+  'Die erste Antwort bringt 5 Punkte, wenn sie stimmt, sonst 3. Danach gibt jede richtige Antwort einen Punkt dazu, jede falsche oder „Weiß ich nicht“ zieht einen ab. Was du noch nicht gut kannst, kommt öfter dran.';
+
 const SCORE_COLORS = {
   heading: 'Farben',
   items: [
@@ -42,8 +46,8 @@ const SCORE_COLORS = {
     { swatches: [{ color: 'var(--score-zero)', label: '0' }], text: 'Grau: 0 Punkte' },
     { swatches: SCORE_SCALE, text: 'Von Rot über Gelb nach Grün: 1 bis 10 Punkte. Grün heißt gemeistert.' },
     { swatches: [{ color: 'var(--never)', ring: true }], text: 'Hellgrüner Rand: das markierte Land' },
-    { swatches: [{ color: 'var(--flash-good)' }, { color: 'var(--flash-bad)' }], text: 'Nach der Antwort leuchtet das Land grün (richtig) oder blinkt rot (falsch).' },
-    'Die erste Antwort bringt 5 Punkte, wenn sie stimmt, sonst 3. Danach gibt jede richtige Antwort einen Punkt dazu, jede falsche oder „Weiß ich nicht“ zieht einen ab. Was du noch nicht gut kannst, kommt öfter dran.',
+    FLASH,
+    SCORING,
   ],
 };
 
@@ -100,6 +104,36 @@ export const INTROS = {
     'Danach dreht sich der Globus zum Land, so lernst du auch, wo es liegt.',
     DONT_KNOW,
   ], RECENTER_AFTER),
+
+  silhouettes: {
+    title: 'Umrisse erkennen',
+    sections: [
+      {
+        heading: 'Spielregeln',
+        items: [
+          'Oben siehst du den Umriss eines Landes, ohne Karte drumherum. Tippe das Land ein und drücke Enter.',
+          `Der Umriss ist immer gleich groß, egal wie groß das Land ist. Weit entfernte Inseln und Gebiete fehlen, sehr kleine Länder werden nicht gefragt. ${TOLERANCE}`,
+          'Der Globus zeigt nur Küsten, keine Grenzen: Sonst könntest du den Umriss dort suchen.',
+          'Danach dreht sich der Globus zum Land, so lernst du auch, wo es liegt.',
+          DONT_KNOW,
+        ],
+      },
+      FILTERS,
+      SCALE,
+      {
+        heading: 'Farben',
+        items: [
+          { swatches: [{ color: 'var(--never)' }], text: 'Beige: das Land im Umriss und alles Land auf dem Globus. Deine Punkte färben den Globus hier nicht, sonst würden sie Umrisse verraten.' },
+          { swatches: [{ color: 'var(--score-zero)', label: '0' }], text: 'Grau: 0 Punkte' },
+          { swatches: SCORE_SCALE, text: 'Von Rot über Gelb nach Grün: 1 bis 10 Punkte. Grün heißt gemeistert. Nach jeder Antwort steht deine Punktzahl in ihrer Farbe neben dem Ergebnis.' },
+          { swatches: [{ color: 'var(--never)', ring: true }], text: 'Hellgrüner Rand: das Land nach deiner Antwort' },
+          FLASH,
+          SCORING,
+        ],
+      },
+      controls(RECENTER_AFTER),
+    ],
+  },
 
   neighbors: {
     title: 'Nachbarn finden',

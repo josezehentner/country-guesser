@@ -15,15 +15,15 @@ A comic-style quiz for every country on Earth. The globe shows how well you know
 
 <p align="center">Free · no sign-up · in the browser on computer or phone · in German and English</p>
 
-## 🎮 Seven ways to play
+## 🎮 Eight ways to play
 
 | | | |
 |:---:|:---:|:---:|
 | <img src="images/modes/name-countries.svg" alt="" width="200"><br>**"Länder benennen"**<br>Name the countries | <img src="images/modes/find-countries.svg" alt="" width="200"><br>**"Länder finden"**<br>Find the countries | <img src="images/modes/capitals.svg" alt="" width="200"><br>**"Hauptstädte lernen"**<br>Learn the capitals |
 | <img src="images/modes/find-capitals.svg" alt="" width="200"><br>**"Hauptstädte finden"**<br>Find the capitals | <img src="images/modes/flags.svg" alt="" width="200"><br>**"Flaggen erkennen"**<br>Recognize the flags | <img src="images/modes/borders.svg" alt="" width="200"><br>**"Grenzgänger"**<br>Cross borders |
-| <img src="images/modes/neighbors.svg" alt="" width="200"><br>**"Nachbarn finden"**<br>Find the neighbors | | |
+| <img src="images/modes/silhouettes.svg" alt="" width="200"><br>**"Umrisse erkennen"**<br>Recognize the outlines | <img src="images/modes/neighbors.svg" alt="" width="200"><br>**"Nachbarn finden"**<br>Find the neighbors | |
 
-**✍️ Type it** (names, capitals, flags, neighbors): one Enter is enough. Right? The next one comes by itself. Wrong? See the answer, move on when ready. Spelling is forgiving: case, missing umlauts ("Osterreich") and small typos are fine, and other common names count ("USA", "Amerika", "UK", "Côte d'Ivoire").
+**✍️ Type it** (names, capitals, flags, outlines, neighbors): one Enter is enough. Right? The next one comes by itself. Wrong? See the answer, move on when ready. Spelling is forgiving: case, missing umlauts ("Osterreich") and small typos are fine, and other common names count ("USA", "Amerika", "UK", "Côte d'Ivoire").
 
 **👆 Click it** (find countries, find capitals): a click just next to a tiny country is enough. Wrong? The globe turns to the right one; click again to move on.
 
@@ -32,6 +32,7 @@ A comic-style quiz for every country on Earth. The globe shows how well you know
 - 🏛️ **"Hauptstädte lernen":** a country is marked; type its capital. The answer also shows the country. German, English and local names count ("Peking", "Beijing"), and every capital of a country with several, such as Bolivia (Sucre, La Paz) or South Africa. Uninhabited places like Antarctica are left out.
 - 🎯 **"Hauptstädte finden":** the game names a capital, such as Canberra; click its country. Shared names like Kingston (Jamaica, Norfolk Island) accept either.
 - 🚩 **"Flaggen erkennen":** a flag appears; type its country, and the globe turns there. Look-alikes Monaco/Indonesia and Romania/Chad accept either name. Places flying another country's flag (Réunion) and Antarctica are left out.
+- 🧩 **"Umrisse erkennen":** a country's outline appears on its own, blown up to fill the box; type its country, and the globe turns there. The globe shows no borders or score colors here, so you can't just look the shape up. Faraway parts like Hawaii are cut off, and tiny countries like Monaco are left out.
 - 🤝 **"Nachbarn finden":** a country is marked on a globe without borders; type every country it shares a land border with, one at a time. The question says how many there are. Found ones get a green outline, wrong guesses a red one; three wrong guesses end the round, and the missing neighbors show in orange. Islands without land borders are left out. Like "Grenzgänger", it counts rounds instead of per-country scores: solved rounds, rounds without a wrong guess, and your streak.
 
 ### 🧭 "Grenzgänger"
@@ -45,11 +46,11 @@ Get from start to end, say Portugal to Poland, on a globe without borders: name 
 - Too far apart for one view? The globe shows the end, then flies to the start.
 - Instead of per-country scores, it counts solved rounds, rounds solved on a shortest route, and your streak.
 
-**Every mode tracks its own progress**, since naming, finding, capitals, placing capitals, flags and neighbors are different skills. **First time in a mode?** A short guide ("So geht's") explains the rules, the filters on the left, the scale on the right and the colors. The **?** button at the top reopens it.
+**Every mode tracks its own progress**, since naming, finding, capitals, placing capitals, flags, outlines and neighbors are different skills. **First time in a mode?** A short guide ("So geht's") explains the rules, the filters on the left, the scale on the right and the colors. The **?** button at the top reopens it.
 
 ## 📈 Paint the globe green
 
-Every country scores 0 to 10 points: **beige** never asked, **gray** 0, **red → yellow → green** 1 to 10, green means mastered.
+Every country scores 0 to 10 points: **beige** never asked, **gray** 0, **red → yellow → green** 1 to 10, green means mastered. (Not in "Umrisse erkennen": there the colors would give the outlines away.)
 
 - First answer: right starts at 5, wrong at 3. Then +1 per right answer, −1 per wrong one or "Weiß ich nicht" ("I don't know").
 - Weak countries come up more often; mastered ones only now and then for review.
@@ -79,7 +80,7 @@ Mix both, e.g. only Africa's easy countries: 250 countries and territories in to
 | Move on after a wrong answer | Enter, "Weiter" or click the globe | "Weiter" or tap the globe |
 | Switch between German and English | "DE \| EN" at the top of the menu, or ⚙ in a mode | the same |
 
-A quick swipe gives the globe momentum. In the find modes and with the flags, "Zum Land" only appears after your answer, so it never gives the country away.
+A quick swipe gives the globe momentum. In the find modes and with the flags and outlines, "Zum Land" only appears after your answer, so it never gives the country away.
 
 ## 🔒 Your data stays yours
 

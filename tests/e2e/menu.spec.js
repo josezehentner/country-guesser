@@ -108,9 +108,9 @@ test('the "Nachbarn finden" card opens its mode', async ({ page }) => {
 // Every mode is ready, so no card is left as "Demnächst".
 test('every card is a link to a mode', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('.mode-card')).toHaveCount(7);
+  await expect(page.locator('.mode-card')).toHaveCount(8);
   await expect(page.locator('.mode-card.soon')).toHaveCount(0);
-  await expect(page.locator('a.mode-card')).toHaveCount(7);
+  await expect(page.locator('a.mode-card')).toHaveCount(8);
 });
 
 test.describe('on a desktop screen', () => {

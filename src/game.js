@@ -38,10 +38,12 @@ const FILTER_GROUPS = [
 //   answered(game, correct)   updates its controls after an answer
 //   onSelect(game, event)     optional: a click on the globe
 //   focus()                   puts the keyboard focus where the player continues
+//   mapOptions                optional: passed on to createMap, e.g. { hideBorders: true }
+//   colorCountries: false     optional: keeps the scores off the globe, where a
+//                             colored country would show its outline
 // A mode without per-country scores ("Grenzgänger") also provides:
 //   scores: false             no legend and no country colors by score
 //   filters                   the filter groups it uses, e.g. ['regions']
-//   mapOptions                passed on to createMap, e.g. { hideBorders: true }
 //   next(game, pool)          returns the new game.current from the filtered pool
 //   renderStats(game)         fills the stats in the top bar
 //   poolSummary(pool)         optional: the filter summary, or null for the default
@@ -116,6 +118,7 @@ export function startGame(mode) {
   }
 
   function renderCountry(code) {
+    if (mode.colorCountries === false) return;
     game.map.setColor(code, scoreColor(progress.countries[code]?.score));
   }
 

@@ -783,5 +783,8 @@ export function createMap(canvas, targetCanvas, world, onSelect = () => false, l
     isFacing: (location) => geoDistance(center, location) < Math.PI / 2,
   };
 
-  return { setColor, highlight, mark, setRoute, reveal, refocus, hasTarget, flash, clearHighlight, codeAt, hits };
+  // A country's shape as it is in data/world.json, e.g. to draw it on its own.
+  const geometryOf = (code) => shapeByCode.get(code)?.feature.geometry;
+
+  return { setColor, highlight, mark, setRoute, reveal, refocus, hasTarget, flash, clearHighlight, codeAt, hits, geometryOf };
 }

@@ -29,6 +29,10 @@ const SCALE = {
   ],
 };
 
+const FLASH = { swatches: [{ color: 'var(--flash-good)' }, { color: 'var(--flash-bad)' }], text: 'After your answer the country lights up green (correct) or flashes red (wrong).' };
+const SCORING =
+  'A first correct answer gives 5 points, a wrong one 3. After that every correct answer adds a point, every wrong one or “Don’t know” takes one away. What you don’t know well yet comes up more often.';
+
 const SCORE_COLORS = {
   heading: 'Colors',
   items: [
@@ -36,8 +40,8 @@ const SCORE_COLORS = {
     { swatches: [{ color: 'var(--score-zero)', label: '0' }], text: 'Gray: 0 points' },
     { swatches: SCORE_SCALE, text: 'From red over yellow to green: 1 to 10 points. Green means mastered.' },
     { swatches: [{ color: 'var(--never)', ring: true }], text: 'Light green outline: the marked country' },
-    { swatches: [{ color: 'var(--flash-good)' }, { color: 'var(--flash-bad)' }], text: 'After your answer the country lights up green (correct) or flashes red (wrong).' },
-    'A first correct answer gives 5 points, a wrong one 3. After that every correct answer adds a point, every wrong one or “Don’t know” takes one away. What you don’t know well yet comes up more often.',
+    FLASH,
+    SCORING,
   ],
 };
 
@@ -94,6 +98,36 @@ export const INTROS_EN = {
     'Then the globe turns to the country, so you also learn where it lies.',
     DONT_KNOW,
   ], RECENTER_AFTER),
+
+  silhouettes: {
+    title: 'Guess the Outline',
+    sections: [
+      {
+        heading: 'Rules',
+        items: [
+          'You see the outline of a country at the top, with no map around it. Type the country and press Enter.',
+          `The outline always has the same size, however large the country is. Faraway islands and territories are left out, and very small countries are not asked. ${TOLERANCE}`,
+          'The globe shows only coasts, no borders: otherwise you could look for the outline there.',
+          'Then the globe turns to the country, so you also learn where it lies.',
+          DONT_KNOW,
+        ],
+      },
+      FILTERS,
+      SCALE,
+      {
+        heading: 'Colors',
+        items: [
+          { swatches: [{ color: 'var(--never)' }], text: 'Beige: the country in the outline and all land on the globe. Your points don’t color the globe here, or they would give outlines away.' },
+          { swatches: [{ color: 'var(--score-zero)', label: '0' }], text: 'Gray: 0 points' },
+          { swatches: SCORE_SCALE, text: 'From red over yellow to green: 1 to 10 points. Green means mastered. After each answer your score shows in its color next to the result.' },
+          { swatches: [{ color: 'var(--never)', ring: true }], text: 'Light green outline: the country after your answer' },
+          FLASH,
+          SCORING,
+        ],
+      },
+      controls(RECENTER_AFTER),
+    ],
+  },
 
   neighbors: {
     title: 'Find the Neighbors',
