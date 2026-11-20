@@ -35,6 +35,10 @@ startGame({
   countries: SILHOUETTE_COUNTRIES,
   // Long enough to see where the country lies. Typing the next answer skips it.
   nextDelayMs: 1000,
+  // Borders, and countries in their score colors, would show every outline on the
+  // globe, so the player could look for the shape there. Only coasts are drawn.
+  mapOptions: { hideBorders: true },
+  colorCountries: false,
 
   setup(game) {
     enableArrowKeys(form);

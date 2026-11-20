@@ -32,7 +32,7 @@ A comic-style quiz for every country on Earth. The globe shows how well you know
 - 🏛️ **"Hauptstädte lernen":** a country is marked; type its capital. The answer also shows the country. German, English and local names count ("Peking", "Beijing"), and every capital of a country with several, such as Bolivia (Sucre, La Paz) or South Africa. Uninhabited places like Antarctica are left out.
 - 🎯 **"Hauptstädte finden":** the game names a capital, such as Canberra; click its country. Shared names like Kingston (Jamaica, Norfolk Island) accept either.
 - 🚩 **"Flaggen erkennen":** a flag appears; type its country, and the globe turns there. Look-alikes Monaco/Indonesia and Romania/Chad accept either name. Places flying another country's flag (Réunion) and Antarctica are left out.
-- 🧩 **"Umrisse erkennen":** a country's outline appears on its own, blown up to fill the box; type its country, and the globe turns there. Faraway parts like Hawaii are cut off, and tiny countries like Monaco are left out.
+- 🧩 **"Umrisse erkennen":** a country's outline appears on its own, blown up to fill the box; type its country, and the globe turns there. The globe shows no borders or score colors here, so you can't just look the shape up. Faraway parts like Hawaii are cut off, and tiny countries like Monaco are left out.
 - 🤝 **"Nachbarn finden":** a country is marked on a globe without borders; type every country it shares a land border with, one at a time. The question says how many there are. Found ones get a green outline, wrong guesses a red one; three wrong guesses end the round, and the missing neighbors show in orange. Islands without land borders are left out. Like "Grenzgänger", it counts rounds instead of per-country scores: solved rounds, rounds without a wrong guess, and your streak.
 
 ### 🧭 "Grenzgänger"
@@ -50,7 +50,7 @@ Get from start to end, say Portugal to Poland, on a globe without borders: name 
 
 ## 📈 Paint the globe green
 
-Every country scores 0 to 10 points: **beige** never asked, **gray** 0, **red → yellow → green** 1 to 10, green means mastered.
+Every country scores 0 to 10 points: **beige** never asked, **gray** 0, **red → yellow → green** 1 to 10, green means mastered. (Not in "Umrisse erkennen": there the colors would give the outlines away.)
 
 - First answer: right starts at 5, wrong at 3. Then +1 per right answer, −1 per wrong one or "Weiß ich nicht" ("I don't know").
 - Weak countries come up more often; mastered ones only now and then for review.

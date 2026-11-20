@@ -86,6 +86,30 @@ test('the outline fills its box above the globe, and the globe marks nothing bef
   await expect(page.locator('#recenter-btn')).toBeHidden();
 });
 
+function mapApi(page, name, ...args) {
+  return page.evaluate(([n, a]) => document.querySelector('#map').mapTestApi[n](...a), [name, args]);
+}
+
+// Borders, or countries in their score colors, would let the player look for the
+// shape on the globe.
+test('the globe shows no borders and no score colors, not even after answers', async ({ page }) => {
+  await open(page);
+  await seed(page, { FR: entry(10), DE: entry(0), BR: entry(4) });
+  expect(await mapApi(page, 'hidesBorders')).toBe(true);
+  await expect(page.locator('#map')).toHaveAttribute('aria-label', 'Globus ohne Grenzen');
+  await expect(page.locator('#stat-started')).toHaveText('1');
+  const plain = await mapApi(page, 'colorOf', 'PT');
+  for (const code of ['FR', 'DE', 'BR']) expect(await mapApi(page, 'colorOf', code)).toBe(plain);
+
+  const { code } = await country(page);
+  await page.click('#dont-know-btn');
+  await expect(page.locator('#feedback .score-chip')).toHaveText('3/10');
+  expect(await mapApi(page, 'targetCode')).toBe(code);
+  // Once the flash is over, the country is as plain as the rest of the land.
+  await expect.poll(() => mapApi(page, 'flashing'), { timeout: 5000 }).toBeNull();
+  expect(await mapApi(page, 'colorOf', code)).toBe(plain);
+});
+
 test('each country gets its own outline', async ({ page }) => {
   await open(page);
   const first = await page.locator('#silhouette-path').getAttribute('d');
