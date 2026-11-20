@@ -53,6 +53,7 @@ find-countries.html     the "Länder finden" mode
 capitals.html           the "Hauptstädte lernen" mode
 find-capitals.html      the "Hauptstädte finden" mode
 flags.html              the "Flaggen erkennen" mode
+silhouettes.html        the "Umrisse erkennen" mode
 borders.html            the "Grenzgänger" mode
 neighbors.html          the "Nachbarn finden" mode
 style.css               styles for all pages

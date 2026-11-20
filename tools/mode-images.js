@@ -2,6 +2,7 @@
 // Regenerate with `npm run build:images`.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { geoOrthographic, geoPath } from 'd3-geo';
+import { silhouettePath } from '../src/silhouette.js';
 import { simplifyPolygon } from '../src/simplify.js';
 
 const WIDTH = 320;
@@ -17,9 +18,9 @@ function round(path) {
 }
 
 // `highlight` outlines a country, `outlines` maps more codes to outline colors,
-// `pin` puts a map pin on a point, `flag` adds a
-// picture of a flag in the top left corner. `route` maps codes to fill colors and
-// hides the borders of all other countries, as in "Grenzgänger".
+// `pin` puts a map pin on a point, `flag` adds a picture, e.g. of a flag, in the
+// top left corner. `route` maps codes to fill colors and hides the borders of all
+// other countries, as in "Grenzgänger".
 function globe({ center, highlight, outlines = {}, pin, flag, route }) {
   const projection = geoOrthographic()
     .clipAngle(90)
@@ -87,3 +88,12 @@ writeFileSync(new URL('../images/modes/borders.svg', import.meta.url), globe({ c
 // Germany marked, its neighbors outlined in green as they are found.
 const NEIGHBORS = Object.fromEntries('AT BE CH CZ DK FR LU NL PL'.split(' ').map((code) => [code, '#3fb05b']));
 writeFileSync(new URL('../images/modes/neighbors.svg', import.meta.url), globe({ center: [10, 46], highlight: 'DE', outlines: NEIGHBORS }));
+
+// The outline of Italy on its own, framed like the outline in the game, with the
+// country marked on the globe behind it.
+const italy = world.features.find((feature) => feature.properties.id === 'IT').geometry;
+const ITALY_OUTLINE = [
+  '<rect x="16" y="14" width="88" height="80" fill="#b5e48c" stroke="#1d2b36" stroke-width="2.5"/>',
+  `<path transform="translate(16 14)" d="${round(silhouettePath(italy, 88, 80, 8))}" fill="${COLORS.land}" stroke="#1d2b36" stroke-width="1.8" stroke-linejoin="round"/>`,
+].join('\n');
+writeFileSync(new URL('../images/modes/silhouettes.svg', import.meta.url), globe({ center: [12, 40], highlight: 'IT', flag: ITALY_OUTLINE }));

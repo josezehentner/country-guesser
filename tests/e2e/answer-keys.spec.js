@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 // The modes where the player types the answer.
-const PAGES = ['name-countries.html', 'capitals.html', 'flags.html'];
+const PAGES = ['name-countries.html', 'capitals.html', 'flags.html', 'silhouettes.html'];
 
 const caret = (page) => page.locator('#answer-input').evaluate((input) => [input.selectionStart, input.selectionEnd]);
 

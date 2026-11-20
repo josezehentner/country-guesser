@@ -484,6 +484,23 @@ h1 { margin: 0; font-size: 1.1rem; }
   box-shadow: 3px 3px 0 #1d2b36;
 }
 .flag[hidden] { display: none; }
+/* The outline to recognize, below the question: a country on its own, drawn like
+   the land in the menu with a thick ink outline. */
+.silhouette {
+  display: block;
+  width: clamp(150px, 42vw, 240px);
+  height: auto;
+  margin: 4px auto 2px;
+  overflow: visible;
+}
+.silhouette path {
+  fill: var(--never);
+  stroke: #1d2b36;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  filter: drop-shadow(3px 3px 0 #1d2b36);
+}
+.silhouette[hidden] { display: none; }
 
 /* "Grenzgänger": start and end in their colors, and below the caption the named
    countries as chips in the colors they have on the globe. */
@@ -768,6 +785,7 @@ html[data-translating] body { visibility: hidden; }
   .recenter { top: calc(50% - 22px); right: 8px; border-width: 2px; box-shadow: 2px 2px 0 var(--line); }
   .caption strong { font-size: 1.35em; letter-spacing: 0.02em; }
   .flag { width: clamp(88px, 28vw, 132px); }
+  .silhouette { width: clamp(120px, 40vw, 180px); }
 
   .feedback { bottom: calc(100% + 14px); gap: 10px; font-size: 0.95rem; }
   .verdict { margin: -22px 0 -22px -24px; padding: 18px 16px; font-size: 1.35rem; }

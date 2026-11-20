@@ -8,7 +8,7 @@ const PORT = Number(process.env.TEST_PORT) || 4200 + (folderHash % 800);
 
 // Most tests play straight away, so the guide each mode opens with on a first visit
 // counts as read. tests/e2e/intro.spec.js starts without it.
-const INTROS_SEEN = { version: 1, seen: ['name', 'find', 'capitals', 'find-capitals', 'flags', 'borders', 'neighbors'] };
+const INTROS_SEEN = { version: 1, seen: ['name', 'find', 'capitals', 'find-capitals', 'flags', 'silhouettes', 'borders', 'neighbors'] };
 
 export default defineConfig({
   testDir: 'tests/e2e',

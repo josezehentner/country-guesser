@@ -95,6 +95,13 @@ export const INTROS_EN = {
     DONT_KNOW,
   ], RECENTER_AFTER),
 
+  silhouettes: scoreGuide('Guess the Outline', [
+    'You see the outline of a country at the top, with no map around it. Type the country and press Enter.',
+    `The outline always has the same size, however large the country is. Faraway islands and territories are left out, and very small countries are not asked. ${TOLERANCE}`,
+    'Then the globe turns to the country, so you also learn where it lies.',
+    DONT_KNOW,
+  ], RECENTER_AFTER),
+
   neighbors: {
     title: 'Find the Neighbors',
     sections: [

@@ -28,10 +28,11 @@ The start page is titled **Country Guesser** and is a menu with one **card** per
 | Hauptstädte lernen | `capitals.html` | Hauptstadt des markierten Landes nennen. |
 | Hauptstädte finden | `find-capitals.html` | Land zur genannten Hauptstadt finden. |
 | Flaggen erkennen | `flags.html` | Land zur gezeigten Flagge nennen. |
+| Umrisse erkennen | `silhouettes.html` | Land zum gezeigten Umriss nennen. |
 | Grenzgänger | `borders.html` | Über Landgrenzen von Land zu Land. |
 | Nachbarn finden | `neighbors.html` | Alle Nachbarn des markierten Landes finden. |
 
-Each mode keeps its own progress: recognizing a country, finding it, knowing its capital, placing a capital, knowing its flag, getting from country to country and knowing a country's neighbors are different skills.
+Each mode keeps its own progress: recognizing a country, finding it, knowing its capital, placing a capital, knowing its flag, knowing its shape, getting from country to country and knowing a country's neighbors are different skills.
 
 Card pictures are drawn from the real map data by `tools/mode-images.js`.
 
@@ -57,7 +58,7 @@ Every page is in **German or English**. The player chooses with "DE | EN" at the
 
 ## Gameplay
 
-This section describes the "Länder benennen" mode. "Länder finden" works the other way round, see [below](#mode-länder-finden); "Hauptstädte lernen" asks for the capital instead of the name, see [below](#mode-hauptstädte-lernen), "Hauptstädte finden" names a capital whose country is to be clicked, see [below](#mode-hauptstädte-finden), "Flaggen erkennen" shows a flag instead of marking the country, see [below](#mode-flaggen-erkennen), "Grenzgänger" asks for a route over land borders instead of single countries, see [below](#mode-grenzgänger), and "Nachbarn finden" marks a country whose neighbors are to be named, see [below](#mode-nachbarn-finden).
+This section describes the "Länder benennen" mode. "Länder finden" works the other way round, see [below](#mode-länder-finden); "Hauptstädte lernen" asks for the capital instead of the name, see [below](#mode-hauptstädte-lernen), "Hauptstädte finden" names a capital whose country is to be clicked, see [below](#mode-hauptstädte-finden), "Flaggen erkennen" shows a flag instead of marking the country, see [below](#mode-flaggen-erkennen), "Umrisse erkennen" shows the country's outline instead, see [below](#mode-umrisse-erkennen), "Grenzgänger" asks for a route over land borders instead of single countries, see [below](#mode-grenzgänger), and "Nachbarn finden" marks a country whose neighbors are to be named, see [below](#mode-nachbarn-finden).
 
 1. One country on the world map is **highlighted** (clearly marked, e.g. thick outline + pulsing effect).
 2. The player **types the country's name** into an input field and confirms with Enter.
@@ -108,6 +109,17 @@ It asks the same countries as "Hauptstädte lernen", without the places that hav
 Only entries with a **flag of their own** are asked (235 of 250), as listed in `data/flags.js`. Left out are Antarctica (AQ), which has no official flag, and territories that fly the flag of another entry: Bouvet Island and Svalbard (Norway), Heard and McDonald Islands (Australia), the U.S. Minor Outlying Islands (United States), the Caribbean Netherlands (Netherlands), Saint Helena, Ascension and Tristan da Cunha (United Kingdom) and the French Saint-Barthélemy, French Guiana, Guadeloupe, Saint-Martin, Saint-Pierre and Miquelon, Réunion, Wallis and Futuna and Mayotte. They are left out of its stats and filter counts too.
 
 The flags are SVG files in `vendor/flags/`, from flag-icons (see `vendor/NOTICE.md`), copied by `npm run build:flags`. They are loaded from the site itself, so the Content Security Policy stays `img-src 'self' data:`.
+
+### Mode "Umrisse erkennen"
+
+1. The question box above the globe asks "Welches Land hat diesen Umriss?" and shows the country's **outline** below it: the country on its own, without neighbors, sea or borders, in the beige of plain land with a thick ink outline and a hard shadow (about 240 px wide on a desktop, about 40 % of the width on a phone). Nothing is marked on the globe, so it gives nothing away.
+2. The outline is seen from straight above the country's center (an orthographic projection), so it is not stretched like on a flat map, and it is scaled to **fill its box**: a small country looks as big as a large one. Islands and exclaves belong to the shape if they can be reached from the largest part in steps of less than 500 km (the islands of Indonesia or Japan, Kaliningrad); parts farther away are left out, so they do not shrink the rest to a dot (Hawaii and Alaska, the Canary Islands, the Galápagos). Lakes and enclaves inside the country stay holes, e.g. Gambia in Senegal.
+3. The player **types the country** and confirms with Enter. Answer checking works as in "Länder benennen", with the same names, aliases and tolerance.
+4. After the answer the globe **turns to the country** and marks it, so the player learns where it lies. The result names the country ("Richtig! Japan", "Falsch! Das ist Japan"). The pause after a right answer is 1 second; typing the next answer skips it. Everything else works as in "Länder benennen".
+
+Only entries whose **largest part covers at least 2,000 km²** on the map are asked (178 of 250), as listed in `data/silhouettes.js`: smaller ones such as Monaco, Malta or Nauru have only a few points there and look like any blob. Antarctica is left out as well, because its outline on the map runs along the South Pole and comes out warped. They are left out of its stats and filter counts too. A unit test checks the list against `data/world.json`.
+
+The outline is drawn as SVG by `src/silhouette.js` from the same map data as the globe, so it needs no images.
 
 ### Mode "Grenzgänger"
 
@@ -179,7 +191,7 @@ Colors must be clearly visible in both light and dark mode. A small **legend** s
 
 ## Storage (localStorage)
 
-Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder finden", `countryquiz.capitals.v1` for "Hauptstädte lernen", `countryquiz.capitals-find.v1` for "Hauptstädte finden", `countryquiz.flags.v1` for "Flaggen erkennen", `countryquiz.borders.v1` for "Grenzgänger", `countryquiz.neighbors.v1` for "Nachbarn finden", all in the format below.
+Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder finden", `countryquiz.capitals.v1` for "Hauptstädte lernen", `countryquiz.capitals-find.v1` for "Hauptstädte finden", `countryquiz.flags.v1` for "Flaggen erkennen", `countryquiz.silhouettes.v1` for "Umrisse erkennen", `countryquiz.borders.v1` for "Grenzgänger", `countryquiz.neighbors.v1` for "Nachbarn finden", all in the format below.
 
 ```json
 {
@@ -196,7 +208,7 @@ Key: `countryquiz.v1` for "Länder benennen", `countryquiz.find.v1` for "Länder
 
 The chosen language is kept apart from the progress too: key `countryquiz.language`, `"de"` or `"en"`.
 
-Which guides the player has closed is kept apart from the progress, so a reset or an import does not bring them back: key `countryquiz.intro.v1`, `{ "version": 1, "seen": ["name", "borders"] }`, one name per mode (`name`, `find`, `capitals`, `find-capitals`, `flags`, `borders`, `neighbors`). Without localStorage the guide opens on every visit.
+Which guides the player has closed is kept apart from the progress, so a reset or an import does not bring them back: key `countryquiz.intro.v1`, `{ "version": 1, "seen": ["name", "borders"] }`, one name per mode (`name`, `find`, `capitals`, `find-capitals`, `flags`, `silhouettes`, `borders`, `neighbors`). Without localStorage the guide opens on every visit.
 
 `settings` is optional throughout: a missing `regions` or `levels` means all of them, an empty list means none. `filtersOpen` remembers whether the filter sidebar is open on a wide screen. `maxScore` (0 to 9) is the score limit; missing means all scores are asked. An older `"continent": "AF"` is read as `"regions": ["AF"]`.
 
@@ -207,7 +219,7 @@ Which guides the player has closed is kept apart from the progress, so a reset o
 
 ### Export / Import
 
-- **Export**: downloads the mode's progress as `countryquiz-progress-YYYY-MM-DD.json` ("Länder finden": `countryquiz-find-progress-YYYY-MM-DD.json`, "Hauptstädte lernen": `countryquiz-capitals-progress-YYYY-MM-DD.json`, "Hauptstädte finden": `countryquiz-capitals-find-progress-YYYY-MM-DD.json`, "Flaggen erkennen": `countryquiz-flags-progress-YYYY-MM-DD.json`, "Grenzgänger": `countryquiz-borders-progress-YYYY-MM-DD.json`, "Nachbarn finden": `countryquiz-neighbors-progress-YYYY-MM-DD.json`).
+- **Export**: downloads the mode's progress as `countryquiz-progress-YYYY-MM-DD.json` ("Länder finden": `countryquiz-find-progress-YYYY-MM-DD.json`, "Hauptstädte lernen": `countryquiz-capitals-progress-YYYY-MM-DD.json`, "Hauptstädte finden": `countryquiz-capitals-find-progress-YYYY-MM-DD.json`, "Flaggen erkennen": `countryquiz-flags-progress-YYYY-MM-DD.json`, "Umrisse erkennen": `countryquiz-silhouettes-progress-YYYY-MM-DD.json`, "Grenzgänger": `countryquiz-borders-progress-YYYY-MM-DD.json`, "Nachbarn finden": `countryquiz-neighbors-progress-YYYY-MM-DD.json`).
 - **Import**: select a file, validate its contents, show a confirmation dialog ("Replace current progress?"), then apply.
 - **Reset**: deletes all progress after confirmation.
 
@@ -224,7 +236,7 @@ Which guides the player has closed is kept apart from the progress, so a reset o
 - **Country scope**: all 249 ISO 3166-1 entries plus Kosovo, including dependent territories such as Greenland and French Guiana. Anything else in the map data is drawn but **not asked** and colored neutrally. The list of quizzed countries lives in one central file (`data/countries.js`) so it is easy to adjust.
 - **Turn and zoom** the globe: drag to turn it, mouse wheel or pinch to zoom. Turning stops at the poles. After a quick drag the globe keeps turning and slows down within about a second, unless the player prefers reduced motion.
 - When a country is asked, the globe **turns it to the front and center** and zooms in moderately, so neighboring land stays in view.
-- **Back to the marked country**: while a country is marked, a "Zum Land" button (⌖) floats at the top right of the globe; on small screens it is only the icon, at the middle of the right edge. It turns and zooms the globe back to the country as when it was asked, so a player who got lost while turning or zooming finds it again. In the find modes and in "Flaggen erkennen" nothing is marked before the answer, so the button only shows afterwards and never gives the country away. A click on it keeps the keyboard focus where the player continues, e.g. in the answer field with the letters typed so far.
+- **Back to the marked country**: while a country is marked, a "Zum Land" button (⌖) floats at the top right of the globe; on small screens it is only the icon, at the middle of the right edge. It turns and zooms the globe back to the country as when it was asked, so a player who got lost while turning or zooming finds it again. In the find modes, "Flaggen erkennen" and "Umrisse erkennen" nothing is marked before the answer, so the button only shows afterwards and never gives the country away. A click on it keeps the keyboard focus where the player continues, e.g. in the answer field with the letters typed so far.
 - **Very small countries** (e.g. Vatican City, Monaco, Malta, Pacific and Caribbean island states) are drawn only as their shapes, with no permanent markers. Entries under 40 km² are enlarged to 40 km² so they can be seen. While one is asked it gets the same outline as every asked country, which is enough to spot it; there is no extra ring.
 - Projection: orthographic, so the map looks like a globe seen from space.
 
@@ -248,7 +260,7 @@ Which guides the player has closed is kept apart from the progress, so a reset o
   - the legend upright at the right edge, scores 0 to 10 with 10 at the top, with the score limit slider upright to its right. Never-asked countries have no swatch: they are plain land. On small screens the legend lies flat above the dock, with the slider flat beneath it.
 - **Small screens** (narrow, or phones held sideways): one layout for all devices, only CSS adapts it. The top bar shrinks to one row (menu link, stats as colored dots, ⚙, a thin progress line), the dock spans the width, "Weiß ich nicht" in "Länder benennen" becomes "?", and the legend lies flat above the dock. Even the longest country name fits the caption box.
 - **On-screen keyboard**: the page is sized to the area above the keyboard, so the answer row stays visible and the globe takes the rest.
-- Keyboard control: the input field automatically gets focus for each new country and stays editable, so a phone keyboard stays open. Enter submits; after a correct answer the next country follows by itself, after a wrong one Enter or typing moves on. In the modes with an answer field ("Länder benennen", "Hauptstädte lernen", "Flaggen erkennen", "Nachbarn finden") the left and right arrow keys move between the field, "Prüfen" ("Weiter") and "Weiß ich nicht", skipping a disabled button and stopping at either end. In the field they only leave it when the cursor is at the end (right) or the start (left) of the text and nothing is selected, so they still move the cursor while typing; Shift with an arrow still selects text. Back in the field the cursor is at the end of the text.
+- Keyboard control: the input field automatically gets focus for each new country and stays editable, so a phone keyboard stays open. Enter submits; after a correct answer the next country follows by itself, after a wrong one Enter or typing moves on. In the modes with an answer field ("Länder benennen", "Hauptstädte lernen", "Flaggen erkennen", "Umrisse erkennen", "Nachbarn finden") the left and right arrow keys move between the field, "Prüfen" ("Weiter") and "Weiß ich nicht", skipping a disabled button and stopping at either end. In the field they only leave it when the cursor is at the end (right) or the start (left) of the text and nothing is selected, so they still move the cursor while typing; Shift with an arrow still selects text. Back in the field the cursor is at the end of the text.
 - Supports light and dark mode (`prefers-color-scheme`).
 - **Comic look** matching the menu: thick ink outlines and hard offset shadows on panels, buttons, cards and the globe; a comic sunburst behind the globe (rays from the globe's center, halftone dots growing towards the edges, a few comic stars; drawn by `tools/globe-background.js`, with a dark variant); Bangers for titles, buttons, the asked name and the result; the light green of the titles for the main action ("Prüfen", "Weiter"), the highlight around the asked country (with an ink edge, so it shows on the beige land) and focus rings. Buttons press down when clicked and the result pops in, except with reduced motion. Bangers draws ß like a B, so ß comes from the body font. In dark mode interface lines are light, because black lines vanish on dark panels.
 
@@ -290,12 +302,13 @@ Local testing: because of ES modules, serve via a local web server: `npm start`,
 - [ ] "Hauptstädte lernen" asks the capital of the highlighted country, accepts every official capital, other spellings and small typos, always shows country and capital afterwards, and never asks places without a capital.
 - [ ] "Hauptstädte finden" names a capital without marking a country; clicking its country is correct, and where two places share the capital's name either one counts. It never asks places without a capital.
 - [ ] "Flaggen erkennen" shows a flag above the globe without marking a country, accepts the country's names with the usual tolerance (and either country for look-alike flags), then turns the globe to the country. It never asks Antarctica or territories that fly another entry's flag.
+- [ ] "Umrisse erkennen" shows a country's outline on its own above the globe, filling its box, without faraway territories and without marking a country; it accepts the country's names with the usual tolerance, then turns the globe to the country. It never asks Antarctica or countries too small for an outline.
 - [ ] The slider beside the legend leaves countries above the chosen score out of the rotation, and the choice survives a reload.
 - [ ] The filter sidebar opens and closes in every mode; region and difficulty ticks combine, only matching countries are asked, and the choice survives a reload.
 - [ ] Export produces a JSON file, import restores the same state, invalid files are rejected.
 - [ ] Large lakes such as Lake Victoria, Lake Michigan and Lake Nicaragua are water on the globe, and a click into one is no answer.
 - [ ] Small countries are plain shapes without rings, and the globe turns to the asked country.
-- [ ] "Zum Land" turns the globe back to the marked country in every mode, and in the find modes and "Flaggen erkennen" it only shows after the answer.
+- [ ] "Zum Land" turns the globe back to the marked country in every mode, and in the find modes, "Flaggen erkennen" and "Umrisse erkennen" it only shows after the answer.
 - [ ] Country names in questions and messages take their article and verbs agree with plural names ("Wo liegen die Niederlande?", "Das ist der Tschad", "Von der Schweiz in die Niederlande"), while plain labels keep the bare name.
 - [ ] "Grenzgänger" picks start and end with at least three countries between and no maximum, shows the globe without borders, shows start and end together or one after the other with a smooth flight, accepts countries in any order, tells steps from detours, ends after the fewest countries plus four guesses, and shows what was missing.
 - [ ] "Nachbarn finden" marks a country with land borders on a globe without borders and says how many neighbors it has; typing a neighbor (with the usual tolerance) outlines it green, another country outlines it red and costs one of three wrong guesses, and unknown, ambiguous or repeated names and the country itself cost nothing. All found is correct; the third wrong guess or "Weiß ich nicht" is wrong and outlines the missing neighbors in orange.

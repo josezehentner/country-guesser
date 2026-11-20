@@ -10,6 +10,7 @@ const MODES = [
   { path: 'capitals.html', title: 'Hauptstädte lernen', focus: '#answer-input' },
   { path: 'find-capitals.html', title: 'Hauptstädte finden', focus: '#prompt' },
   { path: 'flags.html', title: 'Flaggen erkennen', focus: '#answer-input' },
+  { path: 'silhouettes.html', title: 'Umrisse erkennen', focus: '#answer-input' },
   { path: 'borders.html', title: 'Grenzgänger', focus: '#answer-input' },
 ];
 

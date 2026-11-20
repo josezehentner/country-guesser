@@ -101,6 +101,13 @@ export const INTROS = {
     DONT_KNOW,
   ], RECENTER_AFTER),
 
+  silhouettes: scoreGuide('Umrisse erkennen', [
+    'Oben siehst du den Umriss eines Landes, ohne Karte drumherum. Tippe das Land ein und drücke Enter.',
+    `Der Umriss ist immer gleich groß, egal wie groß das Land ist. Weit entfernte Inseln und Gebiete fehlen, sehr kleine Länder werden nicht gefragt. ${TOLERANCE}`,
+    'Danach dreht sich der Globus zum Land, so lernst du auch, wo es liegt.',
+    DONT_KNOW,
+  ], RECENTER_AFTER),
+
   neighbors: {
     title: 'Nachbarn finden',
     sections: [

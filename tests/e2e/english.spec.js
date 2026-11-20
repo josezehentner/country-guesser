@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 // An English browser: every page comes up in English.
 test.use({ locale: 'en-US' });
 
-const PAGES = ['index.html', 'name-countries.html', 'find-countries.html', 'capitals.html', 'find-capitals.html', 'flags.html', 'borders.html'];
+const PAGES = ['index.html', 'name-countries.html', 'find-countries.html', 'capitals.html', 'find-capitals.html', 'flags.html', 'silhouettes.html', 'borders.html'];
 const LANGUAGE_KEY = 'countryquiz.language';
 
 function targetCode(page) {
